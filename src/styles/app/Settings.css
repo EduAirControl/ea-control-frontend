@@ -1,0 +1,392 @@
+/* Settings.css — estilos específicos de la pantalla de configuración.
+   Los colores vienen de las variables CSS definidas en index.css       */
+
+.settings-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 100px 30px 30px;
+}
+
+.settings-content h1 {
+  font-size: 28px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-card h2 {
+  font-size: 20px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-field {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.settings-field:last-child { border-bottom: none; }
+
+.settings-field .field-icon {
+  font-size: 20px;
+  margin-right: 15px;
+  /* color heredado de .field-icon en index.css → var(--accent) */
+}
+
+.settings-field .field-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Theme Picker ── */
+.theme-field {
+  border-bottom: none !important;
+  padding-bottom: 8px !important;
+}
+
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 0 0 8px;
+}
+
+.theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 600;
+  /* color, background y border vienen de index.css */
+}
+
+.theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+.theme-preview {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* background y border vienen de index.css */
+}
+
+.preview-bar  { height: 12px; width: 100%; }
+
+.preview-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.preview-line {
+  height: 4px;
+  border-radius: 2px;
+  display: block;
+  width: 100%;
+  opacity: 0.7;
+  /* background viene de index.css */
+}
+
+.preview-line.short { width: 60%; opacity: 0.4; }
+
+.theme-label { font-size: 11px; font-weight: 600; text-align: center; }
+
+.theme-check {
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  /* color viene de index.css → var(--accent) */
+}
+
+/* ── Language Modal overlay ── */
+.lang-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.6);
+backdrop-filter: blur(4px);
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+/* ── Timezone selector ── */
+.timezone-select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 2px solid var(--border-card, #eee);
+  border-radius: 8px;
+  background: var(--bg-subtle, #f5f5f5);
+  color: var(--text-primary, #333);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.timezone-select:focus {
+  outline: none;
+  border-color: var(--accent, #5de6c8);
+}
+
+.timezone-select option {
+  background: var(--bg-card, white);
+  color: var(--text-primary, #333);
+}
+
+@media (max-width: 768px) {
+  .settings-content {
+    padding: 115px 15px 30px;
+  }
+
+  /* ← Esto arregla el texto partido */
+  .settings-field {
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .settings-field .field-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .settings-field .field-value {
+    white-space: nowrap;      /* ← evita que se parta */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .settings-field .btn-update {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .theme-picker {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.settings-field .field-info {
+  flex: 1;
+  min-width: 0;          
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-field .field-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;      
+}
+
+.btn-delete-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #dc3545;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-delete-icon:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.05);
+}
+
+.help-modal {
+  background: var(--bg-card);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  padding: 28px;
+  position: relative;
+}
+
+.help-modal h3 {
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+}
+
+.help-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.help-modal-close:hover { color: var(--text-primary); }
+
+.help-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-modal-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.help-modal-scroll p  { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+.help-modal-scroll ul { padding-left: 20px; color: var(--text-secondary); font-size: 14px; line-height: 1.8; }
+
+.faq-item {
+  padding: 12px;
+  background: var(--bg-subtle);
+  border-radius: 10px;
+}
+
+.faq-item strong { font-size: 14px; color: var(--text-primary); display: block; margin-bottom: 4px; }
+.faq-item p      { font-size: 13px; color: var(--text-secondary); margin: 0; }
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px;
+  background: var(--bg-subtle);
+  border-radius: 10px;
+}
+
+.contact-icon { font-size: 24px; }
+.contact-item strong { font-size: 14px; color: var(--text-primary); display: block; margin-bottom: 2px; }
+.contact-item p      { font-size: 13px; color: var(--text-secondary); margin: 0; }
+
+.version-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.version-badge { font-size: 32px; font-weight: 700; color: var(--accent); }
+.version-info p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+.version-date   { color: var(--text-muted) !important; font-size: 12px !important; }
+
+.version-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.version-tag {
+  padding: 4px 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 🔹 Hace que toda la fila se sienta como botón */
+.settings-field--link {
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+}
+
+/* 🔹 Hover (cuando pasas el mouse) */
+.settings-field--link:hover {
+  background: var(--bg-subtle);
+  transform: translateX(4px);
+}
+
+/* 🔹 Efecto al hacer click */
+.settings-field--link:active {
+  transform: scale(0.98);
+  background: var(--accent-light);
+}
+
+/* 🔹 Flechita animada */
+.settings-chevron {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+/* 🔹 Animación de la flecha */
+.settings-field--link:hover .settings-chevron {
+  transform: translateX(6px);
+  color: var(--accent);
+}
+
+/* 🔹 Efecto tipo glow suave */
+.settings-field--link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 0 0px var(--accent);
+}
+
+.settings-field--link:hover::after {
+  opacity: 1;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.input-modal {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
