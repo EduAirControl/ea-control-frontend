@@ -59,7 +59,7 @@ export const styles = StyleSheet.create({
 
   networkBody: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   donutWrap: { alignItems: 'center', justifyContent: 'center' },
-  donutCenter: { position: 'absolute', alignItems: 'center', width: 96 },
+  donutCenter: { alignItems: 'center' },
   donutValue: { fontSize: 22, fontWeight: '900' },
   donutLabel: { fontSize: 10, textAlign: 'center', marginTop: 2 },
   networkLegend: { flex: 1, gap: 8 },
@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
   readingBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start' },
   readingBtnTxt: { fontSize: 12.5, fontWeight: '800' },
 
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, marginBottom: 10 },
+  footer: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between', marginTop: 6, marginBottom: 10 },
   footerTxt: { fontSize: 11 },
 
   pointer: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7, gap: 3 },
