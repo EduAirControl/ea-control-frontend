@@ -1,4 +1,4 @@
-export { useDashboardVM } from '../modules/dashboard/viewmodels/useDashboardVM.js'
+export { useDashboardAnalysisVM } from '../modules/dashboard/viewmodels/useDashboardAnalysisVM.js'
 export { useAllEnvironmentsVM } from '../modules/environment/viewmodels/useAllEnvironmentsVM.js'
 export { useManagementVM } from '../modules/environment/viewmodels/useManagementVM.js'
 export { useFavoritesVM } from '../modules/favorites/viewmodels/useFavoritesVM.js'
