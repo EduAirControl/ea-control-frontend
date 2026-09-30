@@ -9,7 +9,8 @@
     "management": "Gestão",
     "greeting": "Olá",
     "admin": "Administrador",
-    "user": "Usuário"
+    "user": "Usuário",
+    "dashboard": "Painel"
   },
   "login": {
     "title": "Entrar",
@@ -54,9 +55,22 @@
       "title": "Termos e Condições",
       "subtitle": "Uso responsável · Segurança · Proteção de dados",
       "intro": "Ao se cadastrar, você confirma que leu, compreendeu e aceita as condições essenciais para o uso responsável do EduAirControl:",
-      "items": ["Fornecer informações verdadeiras, completas e atualizadas e proteger suas credenciais de acesso.", "Informar rapidamente acessos não autorizados, perda de credenciais ou situações que comprometam a segurança da conta.", "Usar a plataforma apenas para fins educacionais, administrativos e de monitoramento ambiental autorizados.", "Não acessar, alterar, excluir ou extrair informações, nem interferir em sistemas, bancos de dados ou sensores IoT sem autorização.", "As leituras dos sensores são informativas, podem variar e não substituem avaliações técnicas especializadas.", "O EduAirControl aplica medidas razoáveis de segurança, embora nenhum sistema garanta proteção absoluta contra todos os riscos.", "Autorizar o tratamento de dados pessoais quando necessário, conforme a legislação aplicável e a Política de Tratamento de Dados.", "Podem ocorrer manutenções, atualizações ou interrupções temporárias por motivos técnicos, de conectividade ou dos dispositivos IoT.", "Aceitar atualizações destes termos comunicadas pela plataforma; o descumprimento pode restringir ou suspender o acesso.", "Usar os dados ambientais como apoio à tomada de decisões e aplicar os procedimentos institucionais ou verificações técnicas quando a situação exigir.", "Reconhecer que estes termos são interpretados de acordo com a legislação colombiana, incluindo as disposições sobre proteção de dados e crimes cibernéticos quando aplicável.", "Confirmar, ao marcar a caixa de aceitação, que você leu e compreendeu este resumo e os Termos e Condições completos disponíveis no EduAirControl."],
-      "notice": "Este resumo não substitui o documento completo. O uso do EduAirControl está sujeito aos Termos e Condições completos, à Política de Tratamento de Dados Pessoais e à legislação aplicável."
-      ,"fullDocumentPrefix": "Deseja revisar todas as informações?",
+      "items": [
+        "Fornecer informações verdadeiras, completas e atualizadas e proteger suas credenciais de acesso.",
+        "Informar rapidamente acessos não autorizados, perda de credenciais ou situações que comprometam a segurança da conta.",
+        "Usar a plataforma apenas para fins educacionais, administrativos e de monitoramento ambiental autorizados.",
+        "Não acessar, alterar, excluir ou extrair informações, nem interferir em sistemas, bancos de dados ou sensores IoT sem autorização.",
+        "As leituras dos sensores são informativas, podem variar e não substituem avaliações técnicas especializadas.",
+        "O EduAirControl aplica medidas razoáveis de segurança, embora nenhum sistema garanta proteção absoluta contra todos os riscos.",
+        "Autorizar o tratamento de dados pessoais quando necessário, conforme a legislação aplicável e a Política de Tratamento de Dados.",
+        "Podem ocorrer manutenções, atualizações ou interrupções temporárias por motivos técnicos, de conectividade ou dos dispositivos IoT.",
+        "Aceitar atualizações destes termos comunicadas pela plataforma; o descumprimento pode restringir ou suspender o acesso.",
+        "Usar os dados ambientais como apoio à tomada de decisões e aplicar os procedimentos institucionais ou verificações técnicas quando a situação exigir.",
+        "Reconhecer que estes termos são interpretados de acordo com a legislação colombiana, incluindo as disposições sobre proteção de dados e crimes cibernéticos quando aplicável.",
+        "Confirmar, ao marcar a caixa de aceitação, que você leu e compreendeu este resumo e os Termos e Condições completos disponíveis no EduAirControl."
+      ],
+      "notice": "Este resumo não substitui o documento completo. O uso do EduAirControl está sujeito aos Termos e Condições completos, à Política de Tratamento de Dados Pessoais e à legislação aplicável.",
+      "fullDocumentPrefix": "Deseja revisar todas as informações?",
       "fullDocumentLink": "Ler o documento completo",
       "readRequired": "Você deve ler e aceitar o documento completo antes de se cadastrar."
     },
@@ -69,14 +83,19 @@
     "subtitle": "Junte-se à rede de monitoramento inteligente",
     "error": "Erro ao registrar",
     "placeholderCompany": "Ex.: EDU-2024",
-    "haveAccount": "Já tem uma conta?"
+    "haveAccount": "Já tem uma conta?",
+    "name": "Nome",
+    "viewFullTerms": "Ver termos e condições completos"
   },
   "common": {
     "close": "Fechar",
     "unknown": "um estranho",
     "back": "Voltar",
     "delete": "Remover",
-    "or": "OU"
+    "or": "OU",
+    "noName": "sem nome",
+    "loading": "Carregando…",
+    "cancel": "Cancelar"
   },
   "forgotPassword": {
     "title": "Esqueci minha senha",
@@ -85,14 +104,20 @@
     "sendBtn": "Enviar código de recuperação",
     "tryAnother": "Tentar de outra forma",
     "sent": "Verifique seu e-mail",
-    "sentTo": "Enviamos as instruções para"
+    "sentTo": "Enviamos as instruções para",
+    "error": "Não foi possível enviar o código. Tente novamente.",
+    "continue": "Continuar"
   },
   "verifyCode": {
     "title": "Verificar código",
     "description": "Digite o código de 5 dígitos enviado ao seu e-mail.",
     "resend": "Reenviar código",
     "verifyBtn": "Verificar código",
-    "digitLabel": "Dígito do código {{n}}"
+    "digitLabel": "Dígito do código {{n}}",
+    "incomplete": "Digite os 6 dígitos do código",
+    "error": "Código inválido ou expirado",
+    "resent": "Novo código enviado",
+    "resendError": "Não foi possível reenviar o código"
   },
   "changePassword": {
     "title": "Esqueci minha senha",
@@ -103,139 +128,140 @@
     "mismatch": "As senhas não coincidem!",
     "success": "Senha atualizada",
     "minHint": "Mínimo de 6 caracteres",
-    "matchStatus": "As senhas coincidem"
+    "matchStatus": "As senhas coincidem",
+    "error": "Não foi possível atualizar a senha"
   },
   "terms": {
-  "title": "Termos e Condições de Uso",
-  "brand": "EduAirControl",
-  "subtitle": "Proteção de Dados · Segurança · Uso Responsável · Monitoramento Ambiental",
-  "sections": [
-    {
-      "title": "1. Aceitação dos Termos",
-      "paragraphs": [
-        "Bem-vindo ao EduAirControl. Estes Termos e Condições estabelecem as regras para o acesso e uso da plataforma.",
-        "Ao se registrar, acessar ou utilizar o EduAirControl, você declara que leu e compreendeu estes termos e concorda em cumprir as disposições aqui estabelecidas.",
-        "Quando aplicável, o tratamento de dados pessoais também estará sujeito à Política de Tratamento de Dados Pessoais do EduAirControl e à legislação colombiana aplicável."
-      ]
+    "title": "Termos e Condições de Uso",
+    "brand": "EduAirControl",
+    "subtitle": "Proteção de Dados · Segurança · Uso Responsável · Monitoramento Ambiental",
+    "sections": [
+      {
+        "title": "1. Aceitação dos Termos",
+        "paragraphs": [
+          "Bem-vindo ao EduAirControl. Estes Termos e Condições estabelecem as regras para o acesso e uso da plataforma.",
+          "Ao se registrar, acessar ou utilizar o EduAirControl, você declara que leu e compreendeu estes termos e concorda em cumprir as disposições aqui estabelecidas.",
+          "Quando aplicável, o tratamento de dados pessoais também estará sujeito à Política de Tratamento de Dados Pessoais do EduAirControl e à legislação colombiana aplicável."
+        ]
+      },
+      {
+        "title": "2. Registro e Responsabilidade do Usuário",
+        "paragraphs": [
+          "As informações fornecidas durante o registro devem ser verdadeiras, completas, atualizadas e verificáveis.",
+          "Cada usuário é responsável por manter a confidencialidade de suas credenciais de acesso e pelas atividades realizadas por meio de sua conta.",
+          "O usuário deverá informar imediatamente qualquer acesso não autorizado, perda de credenciais ou situação que possa comprometer a segurança de sua conta."
+        ]
+      },
+      {
+        "title": "3. Uso Permitido da Plataforma",
+        "paragraphs": [
+          "O EduAirControl deverá ser utilizado exclusivamente para fins educacionais, administrativos e de monitoramento ambiental autorizados pela instituição.",
+          "O usuário se compromete a utilizar a plataforma de maneira responsável e de acordo com a legislação colombiana aplicável."
+        ],
+        "list": [
+          "Tentar acessar sem autorização contas, sistemas, bancos de dados ou serviços do EduAirControl.",
+          "Manipular, alterar, excluir ou extrair informações sem autorização.",
+          "Interferir no funcionamento da plataforma ou dos dispositivos IoT conectados.",
+          "Explorar vulnerabilidades de segurança para obter acesso não autorizado.",
+          "Utilizar a plataforma para atividades ilícitas ou contrárias a estes termos."
+        ],
+        "note": "O acesso não autorizado a sistemas informáticos ou a violação de dados poderá gerar as consequências legais correspondentes de acordo com a legislação colombiana."
+      },
+      {
+        "title": "4. Informações Obtidas por Meio de Sensores IoT",
+        "paragraphs": [
+          "O EduAirControl pode coletar e exibir informações ambientais provenientes de dispositivos IoT, incluindo variáveis como temperatura, umidade, concentração de CO₂ e níveis de ruído, de acordo com os sensores implementados em cada ambiente.",
+          "Essas informações têm como finalidade o monitoramento, a análise e o apoio à tomada de decisões relacionadas às condições ambientais dos espaços educacionais.",
+          "Os dados obtidos por meio dos sensores podem apresentar variações, erros de medição ou interrupções decorrentes do funcionamento dos dispositivos, das comunicações ou de fatores externos.",
+          "As informações fornecidas pela plataforma não substituem inspeções, medições ou avaliações técnicas especializadas quando forem necessárias."
+        ]
+      },
+      {
+        "title": "5. Proteção de Dados Pessoais",
+        "paragraphs": [
+          "O EduAirControl tratará os dados pessoais de acordo com os princípios e obrigações estabelecidos pela legislação colombiana aplicável, especialmente a Lei 1581 de 2012 e suas normas regulamentares.",
+          "O tratamento de dados pessoais será realizado para finalidades legítimas, informadas e relacionadas à prestação e administração dos serviços da plataforma.",
+          "Quando necessário, o tratamento será respaldado pela autorização prévia, expressa e informada do titular dos dados, de acordo com a legislação aplicável.",
+          "Os titulares dos dados poderão exercer seus direitos de conhecer, atualizar e corrigir seus dados, solicitar informações sobre seu tratamento e apresentar consultas ou reclamações ao responsável ou encarregado pelo tratamento.",
+          "As condições específicas sobre coleta, armazenamento, uso, circulação, conservação e exclusão dos dados estão estabelecidas na Política de Tratamento de Dados Pessoais do EduAirControl."
+        ]
+      },
+      {
+        "title": "6. Segurança da Informação",
+        "paragraphs": [
+          "O EduAirControl implementará medidas técnicas, administrativas e organizacionais razoáveis destinadas a proteger as informações contra acessos não autorizados, perda, alteração, divulgação ou uso indevido.",
+          "No entanto, nenhum sistema informático pode garantir segurança absoluta contra todos os riscos tecnológicos, incidentes externos ou situações fora do controle razoável da plataforma.",
+          "Os usuários também deverão adotar medidas razoáveis para proteger suas contas e credenciais de acesso."
+        ]
+      },
+      {
+        "title": "7. Disponibilidade e Atualizações",
+        "paragraphs": [
+          "O EduAirControl poderá apresentar interrupções temporárias devido a manutenção, atualizações, falhas técnicas, problemas de conectividade, funcionamento dos dispositivos IoT ou outras circunstâncias técnicas.",
+          "A plataforma poderá receber atualizações, melhorias, modificações ou correções destinadas a melhorar seu funcionamento, segurança e qualidade.",
+          "Quando necessário, as modificações relevantes serão informadas por meio dos canais disponíveis na plataforma ou pelos meios estabelecidos pela instituição."
+        ]
+      },
+      {
+        "title": "8. Precisão das Informações",
+        "paragraphs": [
+          "O EduAirControl buscará fornecer informações claras e confiáveis dentro das capacidades técnicas da plataforma.",
+          "No entanto, os dados provenientes dos sensores podem estar sujeitos a variações, erros de medição, falhas de conectividade ou limitações próprias dos dispositivos utilizados.",
+          "As decisões que exigirem uma avaliação técnica especializada deverão ser apoiadas pelos procedimentos e verificações correspondentes."
+        ]
+      },
+      {
+        "title": "9. Alterações dos Termos e Condições",
+        "paragraphs": [
+          "O EduAirControl poderá modificar estes Termos e Condições quando necessário devido a alterações funcionais, técnicas, legais ou administrativas.",
+          "As alterações serão publicadas ou comunicadas por meio dos mecanismos disponíveis na plataforma.",
+          "Quando exigido pela legislação aplicável, uma nova aceitação do usuário será solicitada."
+        ]
+      },
+      {
+        "title": "10. Descumprimento",
+        "paragraphs": [
+          "O descumprimento destes Termos e Condições poderá resultar na suspensão ou restrição do acesso à plataforma, de acordo com as políticas da instituição e sem prejuízo das medidas legais que possam ser aplicáveis."
+        ]
+      },
+      {
+        "title": "11. Legislação Aplicável",
+        "paragraphs": [
+          "Estes Termos e Condições serão interpretados de acordo com a legislação colombiana aplicável.",
+          "Em matéria de proteção de dados pessoais, serão consideradas, entre outras disposições aplicáveis, o artigo 15 da Constituição Política da Colômbia, a Lei 1581 de 2012 e suas normas regulamentares.",
+          "As disposições relacionadas aos crimes informáticos serão aplicáveis quando cabível, incluindo as condutas estabelecidas na Lei 1273 de 2009."
+        ]
+      },
+      {
+        "title": "12. Aceitação",
+        "paragraphs": [
+          "Ao selecionar “Aceitar”, o usuário confirma que leu, compreendeu e aceitou estes Termos e Condições de Uso.",
+          "Quando aplicável ao tratamento de dados pessoais, a aceitação destes termos não substitui a autorização específica que possa ser necessária de acordo com a legislação de proteção de dados pessoais."
+        ]
+      }
+    ],
+    "metadata": {
+      "updated": "Data da última atualização",
+      "updatedValue": "18/08/2026",
+      "responsible": "Responsável pelo EduAirControl",
+      "responsibleValue": "Equipe EduAirControl",
+      "email": "E-mail de contato",
+      "emailValue": "eduaircontrol@gmail.com"
     },
-    {
-      "title": "2. Registro e Responsabilidade do Usuário",
-      "paragraphs": [
-        "As informações fornecidas durante o registro devem ser verdadeiras, completas, atualizadas e verificáveis.",
-        "Cada usuário é responsável por manter a confidencialidade de suas credenciais de acesso e pelas atividades realizadas por meio de sua conta.",
-        "O usuário deverá informar imediatamente qualquer acesso não autorizado, perda de credenciais ou situação que possa comprometer a segurança de sua conta."
-      ]
-    },
-    {
-      "title": "3. Uso Permitido da Plataforma",
-      "paragraphs": [
-        "O EduAirControl deverá ser utilizado exclusivamente para fins educacionais, administrativos e de monitoramento ambiental autorizados pela instituição.",
-        "O usuário se compromete a utilizar a plataforma de maneira responsável e de acordo com a legislação colombiana aplicável."
-      ],
-      "list": [
-        "Tentar acessar sem autorização contas, sistemas, bancos de dados ou serviços do EduAirControl.",
-        "Manipular, alterar, excluir ou extrair informações sem autorização.",
-        "Interferir no funcionamento da plataforma ou dos dispositivos IoT conectados.",
-        "Explorar vulnerabilidades de segurança para obter acesso não autorizado.",
-        "Utilizar a plataforma para atividades ilícitas ou contrárias a estes termos."
-      ],
-      "note": "O acesso não autorizado a sistemas informáticos ou a violação de dados poderá gerar as consequências legais correspondentes de acordo com a legislação colombiana."
-    },
-    {
-      "title": "4. Informações Obtidas por Meio de Sensores IoT",
-      "paragraphs": [
-        "O EduAirControl pode coletar e exibir informações ambientais provenientes de dispositivos IoT, incluindo variáveis como temperatura, umidade, concentração de CO₂ e níveis de ruído, de acordo com os sensores implementados em cada ambiente.",
-        "Essas informações têm como finalidade o monitoramento, a análise e o apoio à tomada de decisões relacionadas às condições ambientais dos espaços educacionais.",
-        "Os dados obtidos por meio dos sensores podem apresentar variações, erros de medição ou interrupções decorrentes do funcionamento dos dispositivos, das comunicações ou de fatores externos.",
-        "As informações fornecidas pela plataforma não substituem inspeções, medições ou avaliações técnicas especializadas quando forem necessárias."
-      ]
-    },
-    {
-      "title": "5. Proteção de Dados Pessoais",
-      "paragraphs": [
-        "O EduAirControl tratará os dados pessoais de acordo com os princípios e obrigações estabelecidos pela legislação colombiana aplicável, especialmente a Lei 1581 de 2012 e suas normas regulamentares.",
-        "O tratamento de dados pessoais será realizado para finalidades legítimas, informadas e relacionadas à prestação e administração dos serviços da plataforma.",
-        "Quando necessário, o tratamento será respaldado pela autorização prévia, expressa e informada do titular dos dados, de acordo com a legislação aplicável.",
-        "Os titulares dos dados poderão exercer seus direitos de conhecer, atualizar e corrigir seus dados, solicitar informações sobre seu tratamento e apresentar consultas ou reclamações ao responsável ou encarregado pelo tratamento.",
-        "As condições específicas sobre coleta, armazenamento, uso, circulação, conservação e exclusão dos dados estão estabelecidas na Política de Tratamento de Dados Pessoais do EduAirControl."
-      ]
-    },
-    {
-      "title": "6. Segurança da Informação",
-      "paragraphs": [
-        "O EduAirControl implementará medidas técnicas, administrativas e organizacionais razoáveis destinadas a proteger as informações contra acessos não autorizados, perda, alteração, divulgação ou uso indevido.",
-        "No entanto, nenhum sistema informático pode garantir segurança absoluta contra todos os riscos tecnológicos, incidentes externos ou situações fora do controle razoável da plataforma.",
-        "Os usuários também deverão adotar medidas razoáveis para proteger suas contas e credenciais de acesso."
-      ]
-    },
-    {
-      "title": "7. Disponibilidade e Atualizações",
-      "paragraphs": [
-        "O EduAirControl poderá apresentar interrupções temporárias devido a manutenção, atualizações, falhas técnicas, problemas de conectividade, funcionamento dos dispositivos IoT ou outras circunstâncias técnicas.",
-        "A plataforma poderá receber atualizações, melhorias, modificações ou correções destinadas a melhorar seu funcionamento, segurança e qualidade.",
-        "Quando necessário, as modificações relevantes serão informadas por meio dos canais disponíveis na plataforma ou pelos meios estabelecidos pela instituição."
-      ]
-    },
-    {
-      "title": "8. Precisão das Informações",
-      "paragraphs": [
-        "O EduAirControl buscará fornecer informações claras e confiáveis dentro das capacidades técnicas da plataforma.",
-        "No entanto, os dados provenientes dos sensores podem estar sujeitos a variações, erros de medição, falhas de conectividade ou limitações próprias dos dispositivos utilizados.",
-        "As decisões que exigirem uma avaliação técnica especializada deverão ser apoiadas pelos procedimentos e verificações correspondentes."
-      ]
-    },
-    {
-      "title": "9. Alterações dos Termos e Condições",
-      "paragraphs": [
-        "O EduAirControl poderá modificar estes Termos e Condições quando necessário devido a alterações funcionais, técnicas, legais ou administrativas.",
-        "As alterações serão publicadas ou comunicadas por meio dos mecanismos disponíveis na plataforma.",
-        "Quando exigido pela legislação aplicável, uma nova aceitação do usuário será solicitada."
-      ]
-    },
-    {
-      "title": "10. Descumprimento",
-      "paragraphs": [
-        "O descumprimento destes Termos e Condições poderá resultar na suspensão ou restrição do acesso à plataforma, de acordo com as políticas da instituição e sem prejuízo das medidas legais que possam ser aplicáveis."
-      ]
-    },
-    {
-      "title": "11. Legislação Aplicável",
-      "paragraphs": [
-        "Estes Termos e Condições serão interpretados de acordo com a legislação colombiana aplicável.",
-        "Em matéria de proteção de dados pessoais, serão consideradas, entre outras disposições aplicáveis, o artigo 15 da Constituição Política da Colômbia, a Lei 1581 de 2012 e suas normas regulamentares.",
-        "As disposições relacionadas aos crimes informáticos serão aplicáveis quando cabível, incluindo as condutas estabelecidas na Lei 1273 de 2009."
-      ]
-    },
-    {
-      "title": "12. Aceitação",
-      "paragraphs": [
-        "Ao selecionar “Aceitar”, o usuário confirma que leu, compreendeu e aceitou estes Termos e Condições de Uso.",
-        "Quando aplicável ao tratamento de dados pessoais, a aceitação destes termos não substitui a autorização específica que possa ser necessária de acordo com a legislação de proteção de dados pessoais."
-      ]
-    }
-  ],
-  "metadata": {
-    "updated": "Data da última atualização",
-    "updatedValue": "18/08/2026",
-    "responsible": "Responsável pelo EduAirControl",
-    "responsibleValue": "Equipe EduAirControl",
-    "email": "E-mail de contato",
-    "emailValue": "eduaircontrol@gmail.com"
+    "intro": "Bem-vindo ao EduAirControl. Antes de utilizar nossa plataforma, leia atentamente os seguintes Termos e Condições. Ao criar uma conta e utilizar nossos serviços, você concorda em cumprir estas disposições e a legislação colombiana aplicável.",
+    "item1": "As informações fornecidas durante o registro devem ser verdadeiras, completas e atualizadas. O usuário é responsável por informar qualquer alteração que afete as informações registradas.",
+    "item2": "Cada usuário é responsável por proteger suas credenciais de acesso e pelas atividades realizadas por meio de sua conta. Caso seja detectado um acesso não autorizado, ele deverá ser informado imediatamente.",
+    "item3": "A plataforma deve ser utilizada exclusivamente para fins educacionais, administrativos e de monitoramento ambiental autorizados pela instituição, respeitando a legislação colombiana e as regras de uso estabelecidas.",
+    "item4": "É proibido manipular, alterar, excluir, extrair ou acessar sem autorização informações, bancos de dados, dispositivos IoT, contas ou serviços do EduAirControl.",
+    "item5": "Os dados ambientais exibidos pela plataforma correspondem a informações coletadas por meio de sensores IoT e têm como finalidade o monitoramento, a análise e o apoio à tomada de decisões. Esses dados podem apresentar variações ou erros de medição e não substituem inspeções técnicas especializadas quando necessárias.",
+    "item6": "O EduAirControl implementa medidas técnicas, administrativas e organizacionais razoáveis para proteger as informações contra acessos não autorizados, perda, alteração, divulgação ou uso indevido. No entanto, nenhum sistema informático pode garantir segurança absoluta.",
+    "item7": "A plataforma poderá receber atualizações, melhorias, correções ou modificações relacionadas ao seu funcionamento, segurança ou serviços. Quando necessário, as alterações relevantes serão comunicadas por meio dos mecanismos disponíveis na plataforma.",
+    "item8": "Os dados pessoais serão tratados de acordo com a legislação colombiana aplicável, especialmente a Lei 1581 de 2012 e suas normas regulamentares. Quando necessário, será solicitada ao titular a autorização prévia, expressa e informada para o tratamento de seus dados pessoais.",
+    "footer1": "Os titulares dos dados pessoais têm o direito de conhecer, atualizar e corrigir seus dados, solicitar informações sobre seu tratamento e apresentar consultas ou reclamações de acordo com a legislação colombiana aplicável. As condições específicas do tratamento de dados estão estabelecidas na Política de Tratamento de Dados Pessoais do EduAirControl.",
+    "footer2": "O EduAirControl poderá modificar estes Termos e Condições quando necessário. As alterações serão publicadas ou comunicadas por meio dos mecanismos disponíveis na plataforma. Ao clicar em “Aceitar”, você confirma que leu, compreendeu e aceitou estes Termos e Condições.",
+    "acceptBtn": "Li e aceito",
+    "readToEnd": "Role até o final do documento para habilitar a aceitação."
   },
-  "intro": "Bem-vindo ao EduAirControl. Antes de utilizar nossa plataforma, leia atentamente os seguintes Termos e Condições. Ao criar uma conta e utilizar nossos serviços, você concorda em cumprir estas disposições e a legislação colombiana aplicável.",
-  "item1": "As informações fornecidas durante o registro devem ser verdadeiras, completas e atualizadas. O usuário é responsável por informar qualquer alteração que afete as informações registradas.",
-  "item2": "Cada usuário é responsável por proteger suas credenciais de acesso e pelas atividades realizadas por meio de sua conta. Caso seja detectado um acesso não autorizado, ele deverá ser informado imediatamente.",
-  "item3": "A plataforma deve ser utilizada exclusivamente para fins educacionais, administrativos e de monitoramento ambiental autorizados pela instituição, respeitando a legislação colombiana e as regras de uso estabelecidas.",
-  "item4": "É proibido manipular, alterar, excluir, extrair ou acessar sem autorização informações, bancos de dados, dispositivos IoT, contas ou serviços do EduAirControl.",
-  "item5": "Os dados ambientais exibidos pela plataforma correspondem a informações coletadas por meio de sensores IoT e têm como finalidade o monitoramento, a análise e o apoio à tomada de decisões. Esses dados podem apresentar variações ou erros de medição e não substituem inspeções técnicas especializadas quando necessárias.",
-  "item6": "O EduAirControl implementa medidas técnicas, administrativas e organizacionais razoáveis para proteger as informações contra acessos não autorizados, perda, alteração, divulgação ou uso indevido. No entanto, nenhum sistema informático pode garantir segurança absoluta.",
-  "item7": "A plataforma poderá receber atualizações, melhorias, correções ou modificações relacionadas ao seu funcionamento, segurança ou serviços. Quando necessário, as alterações relevantes serão comunicadas por meio dos mecanismos disponíveis na plataforma.",
-  "item8": "Os dados pessoais serão tratados de acordo com a legislação colombiana aplicável, especialmente a Lei 1581 de 2012 e suas normas regulamentares. Quando necessário, será solicitada ao titular a autorização prévia, expressa e informada para o tratamento de seus dados pessoais.",
-  "footer1": "Os titulares dos dados pessoais têm o direito de conhecer, atualizar e corrigir seus dados, solicitar informações sobre seu tratamento e apresentar consultas ou reclamações de acordo com a legislação colombiana aplicável. As condições específicas do tratamento de dados estão estabelecidas na Política de Tratamento de Dados Pessoais do EduAirControl.",
-  "footer2": "O EduAirControl poderá modificar estes Termos e Condições quando necessário. As alterações serão publicadas ou comunicadas por meio dos mecanismos disponíveis na plataforma. Ao clicar em “Aceitar”, você confirma que leu, compreendeu e aceitou estes Termos e Condições.",
-  "acceptBtn": "Li e aceito",
-  "readToEnd": "Role até o final do documento para habilitar a aceitação."
-},
   "dashboard": {
     "clickDetails": "Clique para ver detalhes",
     "idealRange": "Faixa ideal",
@@ -416,7 +442,9 @@
       "success": "Senha atualizada com sucesso",
       "errorEmpty": "Preencha todos os campos",
       "errorMatch": "As senhas não coincidem",
-      "errorLength": "A senha deve ter pelo menos 6 caracteres"
+      "errorLength": "A senha deve ter pelo menos 6 caracteres",
+      "errorUppercase": "A senha deve conter pelo menos uma letra maiúscula",
+      "errorApi": "Não foi possível atualizar a senha"
     },
     "faq": {
       "q1": "Como adiciono um ambiente favorito?",
@@ -556,7 +584,11 @@
     "timezoneMadrid": "Madrid (UTC+1/+2)",
     "timezoneParis": "Paris (UTC+1/+2)",
     "timezoneTokyo": "Tóquio (UTC+9)",
-    "timezoneSydney": "Sydney (UTC+10/+11)"
+    "timezoneSydney": "Sydney (UTC+10/+11)",
+    "deletePasswordLabel": "Confirme com sua senha",
+    "deletePasswordRequired": "Digite sua senha para excluir a conta",
+    "deleteAccountError": "Não foi possível excluir a conta",
+    "helpGuide": "Guia do produto"
   },
   "google": {
     "chooseAccount": "Escolha sua conta",
@@ -618,7 +650,28 @@
     "requiredName": "O nome é obrigatório",
     "edited": "Ambiente atualizado",
     "added": "Ambiente adicionado",
-    "deleted": "Ambiente excluído"
+    "deleted": "Ambiente excluído",
+    "min": "Mín",
+    "max": "Máx",
+    "sortName": "Nome",
+    "sortCapacity": "Capacidade",
+    "sortStatus": "Estado",
+    "resultsCount": "Exibindo",
+    "resultsOf": "de",
+    "resultsEnvironments": "ambientes",
+    "noResultsSearch": "Nenhum resultado para sua busca",
+    "noResultsSearchSub": "Tente outro termo ou limpe os filtros",
+    "noResults": "Ainda não há ambientes",
+    "noResultsSub": "Adicione o primeiro ambiente para começar a monitorar",
+    "clearSearch": "Limpar busca",
+    "summaryTotal": "Total",
+    "summaryNormal": "Normal",
+    "summaryWarnings": "Avisos",
+    "summaryAlerts": "Em alerta",
+    "tabEnvironments": "Ambientes",
+    "tabSensors": "Sensores e variáveis",
+    "tabDevices": "Dispositivos IoT",
+    "noAdmin": "Você não tem permissão para acessar esta seção"
   },
   "editModal": {
     "dateFormatTitle": "Formato de data",
@@ -638,7 +691,9 @@
     "name_short": "Le nom est trop court",
     "required_company_code": "Le code de l'entreprise est obligatoire",
     "invalid_company_code": "Le code de l'entreprise doit respecter le format ABC-1234",
-    "uppercase_required": "Deve conter pelo menos uma letra maiúscula"
+    "uppercase_required": "Deve conter pelo menos uma letra maiúscula",
+    "uppercaseRequired:_password": "Deve conter pelo menos uma letra maiúscula.",
+    "password_min_8": "A senha deve ter pelo menos 8 caracteres"
   },
   "notifications": {
     "title": "Notificações",
@@ -673,7 +728,57 @@
     "tempIdeal": "Temp ideal: 18–24 °C",
     "humidityIdeal": "Umidade ideal: 40–60 %",
     "co2Ideal": "CO₂ ideal: < 1000 ppm",
-    "noiseIdeal": "Ruído ideal: < 50 dB"
+    "noiseIdeal": "Ruído ideal: < 50 dB",
+    "stats": {
+      "total": "Total"
+    },
+    "health": {
+      "good": "Estado geral bom",
+      "attention": "Atenção recomendada",
+      "critical": "Intervenção necessária",
+      "monitored": "{{count}} ambientes monitorados",
+      "normal": "Normal",
+      "warning": "Aviso",
+      "alert": "Alerta"
+    },
+    "topVsAverage": {
+      "title": "vs. média geral",
+      "average": "Média"
+    },
+    "metrics": {
+      "temperature": "Temperatura",
+      "humidity": "Umidade",
+      "co2": "CO₂",
+      "noise": "Ruído"
+    },
+    "alerts": {
+      "title": "Alertas ativos",
+      "empty": "Sem alertas ativos — todos os ambientes estão bem",
+      "temp": "Temp",
+      "humidity": "Umidade",
+      "noise": "Ruído"
+    },
+    "ranking": {
+      "positions": "Posições {{start}} – {{end}}",
+      "empty": "Não há ambientes com este status",
+      "days": "{{count}} dias"
+    },
+    "favorites": {
+      "add": "Adicionar favorito",
+      "remove": "Remover favorito"
+    },
+    "legend": {
+      "title": "💡 Como a pontuação é calculada",
+      "temp": "Temp ideal: 18–24 °C",
+      "humidity": "Umidade ideal: 40–60 %",
+      "co2": "CO₂ ideal: < 1000 ppm",
+      "noise": "Ruído ideal: < 50 dB"
+    },
+    "locations": {
+      "roomA": "Sala A",
+      "roomB": "Sala B",
+      "roomC": "Sala C"
+    }
   },
   "filters": {
     "all": "Todos",
@@ -912,10 +1017,42 @@
       "alert": "Alerta"
     },
     "chart": {
-      "weekdays": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-      "months": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago"],
-      "weeks": ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Atual"],
-      "hours": ["00h", "03h", "06h", "09h", "12h", "15h", "18h", "21h"],
+      "weekdays": [
+        "Seg",
+        "Ter",
+        "Qua",
+        "Qui",
+        "Sex",
+        "Sáb",
+        "Dom"
+      ],
+      "months": [
+        "Jan",
+        "Fev",
+        "Mar",
+        "Abr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Ago"
+      ],
+      "weeks": [
+        "Sem 1",
+        "Sem 2",
+        "Sem 3",
+        "Sem 4",
+        "Atual"
+      ],
+      "hours": [
+        "00h",
+        "03h",
+        "06h",
+        "09h",
+        "12h",
+        "15h",
+        "18h",
+        "21h"
+      ],
       "comfortThreshold": "limite de conforto",
       "recommendedAverage": "Média recomendada: ",
       "referenceRange": "Faixa de referência",
@@ -937,7 +1074,8 @@
       "consolidatedView": "Visão consolidada",
       "floor": "Andar",
       "lastReading": "Última leitura",
-      "refreshData": "Atualizar dados"
+      "refreshData": "Atualizar dados",
+      "noEnvironment": "Nenhum ambiente selecionado"
     },
     "quickReading": {
       "title": "LEITURA RÁPIDA",
@@ -970,6 +1108,160 @@
       "selectMetric": "Selecionar métrica",
       "periodIndicators": "Indicadores do período",
       "refreshData": "Atualizar dados"
+    },
+    "heroLine1": "A qualidade ambiental",
+    "contextLabel": "CONTEXTO",
+    "updatedNow": "atualizado agora",
+    "updatedAgo": "há 3 min"
+  },
+  "sensors": {
+    "title": "Sensores e variáveis",
+    "subtitle": "Registre e configure os sensores de cada ambiente.",
+    "summaryTotal": "Total de sensores",
+    "summaryActive": "Ativos",
+    "summaryWarning": "Com aviso",
+    "summaryOffline": "Sem conexão",
+    "searchPlaceholder": "Buscar ID, ambiente ou variável…",
+    "filterAllVariables": "Todas as variáveis",
+    "filterAllStatuses": "Todos os estados",
+    "statusActive": "Ativo",
+    "statusWarning": "Verificar",
+    "statusOffline": "Sem conexão",
+    "colSensor": "Sensor",
+    "colVariable": "Variável",
+    "colEnvironment": "Ambiente",
+    "colReading": "Leitura atual",
+    "colRange": "Faixa configurada",
+    "colStatus": "Estado",
+    "addTitle": "Adicionar sensor",
+    "newDevice": "Novo dispositivo",
+    "idLabel": "ID do sensor",
+    "idPlaceholder": "Ex. EA-2091-H",
+    "envLabel": "Ambiente",
+    "variableLabel": "Variável",
+    "saveSensor": "Salvar sensor",
+    "saveChanges": "Salvar alterações",
+    "cancelBtn": "Cancelar",
+    "editTitle": "Configuração do sensor",
+    "editSubtitle": "Modifique as faixas que você usará para gerar avisos.",
+    "minLabel": "Mínimo",
+    "maxLabel": "Máximo",
+    "toggleOn": "Ativar sensor",
+    "toggleOff": "Desativar sensor",
+    "edit": "Editar sensor",
+    "empty": "Nenhum sensor corresponde aos filtros.",
+    "monitored": "Variáveis monitoradas",
+    "monitoredHint": "O que cada sensor mede",
+    "unitRange": "{{unit}} · faixa de referência editável",
+    "noEnvironment": "Sem atribuição",
+    "requiredId": "O ID do sensor é obrigatório",
+    "requiredEnvironment": "Selecione um ambiente",
+    "added": "Sensor adicionado",
+    "updated": "Sensor atualizado",
+    "toggleDone": "Estado do sensor atualizado",
+    "varTemperature": "Temperatura",
+    "varHumidity": "Umidade relativa",
+    "varCo2": "CO₂",
+    "varNoise": "Ruído",
+    "unitTemperature": "°C",
+    "unitHumidity": "%",
+    "unitCo2": "ppm",
+    "unitNoise": "dB",
+    "eyebrow": "Gestão técnica",
+    "synced": "Sincronizado {{time}}",
+    "syncNow": "Sincronizado agora"
+  },
+  "devices": {
+    "title": "Dispositivos IoT",
+    "subtitle": "Registre os dispositivos que monitoram cada ambiente e conecte-os à rede.",
+    "summaryTotal": "Total",
+    "summaryConnected": "Conectados",
+    "summaryPending": "Pendentes",
+    "summaryOffline": "Sem conexão",
+    "searchPlaceholder": "Buscar por MAC, nome ou rede…",
+    "status": {
+      "connected": "Conectado",
+      "pending": "Pendente",
+      "offline": "Sem conexão",
+      "error": "Erro"
+    },
+    "retry": "Tentar novamente",
+    "empty": "Nenhum dispositivo registrado",
+    "emptyFiltered": "Nenhum dispositivo corresponde aos filtros",
+    "addBtn": "Adicionar",
+    "addTitle": "Adicionar dispositivo",
+    "macLabel": "Endereço MAC",
+    "macPlaceholder": "Ex. AA:BB:CC:DD:EE:FF",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Nome do dispositivo",
+    "typeLabel": "Tipo",
+    "saveBtn": "Salvar",
+    "deleteTitle": "Excluir dispositivo",
+    "deleteMsg": "Excluir o dispositivo {{mac}}?",
+    "added": "Dispositivo adicionado",
+    "deleted": "Dispositivo excluído",
+    "noName": "Sem nome",
+    "noSsid": "Sem rede Wi-Fi",
+    "provisionBtn": "Provisionar",
+    "newDeviceName": "Dispositivo {{mac}}",
+    "errors": {
+      "location": "Ative os serviços de localização para escanear Bluetooth",
+      "unauthorized": "Permissão de Bluetooth negada",
+      "poweredOff": "Ligue o Bluetooth para continuar",
+      "notFound": "Nenhum ESP32_Config próximo",
+      "permission": "Permissão de Bluetooth ou localização negada",
+      "generic": "Erro inesperado durante a conexão BLE",
+      "notConnected": "Conecte-se primeiro ao dispositivo",
+      "wifiFail": "O ESP32 não conseguiu entrar na rede Wi-Fi",
+      "badPayload": "O dispositivo rejeitou os dados recebidos",
+      "timeout": "O dispositivo não respondeu a tempo",
+      "mac": "O endereço MAC é obrigatório"
+    }
+  },
+  "provisioning": {
+    "title": "Provisionamento Wi-Fi",
+    "subtitle": "Conecte o ESP32 à rede do prédio usando Bluetooth LE. A senha vai para o dispositivo e nunca fica armazenada no servidor.",
+    "deviceLabel": "Dispositivo",
+    "scanBtn": "1. Escanear e conectar",
+    "ssidLabel": "Nome da rede (SSID)",
+    "ssidPlaceholder": "Ex. Campus-2.4G",
+    "passwordLabel": "Senha Wi-Fi",
+    "passwordPlaceholder": "********",
+    "sendBtn": "2. Enviar credenciais",
+    "hint": "Rede de 2,4 GHz: o ESP32 padrão não suporta 5 GHz.",
+    "status": {
+      "idle": "Pronto para iniciar",
+      "scanning": "Procurando ESP32_Config…",
+      "connecting": "Estabelecendo link BLE…",
+      "ready": "Link BLE pronto. Envie as credenciais.",
+      "sending": "Enviando credenciais…",
+      "waiting": "Aguardando o ESP32 (até 45 s)…",
+      "success": "Conectado e configurado",
+      "error": "Erro durante o processo"
+    },
+    "successTitle": "ESP32 conectado à rede",
+    "successBody": "As credenciais foram salvas na memória do dispositivo (NVS).",
+    "registerBtn": "Salvar no servidor",
+    "backToDevices": "Voltar aos dispositivos",
+    "logTitle": "Registro técnico",
+    "logEmpty": "Nenhuma atividade ainda.",
+    "clear": "Limpar",
+    "toasts": {
+      "connected": "O ESP32 entrou na rede Wi-Fi",
+      "saved": "Dispositivo atualizado no servidor"
+    },
+    "log": {
+      "permissions": "Solicitando permissões de Bluetooth…",
+      "scanning": "Escaneando por SERVICE_UUID…",
+      "connecting": "ESP32_Config encontrado, conectando…",
+      "ready": "Link estabelecido e características descobertas",
+      "sending": "Gravando {ssid, pass} em Base64…",
+      "waiting": "Aguardando notificação de status do ESP32…",
+      "connected": "O dispositivo respondeu STATUS:CONNECTED",
+      "fail": "O dispositivo respondeu STATUS:FAIL",
+      "errJson": "O dispositivo respondeu STATUS:ERR_JSON",
+      "error": "Processo interrompido com erros",
+      "status": "Notificação do dispositivo"
     }
   }
 }

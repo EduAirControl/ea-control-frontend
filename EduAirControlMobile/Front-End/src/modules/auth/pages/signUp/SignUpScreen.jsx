@@ -268,6 +268,17 @@ export default function SignUpScreen() {
             <Button variant="outline" onPress={() => setShowTerms(false)} style={styles.termsBtn}>
               {t('common.close')}
             </Button>
+            <Button
+              onPress={() => {
+                setShowTerms(false)
+                navigation.navigate('Terms')
+              }}
+              style={styles.termsBtn}
+              icon={<Ionicons name="document-text-outline" size={16} color="#fff" />}
+              iconPosition="left"
+            >
+              {t('signup.viewFullTerms')}
+            </Button>
           </Modal>
         </ScrollView>
       </KeyboardAvoidingView>

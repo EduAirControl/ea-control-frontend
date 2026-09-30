@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Ionicons } from '@expo/vector-icons'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext'
+import authService from '../modules/auth/services/authService'
 
 import DashboardScreen from '../modules/dashboard/pages/dashboard/DashboardScreen'
 import FavoritesScreen from '../modules/favorites/pages/favorites/FavoritesScreen'
@@ -13,6 +14,8 @@ import SettingsScreen from '../modules/settings/pages/settings/SettingsScreen'
 import AllEnvironmentsScreen from '../modules/environment/pages/allEnvironments/AllEnvironmentsScreen'
 import EnvironmentDetailScreen from '../modules/environment/pages/environmentDetail/EnvironmentDetailScreen'
 import EnvironmentManagementScreen from '../modules/environment/pages/environmentManagement/EnvironmentManagementScreen'
+import DevicesScreen from '../modules/iot/pages/devices/DevicesScreen'
+import ProvisioningScreen from '../modules/iot/pages/provisioning/ProvisioningScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -42,6 +45,8 @@ function ManagementStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ManagementHome" component={EnvironmentManagementScreen} />
       <Stack.Screen name="EnvironmentDetail" component={EnvironmentDetailScreen} />
+      <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="Provisioning" component={ProvisioningScreen} />
     </Stack.Navigator>
   )
 }
@@ -68,6 +73,7 @@ function ProfileStack() {
 export default function AppNavigator() {
   const { currentColors } = useTheme()
   const { t } = useTranslation()
+  const isAdmin = authService.isAdmin()
 
   return (
     <Tab.Navigator
@@ -104,18 +110,20 @@ export default function AppNavigator() {
       <Tab.Screen
         name="Dashboard"
         component={DashboardStack}
-        options={{ tabBarLabel: t('nav.environments') }}
+        options={{ tabBarLabel: t('nav.dashboard') }}
       />
       <Tab.Screen
         name="Favorites"
         component={FavoritesStack}
         options={{ tabBarLabel: t('nav.favorites') }}
       />
-      <Tab.Screen
-        name="Management"
-        component={ManagementStack}
-        options={{ tabBarLabel: t('nav.management') }}
-      />
+      {isAdmin && (
+        <Tab.Screen
+          name="Management"
+          component={ManagementStack}
+          options={{ tabBarLabel: t('nav.management') }}
+        />
+      )}
       <Tab.Screen
         name="Environments"
         component={EnvironmentsStack}

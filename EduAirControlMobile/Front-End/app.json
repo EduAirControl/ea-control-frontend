@@ -32,7 +32,14 @@
     "plugins": [
       "expo-asset",
       "expo-font",
-      "expo-image-picker"
+      "expo-image-picker",
+      [
+        "react-native-ble-plx",
+        {
+          "neverForLocation": true,
+          "bluetoothAlwaysPermission": "Esta aplicación requiere Bluetooth para aprovisionar las credenciales Wi-Fi del dispositivo ESP32."
+        }
+      ]
     ]
   }
 }

@@ -47,7 +47,24 @@ const authService = {
   },
 
   isAuthenticated() {
-    return !!storage.getItem('token')
+    const token = storage.getItem('token')
+    if (!token) return false
+    const claims = decodeJWT(token)
+    if (!claims) {
+      this.logout()
+      return false
+    }
+    if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
+      this.logout()
+      return false
+    }
+    return true
+  },
+
+  isAdmin() {
+    if (!this.isAuthenticated()) return false
+    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || ''
+    return String(role).toUpperCase() === 'ADMIN'
   },
 }
 

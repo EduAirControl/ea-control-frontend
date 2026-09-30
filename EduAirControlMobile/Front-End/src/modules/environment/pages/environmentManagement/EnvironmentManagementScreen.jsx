@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -6,19 +6,27 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  StyleSheet,
   TextInput,
+  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { useManagementVM } from '../../viewmodels/useManagementVM.js'
 import { getEnvironmentStatus } from '../../utils/getEnvironmentStatus.js'
+import authService from '../../../auth/services/authService.js'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import Modal from '../../../../shared/components/Modal/Modal.jsx'
 import Input from '../../../../shared/components/Input/Input.jsx'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
+import SensorVariablePanel from './SensorVariablePanel.jsx'
 import { styles } from './EnvironmentManagementScreen.styles'
+
+const TABS = [
+  { id: 'environments', key: 'management.tabEnvironments', icon: 'business-outline' },
+  { id: 'sensors', key: 'management.tabSensors', icon: 'hardware-chip-outline' },
+  { id: 'devices', key: 'management.tabDevices', icon: 'wifi-outline' },
+]
 
 function SummaryCard({ label, value, emoji, accent, active, onPress, currentColors }) {
   return (
@@ -106,6 +114,70 @@ function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
   )
 }
 
+function FilterBar({ vm, currentColors, t }) {
+  const sorts = [
+    { id: 'name', label: t('management.sortName') },
+    { id: 'capacity', label: t('management.sortCapacity') },
+    { id: 'status', label: t('management.sortStatus') },
+  ]
+
+  return (
+    <View style={[styles.filterBar, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+      <Text style={[styles.filterBarLabel, { color: currentColors.textMuted }]}>{t('filters.sortLabel')}</Text>
+      <View style={styles.sortRow}>
+        {sorts.map((sort) => {
+          const active = vm.sortBy === sort.id
+          return (
+            <TouchableOpacity
+              key={sort.id}
+              style={[
+                styles.sortChip,
+                { borderColor: currentColors.borderColor, backgroundColor: currentColors.bgCard },
+                active && { borderColor: currentColors.accent, backgroundColor: currentColors.accentDim },
+              ]}
+              onPress={() => vm.setSortBy(sort.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 11.5, fontWeight: '700', color: active ? currentColors.accent : currentColors.textSecondary }}>
+                {sort.label}
+              </Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+
+      <View style={styles.capacityRow}>
+        <Text style={[styles.filterBarLabel, { color: currentColors.textMuted }]}>{t('management.capacity')}</Text>
+        <View style={[styles.capacityInput, { borderColor: currentColors.borderColor, backgroundColor: currentColors.bgInput }]}>
+          <Text style={[styles.capacityPrefix, { color: currentColors.textMuted }]}>{t('management.min')}</Text>
+          <TextInput
+            style={[styles.capacityTextInput, { color: currentColors.textPrimary }]}
+            keyboardType="numeric"
+            value={vm.minCapacity}
+            onChangeText={vm.setMinCapacity}
+            placeholder="0"
+            placeholderTextColor={currentColors.textMuted}
+          />
+        </View>
+        <View style={[styles.capacityInput, { borderColor: currentColors.borderColor, backgroundColor: currentColors.bgInput }]}>
+          <Text style={[styles.capacityPrefix, { color: currentColors.textMuted }]}>{t('management.max')}</Text>
+          <TextInput
+            style={[styles.capacityTextInput, { color: currentColors.textPrimary }]}
+            keyboardType="numeric"
+            value={vm.maxCapacity}
+            onChangeText={vm.setMaxCapacity}
+            placeholder="—"
+            placeholderTextColor={currentColors.textMuted}
+          />
+        </View>
+        <TouchableOpacity onPress={() => { vm.setMinCapacity(''); vm.setMaxCapacity(''); vm.setSortBy('name') }}>
+          <Text style={[styles.clearTxt, { color: currentColors.accent }]}>{t('filters.clear')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+}
+
 const EMPTY_FORM = { name: '', capacity: '', location: '' }
 
 export default function EnvironmentManagementScreen({ navigation }) {
@@ -116,6 +188,17 @@ export default function EnvironmentManagementScreen({ navigation }) {
 
   const [form, setForm] = useState(EMPTY_FORM)
   const [isEdit, setIsEdit] = useState(false)
+  const [tab, setTab] = useState('environments')
+
+  useEffect(() => {
+    if (!authService.isAdmin()) {
+      Alert.alert(
+        t('management.title'),
+        t('management.noAdmin', 'No tienes permisos para acceder a esta sección'),
+      )
+      navigation.replace('DashboardHome')
+    }
+  }, [navigation, t])
 
   const openAdd = () => {
     setIsEdit(false)
@@ -150,6 +233,8 @@ export default function EnvironmentManagementScreen({ navigation }) {
     toast.success(t('management.deleted', 'Ambiente eliminado'))
   }
 
+  const hasFilters = Boolean(vm.search) || vm.activeFilter !== 'all' || Boolean(vm.minCapacity) || Boolean(vm.maxCapacity)
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: currentColors.bgBody }]}>
       <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={currentColors.bgBody} />
@@ -159,86 +244,147 @@ export default function EnvironmentManagementScreen({ navigation }) {
           <Ionicons name="grid-outline" size={20} color={currentColors.accent} />
           <Text style={[styles.headerTitle, { color: currentColors.textPrimary }]}>{t('management.title')}</Text>
         </View>
-        <TouchableOpacity style={[styles.addBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd} activeOpacity={0.85}>
-          <Ionicons name="add" size={18} color="#fff" />
-          <Text style={[styles.addBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
-        </TouchableOpacity>
+        {tab === 'environments' && (
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd} activeOpacity={0.85}>
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={[styles.addBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={styles.summaryRow}>
-          <SummaryCard
-            label={t('filterBar.all')} value={vm.stats.total} emoji="🏫"
-            accent={currentColors.accent} active={vm.activeFilter === 'all'} onPress={() => vm.setActiveFilter('all')} currentColors={currentColors}
-          />
-          <SummaryCard
-            label={t('status.normal')} value={vm.stats.normals} emoji="✅"
-            accent="#4CAF50" active={vm.activeFilter === 'normal'} onPress={() => vm.setActiveFilter('normal')} currentColors={currentColors}
-          />
-          <SummaryCard
-            label={t('status.warning')} value={vm.stats.warnings} emoji="🔔"
-            accent="#FFC107" active={vm.activeFilter === 'warning'} onPress={() => vm.setActiveFilter('warning')} currentColors={currentColors}
-          />
-          <SummaryCard
-            label={t('status.alert')} value={vm.stats.alerts} emoji="⚠️"
-            accent="#F44336" active={vm.activeFilter === 'alert'} onPress={() => vm.setActiveFilter('alert')} currentColors={currentColors}
-          />
-        </View>
-
-        <View style={[styles.searchBar, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
-          <Ionicons name="search-outline" size={16} color={currentColors.textMuted} />
-          <TextInput
-            style={[styles.searchInput, { color: currentColors.textPrimary }]}
-            placeholder={t('filters.searchEnvironment')}
-            placeholderTextColor={currentColors.textMuted}
-            value={vm.search}
-            onChangeText={vm.setSearch}
-          />
-          {vm.search.length > 0 && (
-            <TouchableOpacity onPress={() => vm.setSearch('')}>
-              <Ionicons name="close-circle" size={16} color={currentColors.textMuted} />
+      <View style={[styles.tabBar, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+        {TABS.map((item) => {
+          const active = tab === item.id
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.tabBtn, active && { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}
+              onPress={() => {
+                if (item.id === 'devices') {
+                  navigation.navigate('Devices')
+                  return
+                }
+                setTab(item.id)
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name={item.icon} size={15} color={active ? currentColors.accent : currentColors.textMuted} />
+              <Text
+                style={[styles.tabTxt, { color: active ? currentColors.accent : currentColors.textMuted }]}
+                numberOfLines={1}
+              >
+                {t(item.key)}
+              </Text>
             </TouchableOpacity>
-          )}
-        </View>
+          )
+        })}
+      </View>
 
-        <View style={styles.resultsInfo}>
-          <Text style={[styles.resultsCount, { color: currentColors.textMuted }]}>
-            {t('allEnvironments.showing', 'Mostrando {{shown}} de {{total}}', { shown: vm.filtered.length, total: vm.stats.total })}
-          </Text>
-          {(vm.search || vm.activeFilter !== 'all') && (
-            <TouchableOpacity onPress={() => { vm.setSearch(''); vm.setActiveFilter('all') }}>
-              <Text style={[styles.clearTxt, { color: currentColors.accent }]}>{t('filters.clear', 'Limpiar filtros')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+      {tab === 'sensors' ? (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <SensorVariablePanel />
+        </ScrollView>
+      ) : (
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View style={styles.summaryRow}>
+            <SummaryCard
+              label={t('filterBar.all')} value={vm.stats.total} emoji="🏫"
+              accent={currentColors.accent} active={vm.activeFilter === 'all'} onPress={() => vm.setActiveFilter('all')} currentColors={currentColors}
+            />
+            <SummaryCard
+              label={t('status.normal')} value={vm.stats.normals} emoji="✅"
+              accent="#4CAF50" active={vm.activeFilter === 'normal'} onPress={() => vm.setActiveFilter('normal')} currentColors={currentColors}
+            />
+            <SummaryCard
+              label={t('status.warning')} value={vm.stats.warnings} emoji="🔔"
+              accent="#FFC107" active={vm.activeFilter === 'warning'} onPress={() => vm.setActiveFilter('warning')} currentColors={currentColors}
+            />
+            <SummaryCard
+              label={t('status.alert')} value={vm.stats.alerts} emoji="⚠️"
+              accent="#F44336" active={vm.activeFilter === 'alert'} onPress={() => vm.setActiveFilter('alert')} currentColors={currentColors}
+            />
+          </View>
 
-        {vm.filtered.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🏫</Text>
-            <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>{t('management.empty')}</Text>
-            {vm.filtered.length === 0 && !vm.search && vm.activeFilter === 'all' ? (
-              <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd}>
-                <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]} onPress={() => { vm.setSearch(''); vm.setActiveFilter('all') }}>
-                <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('filters.clear', 'Limpiar filtros')}</Text>
+          <View style={[styles.searchBar, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="search-outline" size={16} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.searchInput, { color: currentColors.textPrimary }]}
+              placeholder={t('filters.searchEnvironment')}
+              placeholderTextColor={currentColors.textMuted}
+              value={vm.search}
+              onChangeText={vm.setSearch}
+            />
+            {vm.search.length > 0 && (
+              <TouchableOpacity onPress={() => vm.setSearch('')}>
+                <Ionicons name="close-circle" size={16} color={currentColors.textMuted} />
               </TouchableOpacity>
             )}
           </View>
-        ) : vm.filtered.map((env) => (
-          <EnvironmentCard
-            key={env.id}
-            environment={env}
-            currentColors={currentColors}
-            onEdit={openEdit}
-            onDelete={vm.openDelete}
-            t={t}
-          />
-        ))}
 
-        <View style={{ height: 24 }} />
-      </ScrollView>
+          <FilterBar vm={vm} currentColors={currentColors} t={t} />
+
+          <View style={styles.resultsInfo}>
+            <Text style={[styles.resultsCount, { color: currentColors.textMuted }]}>
+              {t('management.resultsCount')} {vm.filtered.length} {t('management.resultsOf')} {vm.stats.total}{' '}
+              {t('management.resultsEnvironments')}
+            </Text>
+            {hasFilters && (
+              <TouchableOpacity
+                onPress={() => {
+                  vm.setSearch('')
+                  vm.setActiveFilter('all')
+                  vm.setMinCapacity('')
+                  vm.setMaxCapacity('')
+                  vm.setSortBy('name')
+                }}
+              >
+                <Text style={[styles.clearTxt, { color: currentColors.accent }]}>{t('filters.clear')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {vm.filtered.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>🏫</Text>
+              <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>
+                {vm.stats.total === 0 ? t('management.noResults') : t('management.noResultsSearch')}
+              </Text>
+              <Text style={[styles.emptySub, { color: currentColors.textMuted }]}>
+                {vm.stats.total === 0 ? t('management.noResultsSub') : t('management.noResultsSearchSub')}
+              </Text>
+              {vm.stats.total === 0 ? (
+                <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd}>
+                  <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]}
+                  onPress={() => {
+                    vm.setSearch('')
+                    vm.setActiveFilter('all')
+                    vm.setMinCapacity('')
+                    vm.setMaxCapacity('')
+                    vm.setSortBy('name')
+                  }}
+                >
+                  <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('management.clearSearch')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : vm.filtered.map((env) => (
+            <EnvironmentCard
+              key={env.id}
+              environment={env}
+              currentColors={currentColors}
+              onEdit={openEdit}
+              onDelete={vm.openDelete}
+              t={t}
+            />
+          ))}
+
+          <View style={{ height: 24 }} />
+        </ScrollView>
+      )}
 
       <Modal
         isOpen={vm.showAdd || Boolean(vm.editEnv)}
@@ -295,4 +441,3 @@ export default function EnvironmentManagementScreen({ navigation }) {
     </SafeAreaView>
   )
 }
-
