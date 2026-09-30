@@ -271,7 +271,6 @@ export default function EnvironmentManagementScreen({ navigation }) {
               <Ionicons name={item.icon} size={15} color={active ? currentColors.accent : currentColors.textMuted} />
               <Text
                 style={[styles.tabTxt, { color: active ? currentColors.accent : currentColors.textMuted }]}
-                numberOfLines={1}
               >
                 {t(item.key)}
               </Text>
