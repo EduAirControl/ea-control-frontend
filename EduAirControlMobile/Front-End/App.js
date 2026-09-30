@@ -11,6 +11,7 @@ import ForgotPasswordScreen from './src/modules/auth/pages/forgotPassword/Forgot
 import VerifyCodeScreen from './src/modules/auth/pages/verifyCode/VerifyCodeScreen';
 import ChangePasswordScreen from './src/modules/auth/pages/changePassword/ChangePasswordScreen';
 import TermsScreen from './src/modules/auth/pages/terms/TermsScreen';
+import GuideScreen from './src/modules/landing/pages/GuideScreen.jsx';
 
 // App navigator (bottom tabs + stacks)
 import AppNavigator from './src/navigation/AppNavigator'
@@ -54,6 +55,7 @@ export default function App() {
                 <Stack.Screen name="VerifyCode" component={VerifyCodeScreen} />
                 <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
                 <Stack.Screen name="Terms" component={TermsScreen} />
+                <Stack.Screen name="Guide" component={GuideScreen} />
 
                 {/* App (bottom tabs) */}
                 <Stack.Screen name="App" component={AppNavigator} />

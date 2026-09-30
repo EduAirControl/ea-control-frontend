@@ -359,13 +359,23 @@ export default function SettingsScreen({ navigation }) {
         <SectionCard icon="help-circle-outline" title={t('settings.help')} currentColors={currentColors}>
           <Text style={[styles.cardDesc, { color: currentColors.textMuted }]}>{t('settings.helpDescription')}</Text>
           {[
+            { type: 'guide', icon: 'compass-outline', label: t('settings.helpGuide', 'Guía de producto') },
             { type: 'faq', icon: 'help-circle-outline', label: t('settings.helpFaq') },
             { type: 'contact', icon: 'mail-outline', label: t('settings.helpContact') },
             { type: 'terms', icon: 'document-text-outline', label: t('settings.helpTerms') },
             { type: 'privacy', icon: 'lock-closed-outline', label: t('settings.helpPrivacy') },
             { type: 'version', icon: 'information-circle-outline', label: t('settings.helpVersion') },
           ].map((item) => (
-            <Row key={item.type} icon={item.icon} label={item.label} currentColors={currentColors} onPress={() => setShowHelpModal({ open: true, type: item.type })} />
+            <Row
+              key={item.type}
+              icon={item.icon}
+              label={item.label}
+              currentColors={currentColors}
+              onPress={() => {
+                if (item.type === 'guide') navigation.navigate('Guide')
+                else setShowHelpModal({ open: true, type: item.type })
+              }}
+            />
           ))}
         </SectionCard>
 
