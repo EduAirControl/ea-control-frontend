@@ -101,65 +101,78 @@ export default function DashboardScreen({ navigation }) {
           </View>
         ))}
       </View>
-    )
-  }
-
-  const barData = vm.comparisonData.map((item) => ({
-    value: item.value,
-    label: item.name,
-    frontColor: ENVIRONMENT_COLORS[item.color % ENVIRONMENT_COLORS.length],
-    onPress: () => navigation.navigate('EnvironmentDetail', { envId: item.id }),
-  }))
-
-  const barWidth = Math.min(
-    40,
-    Math.max(12, (chartWidth - 46) / Math.max(barData.length, 1) * 0.55)
+    </TouchableOpacity>
   )
+}
 
-  const donutData = [
-    { value: vm.statusCounts.normal, color: STATUS_COLORS.normal },
-    { value: vm.statusCounts.warning, color: STATUS_COLORS.warning },
-    { value: vm.statusCounts.alert, color: STATUS_COLORS.alert },
-  ].filter((item) => item.value > 0)
 
-  const statusOf = (statusKey) => normalizeStatus(statusKey)
+function RankRow({ env, rank, score, onPress, onToggleFav, currentColors, t }) {
+  const status = getEnvironmentStatus(env.statusKey, t)
+  const temp = env.temp ?? env.temperature ?? 0
+  const pills = [
+    { label: `${temp}°`, warn: temp < 18 || temp > 24 },
+    { label: `${env.humidity ?? 0}%`, warn: (env.humidity ?? 0) < 40 || (env.humidity ?? 0) > 60 },
+    { label: `${env.co2 ?? 0}ppm`, warn: (env.co2 ?? 0) > 1000 },
+    { label: `${env.noise ?? 0}dB`, warn: (env.noise ?? 0) > 50 },
+  ]
+  const warn = pills.filter((p) => p.warn)
+  const visible = warn.length ? warn.slice(0, 2) : pills.slice(0, 2)
 
-  const environmentRow = (environment, index) => {
-    const status = statusOf(environment.statusKey)
-    const color = ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]
-    const isSelected = String(vm.environmentId) === String(environment.id)
-    return (
-      <TouchableOpacity
-        key={environment.id}
-        style={[
-          styles.envRow,
-          { backgroundColor: currentColors.bgCard, borderColor: isSelected ? currentColors.accent : currentColors.borderColor },
-        ]}
-        onPress={() => vm.setEnvironmentId(String(environment.id))}
-        activeOpacity={0.8}
-      >
-        <View style={[styles.envIcon, { backgroundColor: `${color}24` }]}>
-          <Text style={[styles.envIconTxt, { color }]}>{index + 1}</Text>
-        </View>
-        <View style={styles.envInfo}>
-          <Text style={[styles.envName, { color: currentColors.textPrimary }]} numberOfLines={1}>
-            {environment.name}
-          </Text>
-          <Text style={[styles.envMeta, { color: currentColors.textMuted }]} numberOfLines={1}>
-            {environment.building} · {t('dashboardAnalysis.context.floor')} {environment.floor}
-          </Text>
-        </View>
-        <View style={[styles.envStatus, { backgroundColor: status.color }]} />
-        <TouchableOpacity
-          style={styles.envGo}
-          onPress={() => navigation.navigate('EnvironmentDetail', { envId: environment.id })}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-forward" size={16} color={currentColors.textMuted} />
-        </TouchableOpacity>
+  return (
+    <TouchableOpacity
+      style={[rrStyles.row, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}
+      onPress={() => onPress(env.id)}
+      activeOpacity={0.85}
+    >
+      <Text style={[rrStyles.rank, { color: currentColors.textMuted }]}>#{rank}</Text>
+      <Ionicons
+        name={
+          env.statusKey === 'dashboard.statusAlert' ? 'alert-circle'
+            : env.statusKey === 'dashboard.statusWarning' ? 'warning'
+              : 'checkmark-circle'
+        }
+        size={18}
+        color={status.color}
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={[rrStyles.name, { color: currentColors.textPrimary }]} numberOfLines={1}>{env.name}</Text>
+        {env.location ? <Text style={[rrStyles.loc, { color: currentColors.textMuted }]}>{env.location}</Text> : null}
+      </View>
+      <View style={rrStyles.pills}>
+        {visible.map((p, i) => (
+          <View key={i} style={[rrStyles.pill, { backgroundColor: p.warn ? '#FFC10720' : currentColors.bgCard, borderColor: p.warn ? '#FFC107' : currentColors.borderColor }]}>
+            <Text style={[rrStyles.pillTxt, { color: p.warn ? '#FFC107' : currentColors.textMuted }]}>{p.label}</Text>
+          </View>
+        ))}
+      </View>
+      <ScoreRing score={score} size={42} />
+      <TouchableOpacity onPress={() => onToggleFav(env.id, !env.isFavorite)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} style={{ marginLeft: 6 }}>
+        <Ionicons
+          name={env.isFavorite ? 'heart' : 'heart-outline'}
+          size={50}
+          color={env.isFavorite ? '#ff6b6b' : currentColors.textMuted}
+          accessibilityLabel={env.isFavorite ? t('leaderboard.removeFavorite') : t('leaderboard.addFavorite')}
+        />
       </TouchableOpacity>
-    )
-  }
+    </TouchableOpacity>
+  )
+}
+
+
+export default function DashboardScreen({ navigation }) {
+  const { darkMode, currentColors } = useTheme()
+  const { t } = useTranslation()
+  const vm = useDashboardVM()
+
+  const PODIUM_ORDER = [2, 1, 3]
+  const FILTERS = [
+    { key: 'all', label: t('leaderboard.filters.all') },
+    { key: 'normal', label: t('leaderboard.filters.normal') },
+    { key: 'warning', label: t('leaderboard.filters.warning') },
+    { key: 'alert', label: t('leaderboard.filters.alert') },
+  ]
+
+  const handlePress = (id) => navigation.navigate('EnvironmentDetail', { envId: id })
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: currentColors.bgBody }]}>
