@@ -36,6 +36,8 @@ export const rrStyles = StyleSheet.create({
   rank: { fontSize: 13, fontWeight: '700', width: 28 },
   name: { fontSize: 14, fontWeight: '600' },
   loc: { fontSize: 11, marginTop: 1 },
+  metricScroller: { flexDirection: 'row', alignItems: 'center', gap: 2, width: 116, flexShrink: 1 },
+  metricsScroll: { flex: 1, minWidth: 0 },
   pills: { flexDirection: 'row', gap: 4 },
   pill: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3 },
   pillTxt: { fontSize: 10, fontWeight: '600' },

@@ -86,13 +86,13 @@ function RankRow({ env, rank, score, onPress, onToggleFav, currentColors, t }) {
   const status = getEnvironmentStatus(env.statusKey, t)
   const temp = env.temp ?? env.temperature ?? 0
   const pills = [
-    { label: `${temp}°`, warn: temp < 18 || temp > 24 },
-    { label: `${env.humidity ?? 0}%`, warn: (env.humidity ?? 0) < 40 || (env.humidity ?? 0) > 60 },
-    { label: `${env.co2 ?? 0}ppm`, warn: (env.co2 ?? 0) > 1000 },
-    { label: `${env.noise ?? 0}dB`, warn: (env.noise ?? 0) > 50 },
+    { key: 'temp', label: `${temp}°`, warn: temp < 18 || temp > 24 },
+    { key: 'humidity', label: `${env.humidity ?? 0}%`, warn: (env.humidity ?? 0) < 40 || (env.humidity ?? 0) > 60 },
+    { key: 'co2', label: `${env.co2 ?? 0}ppm`, warn: (env.co2 ?? 0) > 1000 },
+    { key: 'noise', label: `${env.noise ?? 0}dB`, warn: (env.noise ?? 0) > 50 },
   ]
   const warn = pills.filter((p) => p.warn)
-  const visible = warn.length ? warn.slice(0, 2) : pills.slice(0, 2)
+  const visible = warn.length ? [...warn, ...pills.filter((p) => !p.warn)] : pills
 
   return (
     <TouchableOpacity
@@ -114,12 +114,21 @@ function RankRow({ env, rank, score, onPress, onToggleFav, currentColors, t }) {
         <Text style={[rrStyles.name, { color: currentColors.textPrimary }]} numberOfLines={1}>{env.name}</Text>
         {env.location ? <Text style={[rrStyles.loc, { color: currentColors.textMuted }]}>{env.location}</Text> : null}
       </View>
-      <View style={rrStyles.pills}>
-        {visible.map((p, i) => (
-          <View key={i} style={[rrStyles.pill, { backgroundColor: p.warn ? '#FFC10720' : currentColors.bgCard, borderColor: p.warn ? '#FFC107' : currentColors.borderColor }]}>
-            <Text style={[rrStyles.pillTxt, { color: p.warn ? '#FFC107' : currentColors.textMuted }]}>{p.label}</Text>
-          </View>
-        ))}
+      <View style={rrStyles.metricScroller}>
+        <ScrollView
+          horizontal
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator={false}
+          style={rrStyles.metricsScroll}
+          contentContainerStyle={rrStyles.pills}
+        >
+          {visible.map((p) => (
+            <View key={p.key} style={[rrStyles.pill, { backgroundColor: p.warn ? '#FFC10720' : currentColors.bgCard, borderColor: p.warn ? '#FFC107' : currentColors.borderColor }]}>
+              <Text style={[rrStyles.pillTxt, { color: p.warn ? '#FFC107' : currentColors.textMuted }]}>{p.label}</Text>
+            </View>
+          ))}
+        </ScrollView>
+        <Ionicons name="chevron-forward" size={15} color={currentColors.textMuted} />
       </View>
       <ScoreRing score={score} size={42} />
       <TouchableOpacity onPress={() => onToggleFav(env.id, !env.isFavorite)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} style={{ marginLeft: 6 }}>
