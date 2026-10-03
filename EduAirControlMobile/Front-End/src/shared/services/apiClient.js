@@ -1,4 +1,4 @@
-import { API_BASE, DB_BASE } from '../config'
+import { API_BASE } from '../config'
 import storage from '../storage/storage'
 import i18n from '../i18n/i18n'
 
@@ -63,14 +63,6 @@ const apiClient = {
   put: (endpoint, body) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
   patch: (endpoint, body) => request(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (endpoint) => request(endpoint, { method: 'DELETE' }),
-}
-
-export const dbClient = {
-  get: (endpoint) => request(endpoint, {}, DB_BASE),
-  post: (endpoint, body) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }, DB_BASE),
-  put: (endpoint, body) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }, DB_BASE),
-  patch: (endpoint, body) => request(endpoint, { method: 'PATCH', body: JSON.stringify(body) }, DB_BASE),
-  delete: (endpoint) => request(endpoint, { method: 'DELETE' }, DB_BASE),
 }
 
 export default apiClient
