@@ -220,7 +220,9 @@ export default function EnvironmentManagementScreen({ navigation }) {
     const data = {
       name: form.name.trim(),
       capacity: Number(form.capacity) || 0,
-      location: form.location.trim() || t('management.locationPlaceholder'),
+      // Vacío al editar = conservar la ubicación actual; al crear, el backend
+      // deriva el campus del nombre.
+      location: form.location.trim() || (isEdit ? vm.editEnv?.location : undefined),
     }
     if (isEdit && vm.editEnv) vm.handleEdit(vm.editEnv.id, data)
     else vm.handleAdd(data)

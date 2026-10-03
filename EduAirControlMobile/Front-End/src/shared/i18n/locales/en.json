@@ -110,7 +110,7 @@
   },
   "verifyCode": {
     "title": "Verify Code",
-    "description": "Enter the 5-digit code sent to your email.",
+    "description": "Enter the 6-digit code sent to your email.",
     "resend": "Resend Code",
     "verifyBtn": "Verify Code",
     "digitLabel": "Code digit {{n}}",
@@ -127,7 +127,7 @@
     "confirmBtn": "Confirm Change",
     "mismatch": "Passwords do not match!",
     "success": "Password updated",
-    "minHint": "Minimum 6 characters",
+    "minHint": "Minimum 8 characters with an uppercase letter",
     "matchStatus": "Passwords match",
     "error": "Could not update the password"
   },
@@ -373,6 +373,7 @@
     "location": "Location",
     "update": "Edit profile",
     "save": "Save",
+    "saved": "Profile updated",
     "cancel": "Cancel",
     "logoutBtn": "Log out",
     "logoutTitle": "Log out",

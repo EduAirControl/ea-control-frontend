@@ -110,7 +110,7 @@
   },
   "verifyCode": {
     "title": "Vérifier le code",
-    "description": "Entrez le code à 5 chiffres envoyé à votre e-mail.",
+    "description": "Entrez le code à 6 chiffres envoyé à votre e-mail.",
     "resend": "Renvoyer le code",
     "verifyBtn": "Vérifier le code",
     "digitLabel": "Chiffre du code {{n}}",
@@ -127,7 +127,7 @@
     "confirmBtn": "Confirmer le changement",
     "mismatch": "Les mots de passe ne correspondent pas !",
     "success": "Mot de passe mis à jour",
-    "minHint": "6 caractères minimum",
+    "minHint": "8 caractères minimum avec une majuscule",
     "matchStatus": "Les mots de passe correspondent",
     "error": "Impossible de mettre à jour le mot de passe"
   },
@@ -372,6 +372,7 @@
     "location": "Emplacement",
     "update": "Modifier le profil",
     "save": "Enregistrer",
+    "saved": "Profil mis à jour",
     "cancel": "Annuler",
     "logoutBtn": "Se déconnecter",
     "logoutTitle": "Se déconnecter",

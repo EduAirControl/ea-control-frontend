@@ -14,7 +14,7 @@ export const METRIC_DEFINITIONS = [
     statusType: 'temp',
     iconKey: 'temp',
     labelKey: 'dashboard.temperature',
-    getValue: (env) => `${env.temp} °C`,
+    getValue: (env) => `${env.temp ?? '—'} °C`,
     getRaw: (env) => env.temp,
   },
   {
@@ -22,7 +22,7 @@ export const METRIC_DEFINITIONS = [
     statusType: 'humidity',
     iconKey: 'humidity',
     labelKey: 'dashboard.humidity',
-    getValue: (env) => `${env.humidity}%`,
+    getValue: (env) => `${env.humidity ?? '—'}%`,
     getRaw: (env) => env.humidity,
   },
   {
@@ -30,7 +30,7 @@ export const METRIC_DEFINITIONS = [
     statusType: 'co2',
     iconKey: 'co2',
     labelKey: 'allEnvironments.co2',
-    getValue: (env) => `${env.co2} ppm`,
+    getValue: (env) => `${env.co2 ?? '—'} ppm`,
     getRaw: (env) => env.co2,
   },
   {
@@ -38,7 +38,7 @@ export const METRIC_DEFINITIONS = [
     statusType: 'noise',
     iconKey: 'noise',
     labelKey: 'dashboard.noise',
-    getValue: (env) => `${env.noise} dB`,
+    getValue: (env) => `${env.noise ?? '—'} dB`,
     getRaw: (env) => env.noise,
   },
 ]

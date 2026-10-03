@@ -86,7 +86,12 @@ export function useManagementVM() {
   }
 
   const handleEdit = (id, data) => {
-    editEnvironment(id, data)
+    const current = environments.find((e) => e.id === id)
+    editEnvironment(id, {
+      envType: current?.envType,
+      floor: current?.floor != null ? String(current.floor) : undefined,
+      ...data,
+    })
     setEditEnv(null)
   }
 

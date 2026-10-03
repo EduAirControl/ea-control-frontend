@@ -107,6 +107,8 @@ export default function SensorVariablePanel() {
     const status = STATUS_META[sensor.status] || STATUS_META.active
     const statusColor = c[status.color]
     const reading = vm.getReading(sensor)
+    // `installed` (backend) define la acción; `status` es solo la píldora.
+    const installed = sensor.installed !== false
 
     return (
       <View key={sensor.id} style={[styles.sensorCard, { backgroundColor: c.bgCard, borderColor: c.borderColor, borderLeftColor: statusColor }]}>
@@ -159,9 +161,9 @@ export default function SensorVariablePanel() {
             <Text style={[styles.sensorActionTxt, { color: c.accent }]}>{t('sensors.edit')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sensorActionBtn} onPress={() => doToggle(sensor)}>
-            <Ionicons name="power-outline" size={15} color={sensor.status === 'offline' ? c.success : c.error} />
-            <Text style={[styles.sensorActionTxt, { color: sensor.status === 'offline' ? c.success : c.error }]}>
-              {sensor.status === 'offline' ? t('sensors.toggleOn') : t('sensors.toggleOff')}
+            <Ionicons name="power-outline" size={15} color={installed ? c.error : c.success} />
+            <Text style={[styles.sensorActionTxt, { color: installed ? c.error : c.success }]}>
+              {installed ? t('sensors.toggleOff') : t('sensors.toggleOn')}
             </Text>
           </TouchableOpacity>
         </View>

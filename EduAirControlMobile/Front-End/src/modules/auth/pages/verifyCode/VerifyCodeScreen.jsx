@@ -8,28 +8,55 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { Ionicons } from '@expo/vector-icons'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
+import authService from '../../services/authService'
 import { styles } from './VerifyCodeScreen.styles'
 
-const CODE_LENGTH = 5
+const CODE_LENGTH = 6
 
 export default function VerifyCodeScreen() {
   const navigation = useNavigation()
+  const route = useRoute()
   const { t } = useTranslation()
   const { currentColors: c } = useTheme()
   const toast = useToast()
+  const email = route.params?.email || ''
   const [code, setCode] = useState(Array(CODE_LENGTH).fill(''))
+  const [verifying, setVerifying] = useState(false)
   const inputsRef = useRef([])
+  const fullCode = code.join('')
 
-  const handleResend = () => {
-    setCode(Array(CODE_LENGTH).fill(''))
-    inputsRef.current[0]?.focus()
-    toast.success(t('forgotPassword.sent', 'Revisa tu correo'))
+  const handleResend = async () => {
+    if (!email) {
+      toast.error(t('verifyCode.resendError'))
+      return
+    }
+    try {
+      await authService.resendCode(email)
+      setCode(Array(CODE_LENGTH).fill(''))
+      inputsRef.current[0]?.focus()
+      toast.success(t('verifyCode.resent'))
+    } catch (e) {
+      toast.error(e.message)
+    }
+  }
+
+  const handleVerify = async () => {
+    if (!email || fullCode.length !== CODE_LENGTH || verifying) return
+    setVerifying(true)
+    try {
+      await authService.verifyCode(email, fullCode)
+      navigation.navigate('ChangePassword', { email, code: fullCode })
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setVerifying(false)
+    }
   }
 
   const handleChange = (index, value) => {
@@ -40,8 +67,6 @@ export default function VerifyCodeScreen() {
     if (value && index < CODE_LENGTH - 1) inputsRef.current[index + 1]?.focus()
     if (!value && index > 0) inputsRef.current[index - 1]?.focus()
   }
-
-  const fullCode = code.join('')
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bgBody }]}>
@@ -87,7 +112,8 @@ export default function VerifyCodeScreen() {
         </Pressable>
 
         <Button
-          onPress={() => navigation.navigate('ChangePassword')}
+          onPress={handleVerify}
+          loading={verifying}
           size="lg"
           style={styles.submit}
           disabled={fullCode.length !== CODE_LENGTH}

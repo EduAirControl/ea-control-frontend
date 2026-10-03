@@ -15,18 +15,31 @@ import { useTranslation } from 'react-i18next'
 import { Ionicons } from '@expo/vector-icons'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
+import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
+import authService from '../../services/authService'
 import { styles } from './forgotPasswordScreen.style'
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation()
   const { t } = useTranslation()
   const { currentColors: c } = useTheme()
+  const toast = useToast()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
 
-  const onSubmit = () => {
-    if (!email.trim()) return
-    setSubmitted(true)
+  const onSubmit = async () => {
+    const value = email.trim()
+    if (!value || sending) return
+    setSending(true)
+    try {
+      await authService.forgotPassword(value)
+      setSubmitted(true)
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -56,7 +69,11 @@ export default function ForgotPasswordScreen() {
               <Text style={[styles.successText, { color: c.textSecondary }]}>
                 {t('forgotPassword.sentTo', 'Te enviamos instrucciones a')} {email}
               </Text>
-              <Button onPress={() => navigation.navigate('VerifyCode')} size="lg" style={styles.successBtn}>
+              <Button
+                onPress={() => navigation.navigate('VerifyCode', { email: email.trim() })}
+                size="lg"
+                style={styles.successBtn}
+              >
                 {t('forgotPassword.continue', 'Continuar')}
               </Button>
               <Button variant="ghost" onPress={() => setSubmitted(false)} style={styles.successBtn}>
@@ -77,7 +94,7 @@ export default function ForgotPasswordScreen() {
                   style={[styles.fieldInput, { color: c.textPrimary }]}
                 />
               </View>
-              <Button onPress={onSubmit} size="lg" style={styles.submit}>
+              <Button onPress={onSubmit} loading={sending} size="lg" style={styles.submit}>
                 {t('forgotPassword.sendBtn')}
               </Button>
             </>

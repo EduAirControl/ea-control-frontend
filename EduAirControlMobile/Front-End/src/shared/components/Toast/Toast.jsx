@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '../../../context/ThemeContext.jsx'
@@ -52,11 +52,15 @@ export function ToastProvider({ children }) {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const toast = {
-    success: (msg, dur) => addToast(msg, 'success', dur),
-    error: (msg, dur) => addToast(msg, 'error', dur),
-    info: (msg, dur) => addToast(msg, 'info', dur),
-  }
+  // Estable en renders: evita re-ejecutar efectos que dependen del toast.
+  const toast = useMemo(
+    () => ({
+      success: (msg, dur) => addToast(msg, 'success', dur),
+      error: (msg, dur) => addToast(msg, 'error', dur),
+      info: (msg, dur) => addToast(msg, 'info', dur),
+    }),
+    [addToast]
+  )
 
   return (
     <ToastContext.Provider value={toast}>

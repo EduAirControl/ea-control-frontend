@@ -79,7 +79,7 @@ export default function DevicesScreen({ navigation }) {
         macAddress: vm.form.macAddress.trim().toUpperCase(),
         nombre: vm.form.nombre.trim() || null,
         tipo: vm.form.tipo,
-        idAula: vm.form.idAula ? Number(vm.form.idAula) : null,
+        idAula: vm.form.idAula || null,
         estado: 'pendiente',
       })
       toast.success(t('devices.added'))

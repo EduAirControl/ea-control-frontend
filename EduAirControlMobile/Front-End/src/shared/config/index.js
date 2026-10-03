@@ -16,4 +16,3 @@ const DEV_HOST = getDevHost()
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ||
   (__DEV__ ? `http://${DEV_HOST}:8080` : 'https://api.eduaircontrol.com')
-export const DB_BASE = __DEV__ ? `http://${DEV_HOST}:3001` : 'https://db.eduaircontrol.com'
