@@ -1,31 +1,34 @@
-import { dbClient } from '../../../shared/services/apiClient'
+import apiClient from '../../../shared/services/apiClient'
 import authService from '../../auth/services/authService'
+
+const BASE = '/api/v1/profile'
+
+const EMPTY = { fullName: '', email: '', title: '', phone: '', location: '', avatar: null }
 
 const profileService = {
   async get() {
     const jwtUser = authService.getUser()
-    if (!jwtUser) return { fullName: '', email: '', title: '', phone: '', location: '', avatar: null }
+    if (!jwtUser) return EMPTY
     try {
-      const remote = await dbClient.get('/profile/1')
-      return { ...remote, email: jwtUser.email, fullName: jwtUser.name || remote.fullName }
+      const remote = await apiClient.get(BASE)
+      return { ...EMPTY, ...remote, email: remote.email || jwtUser.email }
     } catch {
       return {
+        ...EMPTY,
         fullName: jwtUser.name || '',
         email: jwtUser.email || '',
-        title: '',
-        phone: '',
-        location: '',
-        avatar: null,
       }
     }
   },
 
   async save(profile) {
-    return dbClient.put('/profile/1', profile)
-  },
-
-  async clear() {
-    return dbClient.delete('/profile/1')
+    return apiClient.put(BASE, {
+      fullName: profile.fullName,
+      title: profile.title,
+      phone: profile.phone,
+      location: profile.location,
+      avatar: profile.avatar,
+    })
   },
 }
 

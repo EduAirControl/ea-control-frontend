@@ -20,7 +20,7 @@ import { styles } from './ProfileScreen.styles'
 
 const FIELD_CONFIG = [
   { field: 'fullName', icon: 'person-outline' },
-  { field: 'email', icon: 'mail-outline', keyboardType: 'email-address' },
+  { field: 'email', icon: 'mail-outline', keyboardType: 'email-address', disabled: true },
   { field: 'title', icon: 'briefcase-outline' },
   { field: 'phone', icon: 'call-outline', keyboardType: 'phone-pad' },
   { field: 'location', icon: 'location-outline' },
@@ -124,6 +124,7 @@ export default function ProfileScreen({ navigation }) {
                     onChangeText={(v) => vm.handleChange(c.field, v)}
                     keyboardType={c.keyboardType}
                     icon={c.icon}
+                    disabled={c.disabled}
                   />
                 ))}
                 <View style={styles.editActions}>

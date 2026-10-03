@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as ImagePicker from 'expo-image-picker'
 import { useTranslation } from 'react-i18next'
+import { useToast } from '../../../shared/components/Toast/Toast.jsx'
 import profileService from '../services/profileService'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024
@@ -12,6 +13,7 @@ const MAX_IMAGE_SIZE = 2 * 1024 * 1024
  */
 export function useProfileVM({ onLogout } = {}) {
   const { t } = useTranslation()
+  const toast = useToast()
   const [profile, setProfile] = useState({
     fullName: '',
     email: '',
@@ -51,7 +53,12 @@ export function useProfileVM({ onLogout } = {}) {
     try {
       setAvatarLoading(true)
       const base64 = asset.base64 || null
-      setAvatar(base64 ? `data:${asset.mimeType || 'image/jpeg'};base64,${base64}` : asset.uri)
+      // Sin base64 el backend guardaria una ruta temporal inutilizable.
+      if (!base64) {
+        setAvatarError(t('profile.avatarReadError'))
+        return
+      }
+      setAvatar(`data:${asset.mimeType || 'image/jpeg'};base64,${base64}`)
     } catch {
       setAvatarError(t('profile.avatarReadError'))
     } finally {
@@ -82,11 +89,18 @@ export function useProfileVM({ onLogout } = {}) {
     setAvatarError(null)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updated = { ...form, avatar }
-    setProfile(updated)
-    profileService.save(updated)
-    setIsEditing(false)
+    try {
+      const saved = await profileService.save(updated)
+      const next = { ...updated, ...saved }
+      setProfile(next)
+      setForm(next)
+      setIsEditing(false)
+      toast.success(t('profile.saved', 'Perfil actualizado'))
+    } catch (e) {
+      toast.error(e.message)
+    }
   }
 
   const handleCancel = () => {
