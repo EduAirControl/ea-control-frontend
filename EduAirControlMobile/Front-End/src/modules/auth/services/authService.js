@@ -1,10 +1,16 @@
 import apiClient from '../../../shared/services/apiClient'
 import storage from '../../../shared/storage/storage'
 
+function base64UrlDecode(str) {
+  const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  return atob(padded)
+}
+
 function decodeJWT(token) {
   try {
     const payload = token.split('.')[1]
-    return JSON.parse(atob(payload))
+    return JSON.parse(base64UrlDecode(payload))
   } catch {
     return null
   }
@@ -32,6 +38,26 @@ const authService = {
   async logout() {
     await storage.removeItem('token')
     await storage.removeItem('user')
+  },
+
+  async forgotPassword(email) {
+    return apiClient.post('/auth/forgot-password', { email })
+  },
+
+  async verifyCode(email, code) {
+    return apiClient.post('/auth/verify-code', { email, code })
+  },
+
+  async resendCode(email) {
+    return apiClient.post('/auth/resend-code', { email })
+  },
+
+  async resetPassword(email, code, newPassword) {
+    return apiClient.post('/auth/reset-password', { email, code, newPassword })
+  },
+
+  async changePassword(currentPassword, newPassword) {
+    return apiClient.post('/auth/change-password', { currentPassword, newPassword })
   },
 
   getToken() {

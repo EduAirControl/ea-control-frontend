@@ -10,16 +10,20 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { Ionicons } from '@expo/vector-icons'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
+import authService from '../../services/authService'
 import { styles } from './ChangePasswordScreen.styles'
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation()
+  const route = useRoute()
+  const email = route.params?.email
+  const code = route.params?.code
   const { t } = useTranslation()
   const { currentColors: c } = useTheme()
   const toast = useToast()
@@ -30,17 +34,31 @@ export default function ChangePasswordScreen() {
   const [saving, setSaving] = useState(false)
 
   const matches = newPassword === confirmPassword && newPassword.length > 0
+  const policyOk = newPassword.length >= 8 && /[A-Z]/.test(newPassword)
 
   const onSubmit = async () => {
     if (newPassword !== confirmPassword || !newPassword) {
       toast.error(t('changePassword.mismatch'))
       return
     }
+    if (!policyOk) {
+      toast.error(t('changePassword.minHint'))
+      return
+    }
+    if (!email || !code) {
+      toast.error(t('changePassword.error'))
+      return
+    }
     setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    setSaving(false)
-    toast.success(t('changePassword.success', 'Contraseña actualizada'))
-    navigation.popToTop()
+    try {
+      await authService.resetPassword(email, code, newPassword)
+      toast.success(t('changePassword.success', 'Contraseña actualizada'))
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const renderField = (field, key) => (
