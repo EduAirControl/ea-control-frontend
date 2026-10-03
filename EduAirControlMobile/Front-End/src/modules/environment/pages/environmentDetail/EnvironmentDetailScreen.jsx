@@ -21,7 +21,9 @@ import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
 import { styles } from './EnvironmentDetailScreen.styles.js'
 
 function getProgress(value, min, max) {
-  return Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100))
+  const raw = Number(value)
+  if (!Number.isFinite(raw)) return 0
+  return Math.min(100, Math.max(0, ((raw - min) / (max - min)) * 100))
 }
 
 const METRIC_RANGES = {

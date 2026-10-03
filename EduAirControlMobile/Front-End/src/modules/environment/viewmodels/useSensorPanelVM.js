@@ -1,13 +1,13 @@
 /**
  * ViewModel: useSensorPanelVM
  * Sensores y variables (pestaña "Sensores y variables" del panel admin).
- * CRUD sobre /sensors (db.json) + filtros de variable y estado.
+ * CRUD sobre /api/v1/sensors (backend real) + filtros de variable y estado.
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEnvironments } from '../../../context/EnvironmentContext'
-import sensorService, { VARIABLE_META } from '../services/sensorService'
+import sensorService, { ENV_FIELD_BY_VARIABLE, VARIABLE_META } from '../services/sensorService'
 
 const EMPTY_FORM = { sensorId: '', environmentId: '', type: 'temperature', min: '', max: '' }
 
@@ -44,7 +44,7 @@ export function useSensorPanelVM() {
 
   const getEnvironmentName = useCallback(
     (id) => {
-      const env = environments.find((item) => Number(item.id) === Number(id))
+      const env = environments.find((item) => String(item.id) === String(id))
       if (!env) return t('sensors.noEnvironment')
       return env.nameKey ? t(env.nameKey) : env.name || t('sensors.noEnvironment')
     },
@@ -53,9 +53,10 @@ export function useSensorPanelVM() {
 
   const getReading = useCallback(
     (sensor) => {
-      const env = environments.find((item) => Number(item.id) === Number(sensor.environmentId))
+      const env = environments.find((item) => String(item.id) === String(sensor.environmentId))
       if (!env) return null
-      const value = env[sensor.type]
+      const field = ENV_FIELD_BY_VARIABLE[sensor.type] || sensor.type
+      const value = env[field]
       return value ?? null
     },
     [environments]
@@ -100,7 +101,8 @@ export function useSensorPanelVM() {
   }
 
   const saveSensor = async (payload) => {
-    await sensorService.update(payload.id, {
+    await sensorService.update({
+      ...payload,
       type: payload.type,
       min: Number(payload.min),
       max: Number(payload.max),
