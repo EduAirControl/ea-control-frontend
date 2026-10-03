@@ -1,6 +1,6 @@
 /**
  * ViewModel: useDevicesVM
- * Lista y CRUD de dispositivos IoT contra /api/devices (backend real).
+ * Lista y CRUD de dispositivos IoT contra /api/v1/devices (backend real).
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
