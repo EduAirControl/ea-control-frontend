@@ -110,7 +110,7 @@
   },
   "verifyCode": {
     "title": "Verificar código",
-    "description": "Digite o código de 5 dígitos enviado ao seu e-mail.",
+    "description": "Digite o código de 6 dígitos enviado ao seu e-mail.",
     "resend": "Reenviar código",
     "verifyBtn": "Verificar código",
     "digitLabel": "Dígito do código {{n}}",
@@ -127,7 +127,7 @@
     "confirmBtn": "Confirmar alteração",
     "mismatch": "As senhas não coincidem!",
     "success": "Senha atualizada",
-    "minHint": "Mínimo de 6 caracteres",
+    "minHint": "Mínimo de 8 caracteres com uma letra maiúscula",
     "matchStatus": "As senhas coincidem",
     "error": "Não foi possível atualizar a senha"
   },
@@ -372,6 +372,7 @@
     "location": "Localização",
     "update": "Editar perfil",
     "save": "Salvar",
+    "saved": "Perfil atualizado",
     "cancel": "Cancelar",
     "logoutBtn": "Sair",
     "logoutTitle": "Sair da conta",
