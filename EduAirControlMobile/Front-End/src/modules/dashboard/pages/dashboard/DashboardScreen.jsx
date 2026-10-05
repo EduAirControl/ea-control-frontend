@@ -15,29 +15,70 @@ import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { useEnvironment } from '../../../../context/EnvironmentContext.jsx'
 import { useDashboardAnalysisVM } from '../../viewmodels/useDashboardAnalysisVM.js'
-import { ENVIRONMENT_COLORS, METRICS, normalizeStatus } from '../../utils/historicalSeries.js'
+import {
+  ENVIRONMENT_COLORS,
+  METRICS,
+  normalizeStatus,
+} from '../../utils/historicalSeries.js'
 import { styles } from './DashboardScreen.style'
 
 const GRID_COLOR = 'rgba(167,188,208,.28)'
 const AXIS_TEXT_COLOR = '#8394A8'
-const STATUS_COLORS = { normal: '#25E77C', warning: '#FFB11A', alert: '#FF4D5B' }
+
+const STATUS_COLORS = {
+  normal: '#25E77C',
+  warning: '#FFB11A',
+  alert: '#FF4D5B',
+}
 
 function MetricIcon({ name, size = 14, color }) {
   return <Ionicons name={name} size={size} color={color} />
 }
 
-function KpiCard({ label, value, note, icon, iconColor, valueColor, noteColor, cardColor, surface }) {
+function KpiCard({
+  label,
+  value,
+  note,
+  icon,
+  iconColor,
+  valueColor,
+  noteColor,
+  cardColor,
+  surface,
+}) {
   return (
-    <View style={[styles.kpiCard, { backgroundColor: surface, borderColor: cardColor }]}>
+    <View
+      style={[
+        styles.kpiCard,
+        {
+          backgroundColor: surface,
+          borderColor: cardColor,
+        },
+      ]}
+    >
       <View style={styles.kpiTop}>
-        <Text style={[styles.kpiLabel, { color: noteColor }]} numberOfLines={1}>
+        <Text
+          style={[styles.kpiLabel, { color: noteColor }]}
+          numberOfLines={1}
+        >
           {label}
         </Text>
+
         <MetricIcon name={icon} color={iconColor} />
       </View>
-      <Text style={[styles.kpiValue, { color: valueColor }]}>{value}</Text>
+
+      <Text style={[styles.kpiValue, { color: valueColor }]}>
+        {value}
+      </Text>
+
       <View style={styles.kpiNote}>
-        <Text style={{ color: noteColor, fontSize: 10.5 }} numberOfLines={2}>
+        <Text
+          style={{
+            color: noteColor,
+            fontSize: 10.5,
+          }}
+          numberOfLines={2}
+        >
           {note}
         </Text>
       </View>
@@ -52,195 +93,510 @@ export default function DashboardScreen({ navigation }) {
   const vm = useDashboardAnalysisVM()
 
   const screenWidth = Dimensions.get('window').width
-  const chartWidth = Math.max(240, screenWidth - 32 - 28 - 44)
 
-  const pointCount = vm.periodLabels[vm.period]?.length || 0
+  const chartWidth = Math.max(
+    240,
+    screenWidth - 32 - 28 - 44
+  )
+
+  const pointCount = vm.periodLabels?.[vm.period]?.length || 0
+
   const initialSpacing = 10
   const endSpacing = 10
+
   const spacing =
     pointCount > 1
-      ? Math.max(16, (chartWidth - initialSpacing - endSpacing) / (pointCount - 1))
+      ? Math.max(
+          16,
+          (chartWidth - initialSpacing - endSpacing) /
+            (pointCount - 1)
+        )
       : 40
 
-  const chartColors = vm.series.map((_, index) => ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length])
+  const chartColors = vm.series.map(
+    (_, index) =>
+      ENVIRONMENT_COLORS[
+        index % ENVIRONMENT_COLORS.length
+      ]
+  )
 
+  /*
+   * Datos para el gráfico de barras.
+   *
+   * Se toma el último valor disponible de cada serie.
+   */
+  const barData = useMemo(() => {
+    if (!Array.isArray(vm.series)) {
+      return []
+    }
+
+    return vm.series
+      .map((item, index) => {
+        const points = Array.isArray(item.points)
+          ? item.points
+          : []
+
+        const lastPoint =
+          points.length > 0
+            ? points[points.length - 1]
+            : null
+
+        const value =
+          typeof lastPoint?.value === 'number'
+            ? lastPoint.value
+            : 0
+
+        return {
+          value,
+          label: item.name || '',
+          frontColor:
+            ENVIRONMENT_COLORS[
+              index % ENVIRONMENT_COLORS.length
+            ],
+          topLabelComponent: () => (
+            <Text
+              style={{
+                color: currentColors.textMuted,
+                fontSize: 9,
+                marginBottom: 4,
+              }}
+            >
+              {value !== 0 ? vm.formatMetric(value) : ''}
+            </Text>
+          ),
+        }
+      })
+      .filter((item) => item.value >= 0)
+  }, [
+    vm.series,
+    vm.formatMetric,
+    currentColors.textMuted,
+  ])
+
+  const barWidth = Math.max(
+    18,
+    Math.min(
+      34,
+      (chartWidth - 32) /
+        Math.max(barData.length * 2, 1)
+    )
+  )
+
+  /*
+   * Datos para el gráfico circular de estado.
+   */
+  const donutData = useMemo(() => {
+    const normal = Number(vm.statusCounts?.normal || 0)
+    const warning = Number(vm.statusCounts?.warning || 0)
+    const alert = Number(vm.statusCounts?.alert || 0)
+
+    const total = normal + warning + alert
+
+    if (total === 0) {
+      return [
+        {
+          value: 1,
+          color: currentColors.borderColor,
+        },
+      ]
+    }
+
+    return [
+      {
+        value: normal,
+        color: STATUS_COLORS.normal,
+      },
+      {
+        value: warning,
+        color: STATUS_COLORS.warning,
+      },
+      {
+        value: alert,
+        color: STATUS_COLORS.alert,
+      },
+    ].filter((item) => item.value > 0)
+  }, [
+    vm.statusCounts,
+    currentColors.borderColor,
+  ])
+
+  /*
+   * Propiedades de las líneas del gráfico histórico.
+   */
   const lineProps = useMemo(() => {
-    const props = { data: vm.series[0]?.points || [] }
+    const props = {
+      data: vm.series?.[0]?.points || [],
+    }
+
     vm.series.forEach((item, index) => {
-      const n = index + 1
-      const color = ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]
-      if (n > 1) props[`data${n}`] = item.points
-      props[`color${n}`] = color
-      props[`startFillColor${n}`] = color
-      props[`endFillColor${n}`] = color
-      props[`startOpacity${n}`] = 0.3
-      props[`endOpacity${n}`] = 0.02
-      props[`thickness${n}`] = 2.5
-      props[`hideDataPoints${n}`] = true
+      const number = index + 1
+
+      const color =
+        ENVIRONMENT_COLORS[
+          index % ENVIRONMENT_COLORS.length
+        ]
+
+      if (number > 1) {
+        props[`data${number}`] = item.points || []
+      }
+
+      props[`color${number}`] = color
+      props[`startFillColor${number}`] = color
+      props[`endFillColor${number}`] = color
+      props[`startOpacity${number}`] = 0.3
+      props[`endOpacity${number}`] = 0.02
+      props[`thickness${number}`] = 2.5
+      props[`hideDataPoints${number}`] = true
     })
-    if (!vm.series.length) props.data = []
+
+    if (!vm.series?.length) {
+      props.data = []
+    }
+
     return props
   }, [vm.series])
 
+  /*
+   * Tooltip del gráfico histórico.
+   */
   const pointerLabel = (items) => {
-    if (!Array.isArray(items) || !items.length) return null
-    const rows = items.filter((item) => item && typeof item.value === 'number')
-    if (!rows.length) return null
+    if (!Array.isArray(items) || !items.length) {
+      return null
+    }
+
+    const rows = items.filter(
+      (item) =>
+        item &&
+        typeof item.value === 'number'
+    )
+
+    if (!rows.length) {
+      return null
+    }
+
     return (
-      <View style={[styles.pointer, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
-        <Text style={[styles.pointerLabel, { color: currentColors.textPrimary }]}>{rows[0].label}</Text>
+      <View
+        style={[
+          styles.pointer,
+          {
+            backgroundColor: currentColors.bgCard,
+            borderColor: currentColors.borderColor,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.pointerLabel,
+            {
+              color: currentColors.textPrimary,
+            },
+          ]}
+        >
+          {rows[0].label}
+        </Text>
+
         {rows.map((item, index) => (
-          <View key={index} style={styles.pointerRow}>
-            <View style={[styles.pointerDot, { backgroundColor: chartColors[index] || currentColors.accent }]} />
-            <Text style={[styles.pointerName, { color: currentColors.textMuted }]} numberOfLines={1}>
+          <View
+            key={index}
+            style={styles.pointerRow}
+          >
+            <View
+              style={[
+                styles.pointerDot,
+                {
+                  backgroundColor:
+                    chartColors[index] ||
+                    currentColors.accent,
+                },
+              ]}
+            />
+
+            <Text
+              style={[
+                styles.pointerName,
+                {
+                  color: currentColors.textMuted,
+                },
+              ]}
+              numberOfLines={1}
+            >
               {vm.series[index]?.name || ''}
             </Text>
-            <Text style={[styles.pointerValue, { color: currentColors.textPrimary }]}>
+
+            <Text
+              style={[
+                styles.pointerValue,
+                {
+                  color: currentColors.textPrimary,
+                },
+              ]}
+            >
               {vm.formatMetric(item.value)}
             </Text>
           </View>
         ))}
       </View>
-    </TouchableOpacity>
+    )
+  }
+
+  /*
+   * Porcentaje de ambientes dentro del rango.
+   */
+  const healthPercent = Number(
+    vm.healthPercent || 0
   )
-}
 
-
-function RankRow({ env, rank, score, onPress, onToggleFav, currentColors, t }) {
-  const status = getEnvironmentStatus(env.statusKey, t)
-  const temp = env.temp ?? env.temperature ?? 0
-  const pills = [
-    { label: `${temp}°`, warn: temp < 18 || temp > 24 },
-    { label: `${env.humidity ?? 0}%`, warn: (env.humidity ?? 0) < 40 || (env.humidity ?? 0) > 60 },
-    { label: `${env.co2 ?? 0}ppm`, warn: (env.co2 ?? 0) > 1000 },
-    { label: `${env.noise ?? 0}dB`, warn: (env.noise ?? 0) > 50 },
-  ]
-  const warn = pills.filter((p) => p.warn)
-  const visible = warn.length ? warn.slice(0, 2) : pills.slice(0, 2)
+  /*
+   * Navegación al detalle de un ambiente.
+   */
+  const handleEnvironmentPress = (id) => {
+    navigation.navigate('EnvironmentDetail', {
+      envId: id,
+    })
+  }
 
   return (
-    <TouchableOpacity
-      style={[rrStyles.row, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}
-      onPress={() => onPress(env.id)}
-      activeOpacity={0.85}
+    <SafeAreaView
+      style={[
+        styles.safe,
+        {
+          backgroundColor: currentColors.bgBody,
+        },
+      ]}
     >
-      <Text style={[rrStyles.rank, { color: currentColors.textMuted }]}>#{rank}</Text>
-      <Ionicons
-        name={
-          env.statusKey === 'dashboard.statusAlert' ? 'alert-circle'
-            : env.statusKey === 'dashboard.statusWarning' ? 'warning'
-              : 'checkmark-circle'
+      <StatusBar
+        barStyle={
+          darkMode
+            ? 'light-content'
+            : 'dark-content'
         }
-        size={18}
-        color={status.color}
+        backgroundColor={currentColors.bgBody}
       />
-      <View style={{ flex: 1 }}>
-        <Text style={[rrStyles.name, { color: currentColors.textPrimary }]} numberOfLines={1}>{env.name}</Text>
-        {env.location ? <Text style={[rrStyles.loc, { color: currentColors.textMuted }]}>{env.location}</Text> : null}
-      </View>
-      <View style={rrStyles.pills}>
-        {visible.map((p, i) => (
-          <View key={i} style={[rrStyles.pill, { backgroundColor: p.warn ? '#FFC10720' : currentColors.bgCard, borderColor: p.warn ? '#FFC107' : currentColors.borderColor }]}>
-            <Text style={[rrStyles.pillTxt, { color: p.warn ? '#FFC107' : currentColors.textMuted }]}>{p.label}</Text>
-          </View>
-        ))}
-      </View>
-      <ScoreRing score={score} size={42} />
-      <TouchableOpacity onPress={() => onToggleFav(env.id, !env.isFavorite)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} style={{ marginLeft: 6 }}>
+
+      {/* HEADER */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: currentColors.bgCard,
+            borderBottomColor:
+              currentColors.borderColor,
+          },
+        ]}
+      >
         <Ionicons
-          name={env.isFavorite ? 'heart' : 'heart-outline'}
-          size={50}
-          color={env.isFavorite ? '#ff6b6b' : currentColors.textMuted}
-          accessibilityLabel={env.isFavorite ? t('leaderboard.removeFavorite') : t('leaderboard.addFavorite')}
+          name="analytics"
+          size={24}
+          color={currentColors.accent}
         />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  )
-}
 
-
-export default function DashboardScreen({ navigation }) {
-  const { darkMode, currentColors } = useTheme()
-  const { t } = useTranslation()
-  const vm = useDashboardVM()
-
-  const PODIUM_ORDER = [2, 1, 3]
-  const FILTERS = [
-    { key: 'all', label: t('leaderboard.filters.all') },
-    { key: 'normal', label: t('leaderboard.filters.normal') },
-    { key: 'warning', label: t('leaderboard.filters.warning') },
-    { key: 'alert', label: t('leaderboard.filters.alert') },
-  ]
-
-  const handlePress = (id) => navigation.navigate('EnvironmentDetail', { envId: id })
-
-  return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: currentColors.bgBody }]}>
-      <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={currentColors.bgBody} />
-
-      <View style={[styles.header, { backgroundColor: currentColors.bgCard, borderBottomColor: currentColors.borderColor }]}>
-        <Ionicons name="analytics" size={24} color={currentColors.accent} />
         <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: currentColors.textPrimary }]}>{t('dashboardAnalysis.title')}</Text>
-          <Text style={[styles.headerSub, { color: currentColors.textMuted }]}>{t('dashboardAnalysis.subtitle')}</Text>
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                color: currentColors.textPrimary,
+              },
+            ]}
+          >
+            {t('dashboardAnalysis.title')}
+          </Text>
+
+          <Text
+            style={[
+              styles.headerSub,
+              {
+                color: currentColors.textMuted,
+              },
+            ]}
+          >
+            {t('dashboardAnalysis.subtitle')}
+          </Text>
         </View>
+
         <TouchableOpacity
-          onPress={() => navigation.navigate('NotificationsPanel')}
-          style={[styles.iconBtn, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}
+          onPress={() =>
+            navigation.navigate(
+              'NotificationsPanel'
+            )
+          }
+          style={[
+            styles.iconBtn,
+            {
+              backgroundColor:
+                currentColors.bgBody,
+              borderColor:
+                currentColors.borderColor,
+            },
+          ]}
           hitSlop={6}
         >
-          <Ionicons name="notifications-outline" size={20} color={currentColors.textSecondary} />
+          <Ionicons
+            name="notifications-outline"
+            size={20}
+            color={currentColors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
 
+      {/* LOADING */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={currentColors.accent} />
-          <Text style={[styles.centerTxt, { color: currentColors.textMuted }]}>
-            {t('common.loading', 'Cargando…')}
+          <ActivityIndicator
+            size="large"
+            color={currentColors.accent}
+          />
+
+          <Text
+            style={[
+              styles.centerTxt,
+              {
+                color: currentColors.textMuted,
+              },
+            ]}
+          >
+            {t(
+              'common.loading',
+              'Cargando…'
+            )}
           </Text>
         </View>
       ) : (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={
+            styles.scrollContent
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          {/* HERO */}
           <View style={styles.hero}>
             <View style={styles.eyebrow}>
-              <View style={[styles.eyebrowDot, { backgroundColor: currentColors.accent }]} />
-              <Text style={[styles.eyebrowTxt, { color: currentColors.accent }]}>{t('dashboardAnalysis.title')}</Text>
+              <View
+                style={[
+                  styles.eyebrowDot,
+                  {
+                    backgroundColor:
+                      currentColors.accent,
+                  },
+                ]}
+              />
+
+              <Text
+                style={[
+                  styles.eyebrowTxt,
+                  {
+                    color:
+                      currentColors.accent,
+                  },
+                ]}
+              >
+                {t('dashboardAnalysis.title')}
+              </Text>
             </View>
-            <Text style={[styles.heroTitle, { color: currentColors.textPrimary }]}>
-              {t('dashboardAnalysis.heroLine1', 'La calidad ambiental')}
+
+            <Text
+              style={[
+                styles.heroTitle,
+                {
+                  color:
+                    currentColors.textPrimary,
+                },
+              ]}
+            >
+              {t(
+                'dashboardAnalysis.heroLine1',
+                'La calidad ambiental'
+              )}
               {'\n'}
-              <Text style={styles.heroTitleEm}>{vm.metricLabel}</Text>
+
+              <Text style={styles.heroTitleEm}>
+                {vm.metricLabel}
+              </Text>
             </Text>
-            <Text style={[styles.heroDesc, { color: currentColors.textSecondary }]}>{t('dashboardAnalysis.description')}</Text>
+
+            <Text
+              style={[
+                styles.heroDesc,
+                {
+                  color:
+                    currentColors.textSecondary,
+                },
+              ]}
+            >
+              {t(
+                'dashboardAnalysis.description'
+              )}
+            </Text>
           </View>
 
+          {/* PERIODOS */}
           <View style={styles.periodRow}>
             {vm.periods.map((item) => {
-              const active = vm.period === item.id
+              const active =
+                vm.period === item.id
+
               return (
                 <TouchableOpacity
                   key={item.id}
                   style={[
                     styles.periodChip,
-                    { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor },
-                    active && { backgroundColor: currentColors.accent, borderColor: currentColors.accent },
+                    {
+                      backgroundColor:
+                        currentColors.bgCard,
+                      borderColor:
+                        currentColors.borderColor,
+                    },
+                    active && {
+                      backgroundColor:
+                        currentColors.accent,
+                      borderColor:
+                        currentColors.accent,
+                    },
                   ]}
-                  onPress={() => vm.setPeriod(item.id)}
+                  onPress={() =>
+                    vm.setPeriod(item.id)
+                  }
                   activeOpacity={0.85}
                 >
-                  <Text style={[styles.periodChipTxt, { color: active ? '#fff' : currentColors.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.periodChipTxt,
+                      {
+                        color: active
+                          ? '#fff'
+                          : currentColors.textSecondary,
+                      },
+                    ]}
+                  >
                     {item.label}
                   </Text>
                 </TouchableOpacity>
               )
             })}
           </View>
+
           <View style={styles.periodContext}>
-            <Ionicons name="calendar-outline" size={14} color={currentColors.textMuted} />
-            <Text style={[styles.periodContextTxt, { color: currentColors.textMuted }]}>{vm.periodInfo.context}</Text>
+            <Ionicons
+              name="calendar-outline"
+              size={14}
+              color={currentColors.textMuted}
+            />
+
+            <Text
+              style={[
+                styles.periodContextTxt,
+                {
+                  color:
+                    currentColors.textMuted,
+                },
+              ]}
+            >
+              {vm.periodInfo.context}
+            </Text>
           </View>
 
+          {/* MÉTRICAS */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -248,21 +604,53 @@ export default function DashboardScreen({ navigation }) {
             contentContainerStyle={styles.chipRow}
           >
             {Object.keys(METRICS).map((key) => {
-              const active = vm.metric === key
+              const active =
+                vm.metric === key
+
               const info = METRICS[key]
+
               return (
                 <TouchableOpacity
                   key={key}
                   style={[
                     styles.chip,
-                    { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor },
-                    active && { backgroundColor: `${info.color}18`, borderColor: info.color },
+                    {
+                      backgroundColor:
+                        currentColors.bgCard,
+                      borderColor:
+                        currentColors.borderColor,
+                    },
+                    active && {
+                      backgroundColor: `${info.color}18`,
+                      borderColor:
+                        info.color,
+                    },
                   ]}
-                  onPress={() => vm.setMetric(key)}
+                  onPress={() =>
+                    vm.setMetric(key)
+                  }
                   activeOpacity={0.85}
                 >
-                  <Ionicons name={info.icon} size={14} color={active ? info.color : currentColors.textMuted} />
-                  <Text style={[styles.chipTxt, { color: active ? info.color : currentColors.textSecondary }]}>
+                  <Ionicons
+                    name={info.icon}
+                    size={14}
+                    color={
+                      active
+                        ? info.color
+                        : currentColors.textMuted
+                    }
+                  />
+
+                  <Text
+                    style={[
+                      styles.chipTxt,
+                      {
+                        color: active
+                          ? info.color
+                          : currentColors.textSecondary,
+                      },
+                    ]}
+                  >
                     {vm.metricLabels[key]}
                   </Text>
                 </TouchableOpacity>
@@ -270,74 +658,364 @@ export default function DashboardScreen({ navigation }) {
             })}
           </ScrollView>
 
-          <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+          {/* SELECCIÓN DE AMBIENTES */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  currentColors.bgCard,
+                borderColor:
+                  currentColors.borderColor,
+              },
+            ]}
+          >
             <View style={styles.cardHead}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionLabel, { color: currentColors.textMuted }]}>
-                  {t('dashboardAnalysis.contextLabel', 'CONTEXTO')}
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.contextLabel',
+                    'CONTEXTO'
+                  )}
                 </Text>
-                <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>
-                  {t('dashboardAnalysis.context.environments')}
+
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color:
+                        currentColors.textPrimary,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.context.environments'
+                  )}
                 </Text>
-                <Text style={[styles.cardSub, { color: currentColors.textMuted }]}>
-                  {t('dashboardAnalysis.context.selectEnvironment')}
+
+                <Text
+                  style={[
+                    styles.cardSub,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.context.selectEnvironment'
+                  )}
                 </Text>
               </View>
-              <View style={[styles.countBadge, { backgroundColor: `${currentColors.accent}18` }]}>
-                <Text style={[styles.countBadgeTxt, { color: currentColors.accent }]}>{vm.environments.length}</Text>
+
+              <View
+                style={[
+                  styles.countBadge,
+                  {
+                    backgroundColor: `${currentColors.accent}18`,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.countBadgeTxt,
+                    {
+                      color:
+                        currentColors.accent,
+                    },
+                  ]}
+                >
+                  {vm.environments.length}
+                </Text>
               </View>
             </View>
 
             <View style={styles.envList}>
+              {/* TODOS */}
               <TouchableOpacity
                 style={[
                   styles.envRow,
                   {
-                    backgroundColor: vm.environmentId === 'all' ? `${currentColors.accent}12` : currentColors.bgCard,
-                    borderColor: vm.environmentId === 'all' ? currentColors.accent : currentColors.borderColor,
+                    backgroundColor:
+                      vm.environmentId ===
+                      'all'
+                        ? `${currentColors.accent}12`
+                        : currentColors.bgCard,
+                    borderColor:
+                      vm.environmentId ===
+                      'all'
+                        ? currentColors.accent
+                        : currentColors.borderColor,
                   },
                 ]}
-                onPress={() => vm.setEnvironmentId('all')}
+                onPress={() =>
+                  vm.setEnvironmentId('all')
+                }
                 activeOpacity={0.8}
               >
-                <View style={[styles.envIcon, { backgroundColor: `${currentColors.accent}18` }]}>
-                  <Ionicons name="leaf-outline" size={16} color={currentColors.accent} />
+                <View
+                  style={[
+                    styles.envIcon,
+                    {
+                      backgroundColor: `${currentColors.accent}18`,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="leaf-outline"
+                    size={16}
+                    color={
+                      currentColors.accent
+                    }
+                  />
                 </View>
+
                 <View style={styles.envInfo}>
-                  <Text style={[styles.envName, { color: currentColors.textPrimary }]}>
-                    {t('dashboardAnalysis.context.allEnvironments')}
+                  <Text
+                    style={[
+                      styles.envName,
+                      {
+                        color:
+                          currentColors.textPrimary,
+                      },
+                    ]}
+                  >
+                    {t(
+                      'dashboardAnalysis.context.allEnvironments'
+                    )}
                   </Text>
-                  <Text style={[styles.envMeta, { color: currentColors.textMuted }]}>
-                    {t('dashboardAnalysis.context.consolidatedView')}
+
+                  <Text
+                    style={[
+                      styles.envMeta,
+                      {
+                        color:
+                          currentColors.textMuted,
+                      },
+                    ]}
+                  >
+                    {t(
+                      'dashboardAnalysis.context.consolidatedView'
+                    )}
                   </Text>
                 </View>
               </TouchableOpacity>
-              {vm.environments.map(environmentRow)}
+
+              {/* AMBIENTES */}
+              {vm.environments.map(
+                (environment) => {
+                  const isSelected =
+                    String(
+                      vm.environmentId
+                    ) ===
+                    String(environment.id)
+
+                  const normalizedStatus =
+                    normalizeStatus(
+                      environment.statusKey
+                    )
+
+                  const statusColor =
+                    STATUS_COLORS[
+                      normalizedStatus.key
+                    ] ||
+                    currentColors.accent
+
+                  return (
+                    <TouchableOpacity
+                      key={environment.id}
+                      style={[
+                        styles.envRow,
+                        {
+                          backgroundColor:
+                            isSelected
+                              ? `${currentColors.accent}12`
+                              : currentColors.bgCard,
+                          borderColor:
+                            isSelected
+                              ? currentColors.accent
+                              : currentColors.borderColor,
+                        },
+                      ]}
+                      onPress={() =>
+                        vm.setEnvironmentId(
+                          String(
+                            environment.id
+                          )
+                        )
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <View
+                        style={[
+                          styles.envIcon,
+                          {
+                            backgroundColor: `${statusColor}18`,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={
+                            normalizedStatus.key ===
+                            'alert'
+                              ? 'alert-circle-outline'
+                              : normalizedStatus.key ===
+                                  'warning'
+                                ? 'warning-outline'
+                                : 'checkmark-circle-outline'
+                          }
+                          size={16}
+                          color={statusColor}
+                        />
+                      </View>
+
+                      <View
+                        style={
+                          styles.envInfo
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.envName,
+                            {
+                              color:
+                                currentColors.textPrimary,
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {environment.name}
+                        </Text>
+
+                        <Text
+                          style={[
+                            styles.envMeta,
+                            {
+                              color:
+                                currentColors.textMuted,
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {environment.location ||
+                            t(
+                              'dashboardAnalysis.context.environment'
+                            )}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.countBadge,
+                          {
+                            backgroundColor: `${statusColor}18`,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.countBadgeTxt,
+                            {
+                              color: statusColor,
+                            },
+                          ]}
+                        >
+                          {environment.statusKey
+                            ? t(
+                                environment.statusKey
+                              )
+                            : ''}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                }
+              )}
             </View>
 
-            <View style={[styles.updatedRow, { borderTopColor: currentColors.borderColor }]}>
-              <Ionicons name="time-outline" size={14} color={currentColors.textMuted} />
-              <Text style={[styles.updatedTxt, { color: currentColors.textMuted }]}>
-                {t('dashboardAnalysis.context.lastReading')}
+            {/* ÚLTIMA ACTUALIZACIÓN */}
+            <View
+              style={[
+                styles.updatedRow,
+                {
+                  borderTopColor:
+                    currentColors.borderColor,
+                },
+              ]}
+            >
+              <Ionicons
+                name="time-outline"
+                size={14}
+                color={currentColors.textMuted}
+              />
+
+              <Text
+                style={[
+                  styles.updatedTxt,
+                  {
+                    color:
+                      currentColors.textMuted,
+                  },
+                ]}
+              >
+                {t(
+                  'dashboardAnalysis.context.lastReading'
+                )}
                 {' · '}
-                <Text style={{ fontWeight: '800', color: currentColors.textSecondary }}>{vm.lastUpdatedLabel}</Text>
+                <Text
+                  style={{
+                    fontWeight: '800',
+                    color:
+                      currentColors.textSecondary,
+                  }}
+                >
+                  {vm.lastUpdatedLabel}
+                </Text>
               </Text>
+
               <TouchableOpacity
-                style={[styles.refreshBtn, { borderColor: currentColors.borderColor }]}
+                style={[
+                  styles.refreshBtn,
+                  {
+                    borderColor:
+                      currentColors.borderColor,
+                  },
+                ]}
                 onPress={vm.refresh}
                 hitSlop={8}
-                accessibilityLabel={t('dashboardAnalysis.ariaLabels.refreshData')}
+                accessibilityLabel={t(
+                  'dashboardAnalysis.ariaLabels.refreshData'
+                )}
               >
-                <Ionicons name="refresh" size={14} color={currentColors.accent} />
+                <Ionicons
+                  name="refresh"
+                  size={14}
+                  color={currentColors.accent}
+                />
               </TouchableOpacity>
             </View>
           </View>
 
+          {/* KPIS */}
           <View style={styles.kpiGrid}>
             <KpiCard
-              label={`${t('dashboardAnalysis.kpi.averagePrefix')}${vm.metricLabel}`}
-              value={vm.formatMetric(vm.average)}
-              note={`↓ ${t('dashboardAnalysis.kpi.vsPreviousPeriod')}`}
+              label={`${t(
+                'dashboardAnalysis.kpi.averagePrefix'
+              )}${vm.metricLabel}`}
+              value={vm.formatMetric(
+                vm.average
+              )}
+              note={`↓ ${t(
+                'dashboardAnalysis.kpi.vsPreviousPeriod'
+              )}`}
               icon={vm.metricInfo.icon}
               iconColor={currentColors.accent}
               valueColor={currentColors.accent}
@@ -345,71 +1023,215 @@ export default function DashboardScreen({ navigation }) {
               cardColor={`${currentColors.accent}55`}
               surface={`${currentColors.accent}10`}
             />
+
             <KpiCard
               label={vm.statusLabels.normal}
-              value={String(vm.statusCounts.normal)}
-              note={t('dashboardAnalysis.kpi.environmentsInRange')}
+              value={String(
+                vm.statusCounts.normal
+              )}
+              note={t(
+                'dashboardAnalysis.kpi.environmentsInRange'
+              )}
               icon="checkmark-circle-outline"
               iconColor={STATUS_COLORS.normal}
               valueColor={STATUS_COLORS.normal}
               noteColor={currentColors.textMuted}
-              cardColor={currentColors.borderColor}
+              cardColor={
+                currentColors.borderColor
+              }
               surface={currentColors.bgCard}
             />
+
             <KpiCard
               label={vm.statusLabels.warning}
-              value={String(vm.statusCounts.warning)}
-              note={t('dashboardAnalysis.kpi.requireFollowUp')}
+              value={String(
+                vm.statusCounts.warning
+              )}
+              note={t(
+                'dashboardAnalysis.kpi.requireFollowUp'
+              )}
               icon="stats-chart-outline"
               iconColor={STATUS_COLORS.warning}
               valueColor={STATUS_COLORS.warning}
               noteColor={currentColors.textMuted}
-              cardColor={currentColors.borderColor}
+              cardColor={
+                currentColors.borderColor
+              }
               surface={currentColors.bgCard}
             />
+
             <KpiCard
               label={vm.statusLabels.alert}
-              value={String(vm.statusCounts.alert)}
-              note={t('dashboardAnalysis.kpi.requireAttention')}
+              value={String(
+                vm.statusCounts.alert
+              )}
+              note={t(
+                'dashboardAnalysis.kpi.requireAttention'
+              )}
               icon="speedometer-outline"
               iconColor={STATUS_COLORS.alert}
               valueColor={STATUS_COLORS.alert}
               noteColor={currentColors.textMuted}
-              cardColor={currentColors.borderColor}
+              cardColor={
+                currentColors.borderColor
+              }
               surface={currentColors.bgCard}
             />
           </View>
 
-          <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+          {/* GRÁFICO HISTÓRICO */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  currentColors.bgCard,
+                borderColor:
+                  currentColors.borderColor,
+              },
+            ]}
+          >
             <View style={styles.cardHead}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionLabel, { color: currentColors.textMuted }]}>{t('dashboardAnalysis.title')}</Text>
-                <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>
-                  {vm.metricLabel} {t('dashboardAnalysis.chart.throughTime')}
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.title'
+                  )}
                 </Text>
-                <Text style={[styles.cardSub, { color: currentColors.textMuted }]}>
-                  {vm.selectedLabel} · {vm.periodInfo.context}
+
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color:
+                        currentColors.textPrimary,
+                    },
+                  ]}
+                >
+                  {vm.metricLabel}{' '}
+                  {t(
+                    'dashboardAnalysis.chart.throughTime'
+                  )}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.cardSub,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {vm.selectedLabel} ·{' '}
+                  {vm.periodInfo.context}
                 </Text>
               </View>
-              <View style={[styles.livePill, { backgroundColor: `${currentColors.accent}14` }]}>
-                <View style={[styles.liveDot, { backgroundColor: currentColors.accent }]} />
-                <Text style={[styles.liveTxt, { color: currentColors.accent }]}>{t('dashboardAnalysis.chart.syncedData')}</Text>
+
+              <View
+                style={[
+                  styles.livePill,
+                  {
+                    backgroundColor: `${currentColors.accent}14`,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.liveDot,
+                    {
+                      backgroundColor:
+                        currentColors.accent,
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.liveTxt,
+                    {
+                      color:
+                        currentColors.accent,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.chart.syncedData'
+                  )}
+                </Text>
               </View>
             </View>
 
+            {/* LEYENDA */}
             <View style={styles.legendRow}>
-              {vm.series.map((item, index) => (
-                <View key={item.id} style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length] }]} />
-                  <Text style={[styles.legendTxt, { color: currentColors.textSecondary }]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                </View>
-              ))}
-              <View style={styles.legendComfort}>
-                <View style={[styles.legendDash, { borderColor: currentColors.textMuted }]} />
-                <Text style={[styles.legendTxt, { color: currentColors.textMuted }]}>
-                  {t('dashboardAnalysis.chart.comfortThreshold')}
+              {vm.series.map(
+                (item, index) => (
+                  <View
+                    key={item.id}
+                    style={styles.legendItem}
+                  >
+                    <View
+                      style={[
+                        styles.legendDot,
+                        {
+                          backgroundColor:
+                            ENVIRONMENT_COLORS[
+                              index %
+                                ENVIRONMENT_COLORS.length
+                            ],
+                        },
+                      ]}
+                    />
+
+                    <Text
+                      style={[
+                        styles.legendTxt,
+                        {
+                          color:
+                            currentColors.textSecondary,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+                  </View>
+                )
+              )}
+
+              <View
+                style={styles.legendComfort}
+              >
+                <View
+                  style={[
+                    styles.legendDash,
+                    {
+                      borderColor:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.legendTxt,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.chart.comfortThreshold'
+                  )}
                 </Text>
               </View>
             </View>
@@ -422,7 +1244,11 @@ export default function DashboardScreen({ navigation }) {
               spacing={spacing}
               initialSpacing={initialSpacing}
               endSpacing={endSpacing}
-              maxValue={Math.max(1, vm.chartRange.max - vm.chartRange.min)}
+              maxValue={Math.max(
+                1,
+                vm.chartRange.max -
+                  vm.chartRange.min
+              )}
               yAxisOffset={vm.chartRange.min}
               noOfSections={4}
               thickness={2.5}
@@ -435,10 +1261,18 @@ export default function DashboardScreen({ navigation }) {
               yAxisColor="transparent"
               yAxisThickness={0}
               yAxisLabelWidth={44}
-              xAxisLabelTextStyle={{ color: AXIS_TEXT_COLOR, fontSize: 10 }}
-              yAxisTextStyle={{ color: AXIS_TEXT_COLOR, fontSize: 10 }}
+              xAxisLabelTextStyle={{
+                color: AXIS_TEXT_COLOR,
+                fontSize: 10,
+              }}
+              yAxisTextStyle={{
+                color: AXIS_TEXT_COLOR,
+                fontSize: 10,
+              }}
               showReferenceLine1
-              referenceLine1Position={vm.chartRange.comfort}
+              referenceLine1Position={
+                vm.chartRange.comfort
+              }
               referenceLine1Config={{
                 color: 'rgba(185,203,197,.85)',
                 type: 'dashed',
@@ -449,44 +1283,124 @@ export default function DashboardScreen({ navigation }) {
               }}
               disableScroll
               pointerConfig={{
-                activatePointersOnLongPress: true,
+                activatePointersOnLongPress:
+                  true,
                 persistPointer: true,
-                pointerColor: currentColors.accent,
+                pointerColor:
+                  currentColors.accent,
                 pointerWidth: 10,
                 pointerHeight: 10,
                 pointerRadius: 5,
-                pointerLabelComponent: pointerLabel,
+                pointerLabelComponent:
+                  pointerLabel,
               }}
             />
 
             <View style={styles.captionRow}>
-              <Text style={[styles.captionTxt, { color: currentColors.textMuted }]}>
-                {t('dashboardAnalysis.chart.recommendedAverage')}
-                {vm.formatMetric(vm.chartRange.comfort)}
+              <Text
+                style={[
+                  styles.captionTxt,
+                  {
+                    color:
+                      currentColors.textMuted,
+                  },
+                ]}
+              >
+                {t(
+                  'dashboardAnalysis.chart.recommendedAverage'
+                )}
+                {vm.formatMetric(
+                  vm.chartRange.comfort
+                )}
               </Text>
-              <Text style={[styles.captionTxt, { color: currentColors.textMuted, textAlign: 'right' }]}>
+
+              <Text
+                style={[
+                  styles.captionTxt,
+                  {
+                    color:
+                      currentColors.textMuted,
+                    textAlign: 'right',
+                  },
+                ]}
+              >
                 {vm.metric === 'co2'
-                  ? t('dashboardAnalysis.chart.co2Range')
-                  : t('dashboardAnalysis.chart.referenceRange')}
+                  ? t(
+                      'dashboardAnalysis.chart.co2Range'
+                    )
+                  : t(
+                      'dashboardAnalysis.chart.referenceRange'
+                    )}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+          {/* COMPARACIÓN POR AMBIENTE */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  currentColors.bgCard,
+                borderColor:
+                  currentColors.borderColor,
+              },
+            ]}
+          >
             <View style={styles.cardHead}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionLabel, { color: currentColors.textMuted }]}>
-                  {t('dashboardAnalysis.comparison.title')}
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.comparison.title'
+                  )}
                 </Text>
-                <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>
-                  {t('dashboardAnalysis.comparison.byEnvironment')}
+
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color:
+                        currentColors.textPrimary,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.comparison.byEnvironment'
+                  )}
                 </Text>
-                <Text style={[styles.cardSub, { color: currentColors.textMuted }]}>
-                  {t('dashboardAnalysis.comparison.descriptionPrefix')} {vm.metricLabel.toLowerCase()}{' '}
-                  {t('dashboardAnalysis.comparison.descriptionSuffix')}
+
+                <Text
+                  style={[
+                    styles.cardSub,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.comparison.descriptionPrefix'
+                  )}{' '}
+                  {vm.metricLabel.toLowerCase()}{' '}
+                  {t(
+                    'dashboardAnalysis.comparison.descriptionSuffix'
+                  )}
                 </Text>
               </View>
-              <Ionicons name="bar-chart-outline" size={18} color={currentColors.textMuted} />
+
+              <Ionicons
+                name="bar-chart-outline"
+                size={18}
+                color={currentColors.textMuted}
+              />
             </View>
 
             {barData.length ? (
@@ -498,8 +1412,21 @@ export default function DashboardScreen({ navigation }) {
                 roundedTop
                 barBorderRadius={5}
                 noOfSections={4}
-                maxValue={Math.max(...barData.map((item) => item.value)) * 1.15}
-                spacing={Math.max(8, (chartWidth - 46) / Math.max(barData.length, 1) - barWidth)}
+                maxValue={Math.max(
+                  1,
+                  ...barData.map(
+                    (item) => item.value
+                  )
+                ) * 1.15}
+                spacing={Math.max(
+                  8,
+                  (chartWidth - 46) /
+                    Math.max(
+                      barData.length,
+                      1
+                    ) -
+                    barWidth
+                )}
                 initialSpacing={8}
                 endSpacing={8}
                 isAnimated={false}
@@ -511,26 +1438,108 @@ export default function DashboardScreen({ navigation }) {
                 yAxisColor="transparent"
                 yAxisThickness={0}
                 yAxisLabelWidth={44}
-                xAxisLabelTextStyle={{ color: AXIS_TEXT_COLOR, fontSize: 9 }}
-                yAxisTextStyle={{ color: AXIS_TEXT_COLOR, fontSize: 10 }}
+                xAxisLabelTextStyle={{
+                  color: AXIS_TEXT_COLOR,
+                  fontSize: 9,
+                }}
+                yAxisTextStyle={{
+                  color: AXIS_TEXT_COLOR,
+                  fontSize: 10,
+                }}
                 disableScroll
               />
             ) : (
-              <Text style={[styles.cardSub, { color: currentColors.textMuted }]}>
-                {t('dashboardAnalysis.comparison.descriptionSuffix', 'Sin datos')}
+              <Text
+                style={[
+                  styles.cardSub,
+                  {
+                    color:
+                      currentColors.textMuted,
+                  },
+                ]}
+              >
+                {t(
+                  'dashboardAnalysis.comparison.descriptionSuffix',
+                  'Sin datos'
+                )}
               </Text>
             )}
           </View>
 
-          <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+          {/* ESTADO DE LA RED */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  currentColors.bgCard,
+                borderColor:
+                  currentColors.borderColor,
+              },
+            ]}
+          >
             <View style={styles.cardHead}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionLabel, { color: currentColors.textMuted }]}>{t('dashboardAnalysis.network.title')}</Text>
-                <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>{t('dashboardAnalysis.network.health')}</Text>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    {
+                      color:
+                        currentColors.textMuted,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.network.title'
+                  )}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color:
+                        currentColors.textPrimary,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.network.health'
+                  )}
+                </Text>
               </View>
-              <View style={[styles.livePill, { backgroundColor: `${currentColors.accent}14` }]}>
-                <View style={[styles.liveDot, { backgroundColor: currentColors.accent }]} />
-                <Text style={[styles.liveTxt, { color: currentColors.accent }]}>{t('dashboardAnalysis.network.monitoring')}</Text>
+
+              <View
+                style={[
+                  styles.livePill,
+                  {
+                    backgroundColor: `${currentColors.accent}14`,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.liveDot,
+                    {
+                      backgroundColor:
+                        currentColors.accent,
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.liveTxt,
+                    {
+                      color:
+                        currentColors.accent,
+                    },
+                  ]}
+                >
+                  {t(
+                    'dashboardAnalysis.network.monitoring'
+                  )}
+                </Text>
               </View>
             </View>
 
@@ -545,74 +1554,277 @@ export default function DashboardScreen({ navigation }) {
                   backgroundColor="transparent"
                   isAnimated={false}
                   centerLabelComponent={() => (
-                    <View style={styles.donutCenter}>
-                      <Text style={[styles.donutValue, { color: currentColors.textPrimary }]}>{vm.healthPercent}%</Text>
-                      <Text style={[styles.donutLabel, { color: currentColors.textMuted }]}>
-                        {t('dashboardAnalysis.network.inRange')}
+                    <View
+                      style={styles.donutCenter}
+                    >
+                      <Text
+                        style={[
+                          styles.donutValue,
+                          {
+                            color:
+                              currentColors.textPrimary,
+                          },
+                        ]}
+                      >
+                        {healthPercent}%
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.donutLabel,
+                          {
+                            color:
+                              currentColors.textMuted,
+                          },
+                        ]}
+                      >
+                        {t(
+                          'dashboardAnalysis.network.inRange'
+                        )}
                       </Text>
                     </View>
                   )}
                 />
               </View>
-              <View style={styles.networkLegend}>
+
+              <View
+                style={styles.networkLegend}
+              >
                 {[
-                  { key: 'normal', label: vm.statusLabels.normal, value: vm.statusCounts.normal },
-                  { key: 'warning', label: vm.statusLabels.warning, value: vm.statusCounts.warning },
-                  { key: 'alert', label: vm.statusLabels.alert, value: vm.statusCounts.alert },
+                  {
+                    key: 'normal',
+                    label:
+                      vm.statusLabels.normal,
+                    value:
+                      vm.statusCounts.normal,
+                  },
+                  {
+                    key: 'warning',
+                    label:
+                      vm.statusLabels.warning,
+                    value:
+                      vm.statusCounts.warning,
+                  },
+                  {
+                    key: 'alert',
+                    label:
+                      vm.statusLabels.alert,
+                    value:
+                      vm.statusCounts.alert,
+                  },
                 ].map((item) => (
-                  <View key={item.key} style={styles.networkRow}>
-                    <View style={[styles.networkDot, { backgroundColor: STATUS_COLORS[item.key] }]} />
-                    <Text style={[styles.networkName, { color: currentColors.textSecondary }]}>{item.label}</Text>
-                    <Text style={[styles.networkCount, { color: currentColors.textPrimary }]}>{item.value}</Text>
+                  <View
+                    key={item.key}
+                    style={styles.networkRow}
+                  >
+                    <View
+                      style={[
+                        styles.networkDot,
+                        {
+                          backgroundColor:
+                            STATUS_COLORS[
+                              item.key
+                            ],
+                        },
+                      ]}
+                    />
+
+                    <Text
+                      style={[
+                        styles.networkName,
+                        {
+                          color:
+                            currentColors.textSecondary,
+                        },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.networkCount,
+                        {
+                          color:
+                            currentColors.textPrimary,
+                        },
+                      ]}
+                    >
+                      {item.value}
+                    </Text>
                   </View>
                 ))}
+
                 <View style={styles.networkFoot}>
-                  <Ionicons name="checkmark-circle" size={13} color={currentColors.accent} />
-                  <Text style={[styles.footerTxt, { color: currentColors.textMuted }]}>
-                    {t('dashboardAnalysis.network.dataUpdated')}
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={13}
+                    color={
+                      currentColors.accent
+                    }
+                  />
+
+                  <Text
+                    style={[
+                      styles.footerTxt,
+                      {
+                        color:
+                          currentColors.textMuted,
+                      },
+                    ]}
+                  >
+                    {t(
+                      'dashboardAnalysis.network.dataUpdated'
+                    )}
                   </Text>
                 </View>
               </View>
             </View>
           </View>
 
-          <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
-            <Text style={[styles.sectionLabel, { color: currentColors.textMuted }]}>
-              {t('dashboardAnalysis.quickReading.title')}
+          {/* LECTURA RÁPIDA */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  currentColors.bgCard,
+                borderColor:
+                  currentColors.borderColor,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionLabel,
+                {
+                  color:
+                    currentColors.textMuted,
+                },
+              ]}
+            >
+              {t(
+                'dashboardAnalysis.quickReading.title'
+              )}
             </Text>
-            <Text style={[styles.readingTitle, { color: currentColors.textPrimary }]}>
+
+            <Text
+              style={[
+                styles.readingTitle,
+                {
+                  color:
+                    currentColors.textPrimary,
+                },
+              ]}
+            >
               {vm.statusCounts.alert > 0
-                ? t('dashboardAnalysis.quickReading.alertMessage')
-                : t('dashboardAnalysis.quickReading.normalMessage')}
+                ? t(
+                    'dashboardAnalysis.quickReading.alertMessage'
+                  )
+                : t(
+                    'dashboardAnalysis.quickReading.normalMessage'
+                  )}
             </Text>
-            <Text style={[styles.readingDesc, { color: currentColors.textSecondary }]}>
+
+            <Text
+              style={[
+                styles.readingDesc,
+                {
+                  color:
+                    currentColors.textSecondary,
+                },
+              ]}
+            >
               {vm.statusCounts.alert > 0
-                ? t('dashboardAnalysis.quickReading.alertDescription')
-                : t('dashboardAnalysis.quickReading.normalDescription')}
+                ? t(
+                    'dashboardAnalysis.quickReading.alertDescription'
+                  )
+                : t(
+                    'dashboardAnalysis.quickReading.normalDescription'
+                  )}
             </Text>
+
             <TouchableOpacity
               style={styles.readingBtn}
-              onPress={() =>
-                vm.setEnvironmentId(
+              onPress={() => {
+                if (
                   vm.statusCounts.alert > 0
-                    ? String(
-                        vm.environments.find((env) => normalizeStatus(env.statusKey).key === 'alert')?.id || 'all'
+                ) {
+                  const alertEnvironment =
+                    vm.environments.find(
+                      (environment) =>
+                        normalizeStatus(
+                          environment.statusKey
+                        ).key === 'alert'
+                    )
+
+                  if (
+                    alertEnvironment?.id !=
+                    null
+                  ) {
+                    vm.setEnvironmentId(
+                      String(
+                        alertEnvironment.id
                       )
-                    : 'all'
-                )
-              }
+                    )
+                    return
+                  }
+                }
+
+                vm.setEnvironmentId('all')
+              }}
             >
-              <Text style={[styles.readingBtnTxt, { color: currentColors.accent }]}>
-                {t('dashboardAnalysis.quickReading.viewDetail')}
+              <Text
+                style={[
+                  styles.readingBtnTxt,
+                  {
+                    color:
+                      currentColors.accent,
+                  },
+                ]}
+              >
+                {t(
+                  'dashboardAnalysis.quickReading.viewDetail'
+                )}
               </Text>
-              <Ionicons name="arrow-up" size={14} color={currentColors.accent} />
+
+              <Ionicons
+                name="arrow-up"
+                size={14}
+                color={currentColors.accent}
+              />
             </TouchableOpacity>
           </View>
 
+          {/* FOOTER */}
           <View style={styles.footer}>
-            <Text style={[styles.footerTxt, { color: currentColors.textMuted }]}>{t('dashboardAnalysis.footer.brand')}</Text>
-            <Text style={[styles.footerTxt, { color: currentColors.textMuted }]}>
-              {vm.environments.length} {t('dashboardAnalysis.footer.autoUpdate')}
+            <Text
+              style={[
+                styles.footerTxt,
+                {
+                  color:
+                    currentColors.textMuted,
+                },
+              ]}
+            >
+              {t(
+                'dashboardAnalysis.footer.brand'
+              )}
+            </Text>
+
+            <Text
+              style={[
+                styles.footerTxt,
+                {
+                  color:
+                    currentColors.textMuted,
+                },
+              ]}
+            >
+              {vm.environments.length}{' '}
+              {t(
+                'dashboardAnalysis.footer.autoUpdate'
+              )}
             </Text>
           </View>
         </ScrollView>
