@@ -335,9 +335,30 @@ export default function SettingsScreen({ navigation }) {
         )
       case 'version':
         return (
-          <View style={{ alignItems: 'center', gap: 8 }}>
-            <Text style={[styles.versionDesc, { color: currentColors.textSecondary }]}>{t('settings.versionDesc')}</Text>
-            <Text style={[styles.versionDate, { color: currentColors.textMuted }]}>{t('settings.versionDate')}</Text>
+          <View style={styles.versionModalWrap}>
+            <View style={[styles.versionBadge, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+              <Text style={[styles.versionBadgeText, { color: currentColors.accent }]}>v1.0</Text>
+            </View>
+
+            <Text style={[styles.versionAppName, { color: currentColors.textPrimary }]}>
+              Sistema de Monitoreo de Calidad del Aire
+            </Text>
+
+            <Text style={[styles.versionDate, { color: currentColors.textSecondary }]}>
+              Última actualización: Abril 2026
+            </Text>
+
+            <View style={styles.versionChipsRow}>
+              {[
+                'React 18',
+                'i18n',
+                darkMode ? 'Modo oscuro' : 'Modo claro',
+              ].map((chip) => (
+                <View key={chip} style={[styles.versionChip, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+                  <Text style={[styles.versionChipText, { color: currentColors.accent }]}>{chip}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         )
       default:
@@ -467,7 +488,6 @@ export default function SettingsScreen({ navigation }) {
             { type: 'faq', icon: 'help-circle-outline', label: t('settings.helpFaq') },
             { type: 'contact', icon: 'mail-outline', label: t('settings.helpContact') },
             { type: 'terms', icon: 'document-text-outline', label: t('settings.helpTerms') },
-            { type: 'privacy', icon: 'lock-closed-outline', label: t('settings.helpPrivacy') },
             { type: 'version', icon: 'information-circle-outline', label: t('settings.helpVersion') },
           ].map((item) => (
             <Row
@@ -707,11 +727,17 @@ export default function SettingsScreen({ navigation }) {
       <Modal isOpen={showHelpModal.open} onClose={() => setShowHelpModal({ open: false, type: null })} size="lg">
         <View style={[styles.helpModalHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
           <View style={[styles.helpModalIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
-            <Ionicons name="help-circle-outline" size={20} color={currentColors.accent} />
+            <Ionicons name={showHelpModal.type === 'version' ? 'information-circle-outline' : 'shield-checkmark-outline'} size={20} color={currentColors.accent} />
           </View>
           <View style={styles.helpModalTextWrap}>
-            <Text style={[styles.helpModalTitle, { color: currentColors.textPrimary }]}>{t('settings.help')}</Text>
-            <Text style={[styles.helpModalSubtitle, { color: currentColors.textSecondary }]}>{t('settings.helpDescription')}</Text>
+            <Text style={[styles.helpModalTitle, { color: currentColors.textPrimary }]}>
+              {showHelpModal.type === 'version' ? 'Versión de la app' : 'Políticas y seguridad'}
+            </Text>
+            {!showHelpModal.type || showHelpModal.type === 'version' ? null : (
+              <Text style={[styles.helpModalSubtitle, { color: currentColors.textSecondary }]}>
+                {showHelpModal.type === 'privacy' ? 'Información sobre privacidad, protección de datos y seguridad.' : t('settings.helpDescription')}
+              </Text>
+            )}
           </View>
         </View>
 
