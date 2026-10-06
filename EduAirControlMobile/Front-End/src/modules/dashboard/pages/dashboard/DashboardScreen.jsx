@@ -645,6 +645,8 @@ export default function DashboardScreen({ navigation }) {
                           : currentColors.textSecondary,
                       },
                     ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
                   >
                     {vm.metricLabels[key]}
                   </Text>

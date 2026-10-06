@@ -80,9 +80,9 @@ export const styles = StyleSheet.create({
   periodContextTxt: { fontSize: 11.5 },
 
   chipScroll: { marginBottom: 14 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, marginBottom: 14 },
-  chip: { width: '48%', flexGrow: 0, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 20, borderWidth: 1 },
-  chipTxt: { fontSize: 12.5, fontWeight: '700' },
+  chipRow: { flexDirection: 'row', gap: 6, marginTop: 14, marginBottom: 14 },
+  chip: { flex: 1, minWidth: 0, height: 58, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 2, borderRadius: 12, borderWidth: 1 },
+  chipTxt: { fontSize: 10, fontWeight: '700', textAlign: 'center', flexShrink: 1 },
 
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   kpiCard: { width: '47.7%', borderRadius: 14, borderWidth: 1, padding: 12 },
