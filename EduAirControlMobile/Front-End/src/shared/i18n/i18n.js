@@ -33,15 +33,15 @@ i18n.use(initReactI18next).init({
   },
 })
 
-export function setAppLanguage(language) {
+export async function setAppLanguage(language) {
   const next = validLangs.includes(language) ? language : 'es'
-  i18n.changeLanguage(next)
-  storage.setItem('language', next)
+  await storage.setItem('language', next)
+  await i18n.changeLanguage(next)
 }
 
-export function applySavedLanguage() {
+export async function applySavedLanguage() {
   const saved = storage.getItem('language')
-  if (validLangs.includes(saved)) i18n.changeLanguage(saved)
+  if (validLangs.includes(saved)) await i18n.changeLanguage(saved)
 }
 
 export default i18n

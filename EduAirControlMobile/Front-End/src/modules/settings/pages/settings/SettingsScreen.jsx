@@ -145,14 +145,14 @@ export default function SettingsScreen({ navigation }) {
     }
   }
 
-  const handleThemeChange = (key) => {
+  const handleThemeChange = async (key) => {
     setColorTheme(key)
     const a11y = getAccessibilitySettings()
-    saveAccessibilitySettings({ ...a11y, colorTheme: key })
+    await saveAccessibilitySettings({ ...a11y, colorTheme: key })
   }
 
-  const handleChangeLanguage = (code) => {
-    setAppLanguage(code)
+  const handleChangeLanguage = async (code) => {
+    await setAppLanguage(code)
     setShowLangModal(false)
   }
 
