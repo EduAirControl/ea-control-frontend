@@ -38,22 +38,22 @@ export const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   passwordModalContent: { paddingTop: 8, paddingBottom: 6 },
   passwordHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 18,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 14,
   },
   passwordHeaderIcon: {
-    width: 42, height: 42, borderRadius: 12, borderWidth: 1,
+    width: 36, height: 36, borderRadius: 10, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
   passwordHeaderTitle: {
     flexShrink: 1,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: -0.2,
-    lineHeight: 20,
+    lineHeight: 18,
     maxWidth: '100%',
   },
-  passwordFieldGroup: { marginBottom: 14 },
+  passwordFieldGroup: { marginBottom: 12 },
   passwordFieldLabel: {
     flexShrink: 1,
     fontSize: 12,
@@ -63,12 +63,12 @@ export const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   passwordField: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3,
   },
-  passwordInput: { flex: 1, fontSize: 15, paddingVertical: 11 },
-  passwordActionButton: { flex: 1, borderRadius: 12 },
-  modalActions: { flexDirection: 'row', gap: 12, marginTop: 18 },
+  passwordInput: { flex: 1, fontSize: 15, paddingVertical: 9 },
+  passwordActionButton: { flex: 1, borderRadius: 10, minHeight: 42 },
+  modalActions: { flexDirection: 'row', gap: 12, marginTop: 14 },
   langOption: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, marginBottom: 6,
@@ -106,16 +106,69 @@ export const styles = StyleSheet.create({
   dateFormatSaveButton: { flex: 1, borderRadius: 12, minHeight: 42 },
   dateFormatCancelText: { fontWeight: '700' },
   dateFormatSaveText: { fontWeight: '700' },
-  helpItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
+  helpItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
   helpIcon: { fontSize: 16, marginTop: 2 },
+  helpModalHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+
+  borderWidth: 1,
+  borderRadius: 12,
+
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+
+  // Separación de la X del contenido
+  marginTop: 18,
+  marginBottom: 14,
+  marginHorizontal: 2,
+
+  // Espacio extra a la derecha por seguridad
+  paddingRight: 44,
+},
+  helpModalIcon: {
+    width: 32, height: 32, borderRadius: 10, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  helpModalTextWrap: { flex: 1, paddingRight: 8 },
+  helpModalTitle: { fontSize: 14, fontWeight: '700', letterSpacing: -0.2 },
+  helpModalSubtitle: { fontSize: 11, marginTop: 2, lineHeight: 14 },
+
+helpModalScroll: {
+  maxHeight: 430,
+  minHeight: 120,
+  width: '100%',
+},
+
+helpModalContent: {
+  paddingTop: 2,
+  paddingBottom: 24,
+  paddingHorizontal: 2,
+},
+  helpFaqList: { gap: 10 },
+  helpFaqCard: {
+    borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  helpContactList: { gap: 10 },
+  helpContactCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  helpContactIcon: {
+    width: 36, height: 36, borderRadius: 10, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  helpContactIconText: { fontSize: 16 },
+  helpContactText: { flex: 1 },
   helpLabel: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
-  helpValue: { fontSize: 13 },
-  helpQuestion: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  helpAnswer: { fontSize: 13, lineHeight: 18 },
-  helpText: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
-  helpSection: { marginBottom: 14 },
-  helpSectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: 6 },
-  helpListItem: { fontSize: 13, lineHeight: 19 },
+  helpValue: { fontSize: 13, lineHeight: 18 },
+  helpQuestion: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
+  helpAnswer: { fontSize: 13, lineHeight: 20 },
+  helpText: { fontSize: 14, lineHeight: 22, marginBottom: 12, textAlign: 'left' },
+  helpSection: { marginBottom: 16 },
+  helpSectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
+  helpListItem: { fontSize: 13, lineHeight: 21, marginBottom: 4 },
   versionDesc: { fontSize: 15, fontWeight: '600' },
   versionDate: { fontSize: 12 },
 })

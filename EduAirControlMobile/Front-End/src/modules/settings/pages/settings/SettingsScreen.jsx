@@ -195,34 +195,58 @@ export default function SettingsScreen({ navigation }) {
   const renderHelpContent = () => {
     switch (showHelpModal.type) {
       case 'faq':
-        return [
-          { q: t('settings.faq.q1'), a: t('settings.faq.a1') },
-          { q: t('settings.faq.q2'), a: t('settings.faq.a2') },
-          { q: t('settings.faq.q3'), a: t('settings.faq.a3') },
-          { q: t('settings.faq.q4'), a: t('settings.faq.a4') },
-        ].map((item, idx) => (
-          <View key={idx} style={styles.helpItem}>
-            <Text style={[styles.helpQuestion, { color: currentColors.textPrimary }]}>{item.q}</Text>
-            <Text style={[styles.helpAnswer, { color: currentColors.textSecondary }]}>{item.a}</Text>
+        return (
+          <View style={styles.helpFaqList}>
+            {[
+              { q: t('settings.faq.q1'), a: t('settings.faq.a1') },
+              { q: t('settings.faq.q2'), a: t('settings.faq.a2') },
+              { q: t('settings.faq.q3'), a: t('settings.faq.a3') },
+              { q: t('settings.faq.q4'), a: t('settings.faq.a4') },
+            ].map((item, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.helpFaqCard,
+                  {
+                    backgroundColor: currentColors.bgBody,
+                    borderColor: currentColors.borderColor,
+                  },
+                ]}
+              >
+                <Text style={[styles.helpQuestion, { color: currentColors.textPrimary }]}>{item.q}</Text>
+                <Text style={[styles.helpAnswer, { color: currentColors.textSecondary }]}>{item.a}</Text>
+              </View>
+            ))}
           </View>
-        ))
+        )
       case 'contact':
         return (
-          <>
+          <View style={styles.helpContactList}>
             {[
               { icon: '✉️', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
               { icon: '🕐', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
               { icon: '⏱️', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
             ].map((row, idx) => (
-              <View key={idx} style={styles.helpItem}>
-                <Text style={styles.helpIcon}>{row.icon}</Text>
-                <View style={{ flex: 1 }}>
+              <View
+                key={idx}
+                style={[
+                  styles.helpContactCard,
+                  {
+                    backgroundColor: currentColors.bgBody,
+                    borderColor: currentColors.borderColor,
+                  },
+                ]}
+              >
+                <View style={[styles.helpContactIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+                  <Text style={styles.helpContactIconText}>{row.icon}</Text>
+                </View>
+                <View style={styles.helpContactText}>
                   <Text style={[styles.helpLabel, { color: currentColors.textPrimary }]}>{row.label}</Text>
                   <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>{row.value}</Text>
                 </View>
               </View>
             ))}
-          </>
+          </View>
         )
       case 'terms':
         return (
@@ -236,20 +260,61 @@ export default function SettingsScreen({ navigation }) {
                 ))}
               </View>
             ))}
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>{t('settings.terms.footer')}</Text>
           </>
         )
       case 'privacy':
         return (
           <>
-            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>{t('settings.privacyModal.intro')}</Text>
-            {t('settings.privacyModal.sections', { returnObjects: true }).map((sec, idx) => (
-              <View key={idx} style={styles.helpSection}>
-                <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>{sec.title}</Text>
-                {sec.items.map((item, i) => (
-                  <Text key={i} style={[styles.helpListItem, { color: currentColors.textSecondary }]}>- {item}</Text>
-                ))}
-              </View>
-            ))}
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>
+              En EduAirControl nos tomamos en serio la protección de tu información personal. Esta política explica qué datos recopilamos y cómo los cuidamos:
+            </Text>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Qué información recopilamos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos de cuenta: nombre, correo electrónico y credenciales de acceso.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos ambientales generados por los sensores de tu institución (calidad del aire, temperatura, humedad, etc.).</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos de uso: preferencias, idioma, zona horaria y configuración de la aplicación.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Cómo usamos tu información</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para brindarte acceso al panel, los rankings y las notificaciones de la plataforma.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para generar reportes e informes ambientales de tu institución.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para mejorar el servicio y comunicarnos contigo sobre actualizaciones importantes.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Cómo protegemos tus datos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Tus datos se transmiten y almacenan de forma cifrada.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Las contraseñas nunca se guardan en texto plano; se protegen mediante algoritmos de cifrado seguros.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• El acceso a la información está restringido solo al personal autorizado que lo necesita para operar la plataforma.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Revisamos periódicamente nuestras prácticas de seguridad para prevenir accesos no autorizados.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Con quién compartimos tu información</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• No vendemos ni alquilamos tus datos personales a terceros.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Solo compartimos información con los administradores de tu propia institución, o con proveedores estrictamente necesarios para operar el servicio (por ejemplo, hosting).</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Podemos divulgar información si así lo exige la ley.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Tus derechos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes acceder, corregir o actualizar tus datos personales desde tu perfil.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes solicitar la eliminación de tu cuenta y de tus datos en cualquier momento desde esta sección de Configuración.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes solicitar una copia de la información que tenemos sobre ti escribiéndonos a soporte.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Retención de datos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Conservamos tu información mientras tu cuenta esté activa.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Al solicitar la eliminación de tu cuenta, tus datos personales se eliminan o anonimizan dentro de un plazo razonable, salvo que la ley exija conservarlos.</Text>
+            </View>
+
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>
+              ¿Tienes preguntas sobre cómo tratamos tus datos? Escríbenos a soporte@eduaircontrol.com.
+            </Text>
           </>
         )
       case 'version':
@@ -584,8 +649,23 @@ export default function SettingsScreen({ navigation }) {
         )}
       </Modal>
 
-      <Modal isOpen={showHelpModal.open} onClose={() => setShowHelpModal({ open: false, type: null })} title={t('settings.help')} size="lg">
-        <ScrollView style={{ maxHeight: 480 }} contentContainerStyle={{ paddingBottom: 8 }}>
+      <Modal isOpen={showHelpModal.open} onClose={() => setShowHelpModal({ open: false, type: null })} size="lg">
+        <View style={[styles.helpModalHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+          <View style={[styles.helpModalIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+            <Ionicons name="help-circle-outline" size={20} color={currentColors.accent} />
+          </View>
+          <View style={styles.helpModalTextWrap}>
+            <Text style={[styles.helpModalTitle, { color: currentColors.textPrimary }]}>{t('settings.help')}</Text>
+            <Text style={[styles.helpModalSubtitle, { color: currentColors.textSecondary }]}>{t('settings.helpDescription')}</Text>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.helpModalScroll}
+          contentContainerStyle={styles.helpModalContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
           {renderHelpContent()}
         </ScrollView>
       </Modal>
