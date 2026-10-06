@@ -37,10 +37,10 @@ const TIMEZONES = [
 ]
 
 const LANGUAGES = [
-  { code: 'es', name: 'Español' },
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
-  { code: 'pt', name: 'Português' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
 ]
 
 const COLOR_THEMES = [
@@ -414,9 +414,12 @@ export default function SettingsScreen({ navigation }) {
               style={[styles.langOption, active && { backgroundColor: currentColors.accentDim }]}
               onPress={() => handleChangeLanguage(lang.code)}
             >
-              <Text style={[styles.langOptionText, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
-                {lang.name}
-              </Text>
+              <View style={styles.langOptionRow}>
+                <Text style={styles.langFlag}>{lang.flag}</Text>
+                <Text style={[styles.langOptionText, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
+                  {lang.name}
+                </Text>
+              </View>
               {active && <Ionicons name="checkmark" size={18} color={currentColors.accent} />}
             </TouchableOpacity>
           )

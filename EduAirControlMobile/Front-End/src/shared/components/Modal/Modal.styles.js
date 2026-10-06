@@ -5,10 +5,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(1, 10, 18, 0.7)',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     paddingHorizontal: 18,
-    paddingTop: 88,
-    paddingBottom: 20,
+    paddingVertical: 20,
   },
   content: {
     borderRadius: 24,

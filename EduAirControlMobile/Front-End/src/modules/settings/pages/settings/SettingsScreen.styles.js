@@ -41,6 +41,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, marginBottom: 6,
   },
+  langOptionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  langFlag: { fontSize: 18 },
   langOptionText: { fontSize: 15, fontWeight: '600' },
   modalText: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 12 },
   dateFormatModalContent: { paddingTop: 8, paddingBottom: 6 },
