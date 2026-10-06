@@ -114,6 +114,7 @@ export default function SettingsScreen({ navigation }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteSent, setDeleteSent] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
   const [showHelpModal, setShowHelpModal] = useState({ open: false, type: null })
   const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' })
   const [showPassword, setShowPassword] = useState({ new: false, confirm: false })
@@ -185,6 +186,21 @@ export default function SettingsScreen({ navigation }) {
     Alert.alert('', pm.success)
     setShowPasswordModal(false)
     setPasswordData({ current: '', new: '', confirm: '' })
+  }
+
+  const handleDeleteAccountConfirm = () => {
+    if (!deletePassword.trim()) {
+      return Alert.alert('', 'Ingresa tu contraseña para confirmar la eliminación de la cuenta.')
+    }
+
+    setDeleteSent(true)
+    setDeletePassword('')
+  }
+
+  const handleCloseDeleteModal = () => {
+    setDeleteSent(false)
+    setDeletePassword('')
+    setShowDeleteModal(false)
   }
 
   const themeLabel = (key) => {
@@ -441,7 +457,7 @@ export default function SettingsScreen({ navigation }) {
           </View>
           <Row icon="lock-closed-outline" label={t('settings.changePassword')} currentColors={currentColors} onPress={() => setShowPasswordModal(true)} />
           <Row icon="book-outline" label={t('settings.viewPrivacyPolicy')} currentColors={currentColors} onPress={() => setShowHelpModal({ open: true, type: 'privacy' })} />
-          <Row icon="trash-outline" label={t('settings.deleteAccount')} currentColors={currentColors} color={currentColors.error} onPress={() => { setDeleteSent(false); setShowDeleteModal(true) }} />
+          <Row icon="trash-outline" label={t('settings.deleteAccount')} currentColors={currentColors} color={currentColors.error} onPress={() => { setDeleteSent(false); setDeletePassword(''); setShowDeleteModal(true) }} />
         </SectionCard>
 
         <SectionCard icon="help-circle-outline" title={t('settings.help')} currentColors={currentColors}>
@@ -630,19 +646,58 @@ export default function SettingsScreen({ navigation }) {
         </View>
       </Modal>
 
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title={t('settings.deleteAccount')}>
+      <Modal isOpen={showDeleteModal} onClose={handleCloseDeleteModal} title="Confirmación de seguridad" contentStyle={styles.deleteModalContent}>
         {deleteSent ? (
-          <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>{t('settings.deleteRequestSent')}</Text>
+          <View style={[styles.deleteSuccessCard, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="checkmark-circle-outline" size={32} color={currentColors.accent} />
+            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Solicitud enviada</Text>
+            <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>
+              Tu cuenta queda pendiente de eliminación segura. Verificaremos la confirmación y te avisaremos si necesitamos más información.
+            </Text>
+            <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteSuccessButton}>
+              Cerrar
+            </Button>
+          </View>
         ) : (
           <>
-            <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>{t('settings.deleteAccountConfirm')}</Text>
-            <Text style={[styles.helpValue, { color: currentColors.textMuted }]}>{t('settings.deleteAccountDetail')}</Text>
+            <View style={[styles.deleteHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+              <View style={[styles.deleteHeaderIcon, { backgroundColor: currentColors.error + '15', borderColor: currentColors.error }]}>
+                <Ionicons name="trash-outline" size={22} color={currentColors.error} />
+              </View>
+              <Text style={[styles.deleteHeaderTitle, { color: currentColors.textPrimary }]}>
+                Eliminar cuenta
+              </Text>
+            </View>
+
+            <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>
+              Esta acción elimina permanentemente tu cuenta y todos los datos asociados a tu perfil.
+            </Text>
+            <Text style={[styles.deleteDetail, { color: currentColors.textMuted }]}>
+              Para continuar, introduce tu contraseña actual para confirmar la eliminación.
+            </Text>
+
+            <View style={styles.deleteFieldGroup}>
+              <Text style={[styles.deleteFieldLabel, { color: currentColors.textSecondary }]}>Contraseña actual</Text>
+              <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+                <Ionicons name="key-outline" size={18} color={currentColors.textMuted} />
+                <TextInput
+                  style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+                  placeholder="Confirma tu contraseña"
+                  placeholderTextColor={currentColors.textMuted}
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
             <View style={styles.modalActions}>
-              <Button variant="outline" onPress={() => setShowDeleteModal(false)}>
-                {t('settings.passwordModal.cancel')}
+              <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteActionButton}>
+                Cancelar
               </Button>
-              <Button variant="danger" onPress={() => { setDeleteSent(true); }}>
-                {t('settings.deleteBtn')}
+              <Button variant="danger" onPress={handleDeleteAccountConfirm} style={styles.deleteActionButton}>
+                Eliminar cuenta
               </Button>
             </View>
           </>
