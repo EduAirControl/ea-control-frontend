@@ -597,12 +597,7 @@ export default function DashboardScreen({ navigation }) {
           </View>
 
           {/* MÉTRICAS */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipScroll}
-            contentContainerStyle={styles.chipRow}
-          >
+          <View style={styles.chipRow}>
             {Object.keys(METRICS).map((key) => {
               const active =
                 vm.metric === key
@@ -656,7 +651,7 @@ export default function DashboardScreen({ navigation }) {
                 </TouchableOpacity>
               )
             })}
-          </ScrollView>
+          </View>
 
           {/* SELECCIÓN DE AMBIENTES */}
           <View

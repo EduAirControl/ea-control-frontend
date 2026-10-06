@@ -79,9 +79,9 @@ export const styles = StyleSheet.create({
   periodContext: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   periodContextTxt: { fontSize: 11.5 },
 
-  chipScroll: { flexGrow: 0, marginBottom: 14 },
-  chipRow: { flexDirection: 'row', gap: 8, paddingRight: 4 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 20, borderWidth: 1 },
+  chipScroll: { marginBottom: 14 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, marginBottom: 14 },
+  chip: { width: '48%', flexGrow: 0, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 20, borderWidth: 1 },
   chipTxt: { fontSize: 12.5, fontWeight: '700' },
 
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
