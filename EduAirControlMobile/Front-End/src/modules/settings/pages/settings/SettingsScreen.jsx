@@ -50,6 +50,15 @@ const COLOR_THEMES = [
   { key: 'theme-tritanopia', label: 'settings.themeTritanopia' },
 ]
 
+const DATE_FORMATS = [
+  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY', sample: '06/10/2026' },
+  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY', sample: '10/06/2026' },
+  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD', sample: '2026-10-06' },
+  { value: 'DD-MM-YYYY', label: 'DD-MM-YYYY', sample: '06-10-2026' },
+  { value: 'DD.MM.YYYY', label: 'DD.MM.YYYY', sample: '06.10.2026' },
+  { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD', sample: '2026/10/06' },
+]
+
 function Toggle({ value, onValueChange, currentColors }) {
   return (
     <TouchableOpacity
@@ -97,9 +106,11 @@ export default function SettingsScreen({ navigation }) {
   const [autoTimezone, setAutoTimezone] = useState(true)
   const [manualTimezone, setManualTimezone] = useState('America/Bogota')
   const [dateFormat, setDateFormat] = useState('DD-MM-YYYY')
+  const [dateFormatDraft, setDateFormatDraft] = useState('DD-MM-YYYY')
   const [reminders, setReminders] = useState({ alerts: true, warnings: true, daily: false, sound: true })
   const [privacy, setPrivacy] = useState({ visible: false })
   const [showLangModal, setShowLangModal] = useState(false)
+  const [showDateFormatModal, setShowDateFormatModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteSent, setDeleteSent] = useState(false)
@@ -142,6 +153,22 @@ export default function SettingsScreen({ navigation }) {
   const handleChangeLanguage = (code) => {
     setAppLanguage(code)
     setShowLangModal(false)
+  }
+
+  const handleOpenDateFormatModal = () => {
+    setDateFormatDraft(dateFormat)
+    setShowDateFormatModal(true)
+  }
+
+  const handleCloseDateFormatModal = () => {
+    setDateFormatDraft(dateFormat)
+    setShowDateFormatModal(false)
+  }
+
+  const handleDateFormatSave = () => {
+    setDateFormat(dateFormatDraft)
+    persist('settings', { dateFormat: dateFormatDraft })
+    setShowDateFormatModal(false)
   }
 
   const handleSavePassword = () => {
@@ -290,11 +317,7 @@ export default function SettingsScreen({ navigation }) {
             label={t('settings.dateFormat')}
             value={dateFormat}
             currentColors={currentColors}
-            onPress={() => {
-              const next = dateFormat === 'DD-MM-YYYY' ? 'YYYY-MM-DD' : 'DD-MM-YYYY'
-              setDateFormat(next)
-              persist('settings', { dateFormat: next })
-            }}
+            onPress={handleOpenDateFormatModal}
           />
           <Row
             icon="time-outline"
@@ -398,6 +421,62 @@ export default function SettingsScreen({ navigation }) {
             </TouchableOpacity>
           )
         })}
+      </Modal>
+
+      <Modal
+        isOpen={showDateFormatModal}
+        onClose={handleCloseDateFormatModal}
+        title="Formato de fecha"
+        size="lg"
+        contentStyle={styles.dateFormatModalContent}
+      >
+        <Text style={[styles.dateFormatSubtitle, { color: currentColors.textSecondary }]}>
+          Elige cómo se muestran las fechas en la app
+        </Text>
+
+        <View style={styles.dateFormatGrid}>
+          {DATE_FORMATS.map((option) => {
+            const active = option.value === dateFormatDraft
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.9}
+                style={[
+                  styles.dateFormatOption,
+                  {
+                    backgroundColor: active ? currentColors.accentDim : currentColors.bgBody,
+                    borderColor: active ? currentColors.accent : currentColors.borderColor,
+                  },
+                  active && { borderWidth: 1.5 },
+                ]}
+                onPress={() => setDateFormatDraft(option.value)}
+              >
+                <Text style={[styles.dateFormatOptionLabel, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
+                  {option.label}
+                </Text>
+                <Text style={[styles.dateFormatOptionSample, { color: active ? currentColors.accent : currentColors.textMuted }]}>
+                  {option.sample}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+
+        <View style={styles.dateFormatPreviewBox}>
+          <Text style={[styles.dateFormatPreviewLabel, { color: currentColors.textMuted }]}>VISTA PREVIA</Text>
+          <Text style={[styles.dateFormatPreviewValue, { color: currentColors.accent }]}>
+            {DATE_FORMATS.find((option) => option.value === dateFormatDraft)?.sample || '06-10-2026'}
+          </Text>
+        </View>
+
+        <View style={styles.modalActions}>
+          <Button variant="secondary" onPress={handleCloseDateFormatModal} style={styles.dateFormatCancelButton} textStyle={styles.dateFormatCancelText}>
+            Cancelar
+          </Button>
+          <Button onPress={handleDateFormatSave} style={styles.dateFormatSaveButton} textStyle={styles.dateFormatSaveText}>
+            Guardar
+          </Button>
+        </View>
       </Modal>
 
       <Modal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} title={t('settings.passwordModal.title')}>
