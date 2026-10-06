@@ -4,11 +4,11 @@ export const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 20, paddingTop: 55, paddingBottom: 20, borderBottomWidth: 1,
+    paddingHorizontal: 20, paddingTop: 48, paddingBottom: 18, borderBottomWidth: 1,
   },
   headerTitle: { fontSize: 24, fontWeight: 'bold' },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 },
   card: { borderRadius: 16, borderWidth: 1, marginBottom: 16, overflow: 'hidden', paddingHorizontal: 16, paddingVertical: 12 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   cardTitle: { fontSize: 16, fontWeight: 'bold' },
