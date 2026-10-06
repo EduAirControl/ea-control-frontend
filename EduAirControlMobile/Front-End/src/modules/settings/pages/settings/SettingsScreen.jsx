@@ -37,10 +37,10 @@ const TIMEZONES = [
 ]
 
 const LANGUAGES = [
-  { code: 'es', name: 'Español' },
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
-  { code: 'pt', name: 'Português' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
 ]
 
 const COLOR_THEMES = [
@@ -48,6 +48,15 @@ const COLOR_THEMES = [
   { key: 'theme-protanopia', label: 'settings.themeProtanopia' },
   { key: 'theme-deuteranopia', label: 'settings.themeDeuteranopia' },
   { key: 'theme-tritanopia', label: 'settings.themeTritanopia' },
+]
+
+const DATE_FORMATS = [
+  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY', sample: '06/10/2026' },
+  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY', sample: '10/06/2026' },
+  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD', sample: '2026-10-06' },
+  { value: 'DD-MM-YYYY', label: 'DD-MM-YYYY', sample: '06-10-2026' },
+  { value: 'DD.MM.YYYY', label: 'DD.MM.YYYY', sample: '06.10.2026' },
+  { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD', sample: '2026/10/06' },
 ]
 
 function Toggle({ value, onValueChange, currentColors }) {
@@ -97,12 +106,15 @@ export default function SettingsScreen({ navigation }) {
   const [autoTimezone, setAutoTimezone] = useState(true)
   const [manualTimezone, setManualTimezone] = useState('America/Bogota')
   const [dateFormat, setDateFormat] = useState('DD-MM-YYYY')
+  const [dateFormatDraft, setDateFormatDraft] = useState('DD-MM-YYYY')
   const [reminders, setReminders] = useState({ alerts: true, warnings: true, daily: false, sound: true })
   const [privacy, setPrivacy] = useState({ visible: false })
   const [showLangModal, setShowLangModal] = useState(false)
+  const [showDateFormatModal, setShowDateFormatModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteSent, setDeleteSent] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
   const [showHelpModal, setShowHelpModal] = useState({ open: false, type: null })
   const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' })
   const [showPassword, setShowPassword] = useState({ new: false, confirm: false })
@@ -133,15 +145,31 @@ export default function SettingsScreen({ navigation }) {
     }
   }
 
-  const handleThemeChange = (key) => {
+  const handleThemeChange = async (key) => {
     setColorTheme(key)
     const a11y = getAccessibilitySettings()
-    saveAccessibilitySettings({ ...a11y, colorTheme: key })
+    await saveAccessibilitySettings({ ...a11y, colorTheme: key })
   }
 
-  const handleChangeLanguage = (code) => {
-    setAppLanguage(code)
+  const handleChangeLanguage = async (code) => {
+    await setAppLanguage(code)
     setShowLangModal(false)
+  }
+
+  const handleOpenDateFormatModal = () => {
+    setDateFormatDraft(dateFormat)
+    setShowDateFormatModal(true)
+  }
+
+  const handleCloseDateFormatModal = () => {
+    setDateFormatDraft(dateFormat)
+    setShowDateFormatModal(false)
+  }
+
+  const handleDateFormatSave = () => {
+    setDateFormat(dateFormatDraft)
+    persist('settings', { dateFormat: dateFormatDraft })
+    setShowDateFormatModal(false)
   }
 
   const handleSavePassword = () => {
@@ -160,6 +188,21 @@ export default function SettingsScreen({ navigation }) {
     setPasswordData({ current: '', new: '', confirm: '' })
   }
 
+  const handleDeleteAccountConfirm = () => {
+    if (!deletePassword.trim()) {
+      return Alert.alert('', 'Ingresa tu contraseña para confirmar la eliminación de la cuenta.')
+    }
+
+    setDeleteSent(true)
+    setDeletePassword('')
+  }
+
+  const handleCloseDeleteModal = () => {
+    setDeleteSent(false)
+    setDeletePassword('')
+    setShowDeleteModal(false)
+  }
+
   const themeLabel = (key) => {
     const entry = COLOR_THEMES.find((c) => c.key === key)
     return entry ? t(entry.label) : t('settings.themeNormal')
@@ -168,34 +211,58 @@ export default function SettingsScreen({ navigation }) {
   const renderHelpContent = () => {
     switch (showHelpModal.type) {
       case 'faq':
-        return [
-          { q: t('settings.faq.q1'), a: t('settings.faq.a1') },
-          { q: t('settings.faq.q2'), a: t('settings.faq.a2') },
-          { q: t('settings.faq.q3'), a: t('settings.faq.a3') },
-          { q: t('settings.faq.q4'), a: t('settings.faq.a4') },
-        ].map((item, idx) => (
-          <View key={idx} style={styles.helpItem}>
-            <Text style={[styles.helpQuestion, { color: currentColors.textPrimary }]}>{item.q}</Text>
-            <Text style={[styles.helpAnswer, { color: currentColors.textSecondary }]}>{item.a}</Text>
+        return (
+          <View style={styles.helpFaqList}>
+            {[
+              { q: t('settings.faq.q1'), a: t('settings.faq.a1') },
+              { q: t('settings.faq.q2'), a: t('settings.faq.a2') },
+              { q: t('settings.faq.q3'), a: t('settings.faq.a3') },
+              { q: t('settings.faq.q4'), a: t('settings.faq.a4') },
+            ].map((item, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.helpFaqCard,
+                  {
+                    backgroundColor: currentColors.bgBody,
+                    borderColor: currentColors.borderColor,
+                  },
+                ]}
+              >
+                <Text style={[styles.helpQuestion, { color: currentColors.textPrimary }]}>{item.q}</Text>
+                <Text style={[styles.helpAnswer, { color: currentColors.textSecondary }]}>{item.a}</Text>
+              </View>
+            ))}
           </View>
-        ))
+        )
       case 'contact':
         return (
-          <>
+          <View style={styles.helpContactList}>
             {[
               { icon: '✉️', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
               { icon: '🕐', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
               { icon: '⏱️', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
             ].map((row, idx) => (
-              <View key={idx} style={styles.helpItem}>
-                <Text style={styles.helpIcon}>{row.icon}</Text>
-                <View style={{ flex: 1 }}>
+              <View
+                key={idx}
+                style={[
+                  styles.helpContactCard,
+                  {
+                    backgroundColor: currentColors.bgBody,
+                    borderColor: currentColors.borderColor,
+                  },
+                ]}
+              >
+                <View style={[styles.helpContactIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+                  <Text style={styles.helpContactIconText}>{row.icon}</Text>
+                </View>
+                <View style={styles.helpContactText}>
                   <Text style={[styles.helpLabel, { color: currentColors.textPrimary }]}>{row.label}</Text>
                   <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>{row.value}</Text>
                 </View>
               </View>
             ))}
-          </>
+          </View>
         )
       case 'terms':
         return (
@@ -209,27 +276,89 @@ export default function SettingsScreen({ navigation }) {
                 ))}
               </View>
             ))}
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>{t('settings.terms.footer')}</Text>
           </>
         )
       case 'privacy':
         return (
           <>
-            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>{t('settings.privacyModal.intro')}</Text>
-            {t('settings.privacyModal.sections', { returnObjects: true }).map((sec, idx) => (
-              <View key={idx} style={styles.helpSection}>
-                <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>{sec.title}</Text>
-                {sec.items.map((item, i) => (
-                  <Text key={i} style={[styles.helpListItem, { color: currentColors.textSecondary }]}>- {item}</Text>
-                ))}
-              </View>
-            ))}
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>
+              En EduAirControl nos tomamos en serio la protección de tu información personal. Esta política explica qué datos recopilamos y cómo los cuidamos:
+            </Text>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Qué información recopilamos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos de cuenta: nombre, correo electrónico y credenciales de acceso.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos ambientales generados por los sensores de tu institución (calidad del aire, temperatura, humedad, etc.).</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Datos de uso: preferencias, idioma, zona horaria y configuración de la aplicación.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Cómo usamos tu información</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para brindarte acceso al panel, los rankings y las notificaciones de la plataforma.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para generar reportes e informes ambientales de tu institución.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Para mejorar el servicio y comunicarnos contigo sobre actualizaciones importantes.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Cómo protegemos tus datos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Tus datos se transmiten y almacenan de forma cifrada.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Las contraseñas nunca se guardan en texto plano; se protegen mediante algoritmos de cifrado seguros.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• El acceso a la información está restringido solo al personal autorizado que lo necesita para operar la plataforma.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Revisamos periódicamente nuestras prácticas de seguridad para prevenir accesos no autorizados.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Con quién compartimos tu información</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• No vendemos ni alquilamos tus datos personales a terceros.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Solo compartimos información con los administradores de tu propia institución, o con proveedores estrictamente necesarios para operar el servicio (por ejemplo, hosting).</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Podemos divulgar información si así lo exige la ley.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Tus derechos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes acceder, corregir o actualizar tus datos personales desde tu perfil.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes solicitar la eliminación de tu cuenta y de tus datos en cualquier momento desde esta sección de Configuración.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Puedes solicitar una copia de la información que tenemos sobre ti escribiéndonos a soporte.</Text>
+            </View>
+
+            <View style={styles.helpSection}>
+              <Text style={[styles.helpSectionTitle, { color: currentColors.textPrimary }]}>Retención de datos</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Conservamos tu información mientras tu cuenta esté activa.</Text>
+              <Text style={[styles.helpListItem, { color: currentColors.textSecondary }]}>• Al solicitar la eliminación de tu cuenta, tus datos personales se eliminan o anonimizan dentro de un plazo razonable, salvo que la ley exija conservarlos.</Text>
+            </View>
+
+            <Text style={[styles.helpText, { color: currentColors.textSecondary }]}>
+              ¿Tienes preguntas sobre cómo tratamos tus datos? Escríbenos a soporte@eduaircontrol.com.
+            </Text>
           </>
         )
       case 'version':
         return (
-          <View style={{ alignItems: 'center', gap: 8 }}>
-            <Text style={[styles.versionDesc, { color: currentColors.textSecondary }]}>{t('settings.versionDesc')}</Text>
-            <Text style={[styles.versionDate, { color: currentColors.textMuted }]}>{t('settings.versionDate')}</Text>
+          <View style={styles.versionModalWrap}>
+            <View style={[styles.versionBadge, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+              <Text style={[styles.versionBadgeText, { color: currentColors.accent }]}>v1.0</Text>
+            </View>
+
+            <Text style={[styles.versionAppName, { color: currentColors.textPrimary }]}>
+              Sistema de Monitoreo de Calidad del Aire
+            </Text>
+
+            <Text style={[styles.versionDate, { color: currentColors.textSecondary }]}>
+              Última actualización: Abril 2026
+            </Text>
+
+            <View style={styles.versionChipsRow}>
+              {[
+                'React 18',
+                'i18n',
+                darkMode ? 'Modo oscuro' : 'Modo claro',
+              ].map((chip) => (
+                <View key={chip} style={[styles.versionChip, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+                  <Text style={[styles.versionChipText, { color: currentColors.accent }]}>{chip}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         )
       default:
@@ -290,11 +419,7 @@ export default function SettingsScreen({ navigation }) {
             label={t('settings.dateFormat')}
             value={dateFormat}
             currentColors={currentColors}
-            onPress={() => {
-              const next = dateFormat === 'DD-MM-YYYY' ? 'YYYY-MM-DD' : 'DD-MM-YYYY'
-              setDateFormat(next)
-              persist('settings', { dateFormat: next })
-            }}
+            onPress={handleOpenDateFormatModal}
           />
           <Row
             icon="time-outline"
@@ -353,7 +478,7 @@ export default function SettingsScreen({ navigation }) {
           </View>
           <Row icon="lock-closed-outline" label={t('settings.changePassword')} currentColors={currentColors} onPress={() => setShowPasswordModal(true)} />
           <Row icon="book-outline" label={t('settings.viewPrivacyPolicy')} currentColors={currentColors} onPress={() => setShowHelpModal({ open: true, type: 'privacy' })} />
-          <Row icon="trash-outline" label={t('settings.deleteAccount')} currentColors={currentColors} color={currentColors.error} onPress={() => { setDeleteSent(false); setShowDeleteModal(true) }} />
+          <Row icon="trash-outline" label={t('settings.deleteAccount')} currentColors={currentColors} color={currentColors.error} onPress={() => { setDeleteSent(false); setDeletePassword(''); setShowDeleteModal(true) }} />
         </SectionCard>
 
         <SectionCard icon="help-circle-outline" title={t('settings.help')} currentColors={currentColors}>
@@ -363,7 +488,6 @@ export default function SettingsScreen({ navigation }) {
             { type: 'faq', icon: 'help-circle-outline', label: t('settings.helpFaq') },
             { type: 'contact', icon: 'mail-outline', label: t('settings.helpContact') },
             { type: 'terms', icon: 'document-text-outline', label: t('settings.helpTerms') },
-            { type: 'privacy', icon: 'lock-closed-outline', label: t('settings.helpPrivacy') },
             { type: 'version', icon: 'information-circle-outline', label: t('settings.helpVersion') },
           ].map((item) => (
             <Row
@@ -391,84 +515,238 @@ export default function SettingsScreen({ navigation }) {
               style={[styles.langOption, active && { backgroundColor: currentColors.accentDim }]}
               onPress={() => handleChangeLanguage(lang.code)}
             >
-              <Text style={[styles.langOptionText, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
-                {lang.name}
-              </Text>
+              <View style={styles.langOptionRow}>
+                <Text style={styles.langFlag}>{lang.flag}</Text>
+                <Text style={[styles.langOptionText, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
+                  {lang.name}
+                </Text>
+              </View>
               {active && <Ionicons name="checkmark" size={18} color={currentColors.accent} />}
             </TouchableOpacity>
           )
         })}
       </Modal>
 
-      <Modal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} title={t('settings.passwordModal.title')}>
-        <TextInput
-          style={[styles.input, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-          placeholder={t('settings.passwordModal.current')}
-          placeholderTextColor={currentColors.textMuted}
-          value={passwordData.current}
-          onChangeText={(v) => setPasswordData((p) => ({ ...p, current: v }))}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-            placeholder={t('settings.passwordModal.new')}
-            placeholderTextColor={currentColors.textMuted}
-            value={passwordData.new}
-            onChangeText={(v) => setPasswordData((p) => ({ ...p, new: v }))}
-            secureTextEntry={!showPassword.new}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, new: !p.new }))} hitSlop={8}>
-            <Ionicons name={showPassword.new ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
-          </TouchableOpacity>
+      <Modal
+        isOpen={showDateFormatModal}
+        onClose={handleCloseDateFormatModal}
+        title="Formato de fecha"
+        size="lg"
+        contentStyle={styles.dateFormatModalContent}
+      >
+        <Text style={[styles.dateFormatSubtitle, { color: currentColors.textSecondary }]}>
+          Elige cómo se muestran las fechas en la app
+        </Text>
+
+        <View style={styles.dateFormatGrid}>
+          {DATE_FORMATS.map((option) => {
+            const active = option.value === dateFormatDraft
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.9}
+                style={[
+                  styles.dateFormatOption,
+                  {
+                    backgroundColor: active ? currentColors.accentDim : currentColors.bgBody,
+                    borderColor: active ? currentColors.accent : currentColors.borderColor,
+                  },
+                  active && { borderWidth: 1.5 },
+                ]}
+                onPress={() => setDateFormatDraft(option.value)}
+              >
+                <Text style={[styles.dateFormatOptionLabel, { color: active ? currentColors.accent : currentColors.textPrimary }]}>
+                  {option.label}
+                </Text>
+                <Text style={[styles.dateFormatOptionSample, { color: active ? currentColors.accent : currentColors.textMuted }]}>
+                  {option.sample}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
         </View>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-            placeholder={t('settings.passwordModal.confirm')}
-            placeholderTextColor={currentColors.textMuted}
-            value={passwordData.confirm}
-            onChangeText={(v) => setPasswordData((p) => ({ ...p, confirm: v }))}
-            secureTextEntry={!showPassword.confirm}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))} hitSlop={8}>
-            <Ionicons name={showPassword.confirm ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
-          </TouchableOpacity>
+
+        <View style={styles.dateFormatPreviewBox}>
+          <Text style={[styles.dateFormatPreviewLabel, { color: currentColors.textMuted }]}>VISTA PREVIA</Text>
+          <Text style={[styles.dateFormatPreviewValue, { color: currentColors.accent }]}>
+            {DATE_FORMATS.find((option) => option.value === dateFormatDraft)?.sample || '06-10-2026'}
+          </Text>
         </View>
+
         <View style={styles.modalActions}>
-          <Button variant="outline" onPress={() => setShowPasswordModal(false)}>
+          <Button variant="secondary" onPress={handleCloseDateFormatModal} style={styles.dateFormatCancelButton} textStyle={styles.dateFormatCancelText}>
+            Cancelar
+          </Button>
+          <Button onPress={handleDateFormatSave} style={styles.dateFormatSaveButton} textStyle={styles.dateFormatSaveText}>
+            Guardar
+          </Button>
+        </View>
+      </Modal>
+
+      <Modal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title={t('settings.passwordModal.title')}
+        contentStyle={styles.passwordModalContent}
+      >
+        <View style={[styles.passwordHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+          <View style={[styles.passwordHeaderIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+            <Ionicons name="lock-closed-outline" size={24} color={currentColors.accent} />
+          </View>
+          <Text
+            style={[styles.passwordHeaderTitle, { color: currentColors.textPrimary }]}
+            numberOfLines={2}
+            adjustsFontSizeToFit={false}
+          >
+            Actualiza tu contraseña
+          </Text>
+        </View>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.current')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="key-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.current')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.current}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, current: v }))}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+        </View>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.new')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.new')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.new}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, new: v }))}
+              secureTextEntry={!showPassword.new}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, new: !p.new }))} hitSlop={8}>
+              <Ionicons name={showPassword.new ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.confirm')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="shield-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.confirm')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.confirm}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, confirm: v }))}
+              secureTextEntry={!showPassword.confirm}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))} hitSlop={8}>
+              <Ionicons name={showPassword.confirm ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.modalActions}>
+          <Button variant="secondary" onPress={() => setShowPasswordModal(false)} style={styles.passwordActionButton}>
             {t('settings.passwordModal.cancel')}
           </Button>
-          <Button onPress={handleSavePassword}>
+          <Button onPress={handleSavePassword} style={styles.passwordActionButton}>
             {t('settings.passwordModal.save')}
           </Button>
         </View>
       </Modal>
 
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title={t('settings.deleteAccount')}>
+      <Modal isOpen={showDeleteModal} onClose={handleCloseDeleteModal} title="Confirmación de seguridad" contentStyle={styles.deleteModalContent}>
         {deleteSent ? (
-          <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>{t('settings.deleteRequestSent')}</Text>
+          <View style={[styles.deleteSuccessCard, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="checkmark-circle-outline" size={32} color={currentColors.accent} />
+            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Solicitud enviada</Text>
+            <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>
+              Tu cuenta queda pendiente de eliminación segura. Verificaremos la confirmación y te avisaremos si necesitamos más información.
+            </Text>
+            <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteSuccessButton}>
+              Cerrar
+            </Button>
+          </View>
         ) : (
           <>
-            <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>{t('settings.deleteAccountConfirm')}</Text>
-            <Text style={[styles.helpValue, { color: currentColors.textMuted }]}>{t('settings.deleteAccountDetail')}</Text>
+            <View style={[styles.deleteHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+              <View style={[styles.deleteHeaderIcon, { backgroundColor: currentColors.error + '15', borderColor: currentColors.error }]}>
+                <Ionicons name="trash-outline" size={22} color={currentColors.error} />
+              </View>
+              <Text style={[styles.deleteHeaderTitle, { color: currentColors.textPrimary }]}>
+                Eliminar cuenta
+              </Text>
+            </View>
+
+            <Text style={[styles.modalText, { color: currentColors.textSecondary }]}>
+              Esta acción elimina permanentemente tu cuenta y todos los datos asociados a tu perfil.
+            </Text>
+            <Text style={[styles.deleteDetail, { color: currentColors.textMuted }]}>
+              Para continuar, introduce tu contraseña actual para confirmar la eliminación.
+            </Text>
+
+            <View style={styles.deleteFieldGroup}>
+              <Text style={[styles.deleteFieldLabel, { color: currentColors.textSecondary }]}>Contraseña actual</Text>
+              <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+                <Ionicons name="key-outline" size={18} color={currentColors.textMuted} />
+                <TextInput
+                  style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+                  placeholder="Confirma tu contraseña"
+                  placeholderTextColor={currentColors.textMuted}
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
             <View style={styles.modalActions}>
-              <Button variant="outline" onPress={() => setShowDeleteModal(false)}>
-                {t('settings.passwordModal.cancel')}
+              <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteActionButton}>
+                Cancelar
               </Button>
-              <Button variant="danger" onPress={() => { setDeleteSent(true); }}>
-                {t('settings.deleteBtn')}
+              <Button variant="danger" onPress={handleDeleteAccountConfirm} style={styles.deleteActionButton}>
+                Eliminar cuenta
               </Button>
             </View>
           </>
         )}
       </Modal>
 
-      <Modal isOpen={showHelpModal.open} onClose={() => setShowHelpModal({ open: false, type: null })} title={t('settings.help')} size="lg">
-        <ScrollView style={{ maxHeight: 480 }} contentContainerStyle={{ paddingBottom: 8 }}>
+      <Modal isOpen={showHelpModal.open} onClose={() => setShowHelpModal({ open: false, type: null })} size="lg">
+        <View style={[styles.helpModalHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+          <View style={[styles.helpModalIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+            <Ionicons name={showHelpModal.type === 'version' ? 'information-circle-outline' : 'shield-checkmark-outline'} size={20} color={currentColors.accent} />
+          </View>
+          <View style={styles.helpModalTextWrap}>
+            <Text style={[styles.helpModalTitle, { color: currentColors.textPrimary }]}>
+              {showHelpModal.type === 'version' ? 'Versión de la app' : 'Políticas y seguridad'}
+            </Text>
+            {!showHelpModal.type || showHelpModal.type === 'version' ? null : (
+              <Text style={[styles.helpModalSubtitle, { color: currentColors.textSecondary }]}>
+                {showHelpModal.type === 'privacy' ? 'Información sobre privacidad, protección de datos y seguridad.' : t('settings.helpDescription')}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.helpModalScroll}
+          contentContainerStyle={styles.helpModalContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
           {renderHelpContent()}
         </ScrollView>
       </Modal>

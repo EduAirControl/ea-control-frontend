@@ -64,14 +64,16 @@ export function getComputedA11yFontSizePx() {
   return FONT_SIZES[settings.fontSize] || 16
 }
 
-export function saveAccessibilitySettings(settings) {
-  storage.setItem(ACCESSIBILITY_STORAGE_KEYS.fontSize, settings.fontSize)
-  storage.setItem(ACCESSIBILITY_STORAGE_KEYS.darkMode, JSON.stringify(settings.darkMode))
-  storage.setItem(ACCESSIBILITY_STORAGE_KEYS.colorTheme, settings.colorTheme)
-  storage.setItem(ACCESSIBILITY_STORAGE_KEYS.legacyTheme, settings.colorTheme)
+export async function saveAccessibilitySettings(settings) {
+  await Promise.all([
+    storage.setItem(ACCESSIBILITY_STORAGE_KEYS.fontSize, settings.fontSize),
+    storage.setItem(ACCESSIBILITY_STORAGE_KEYS.darkMode, JSON.stringify(settings.darkMode)),
+    storage.setItem(ACCESSIBILITY_STORAGE_KEYS.colorTheme, settings.colorTheme),
+    storage.setItem(ACCESSIBILITY_STORAGE_KEYS.legacyTheme, settings.colorTheme),
+  ])
   emitA11yChange()
 }
 
 export function resetAccessibilitySettings() {
-  saveAccessibilitySettings({ fontSize: 'base', darkMode: false, colorTheme: '' })
+  return saveAccessibilitySettings({ fontSize: 'base', darkMode: false, colorTheme: '' })
 }

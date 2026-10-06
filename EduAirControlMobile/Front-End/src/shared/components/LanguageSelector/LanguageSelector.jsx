@@ -21,8 +21,8 @@ function LanguageSelector({ onSelect }) {
 
   const current = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0]
 
-  const handleChange = (code) => {
-    setAppLanguage(code)
+  const handleChange = async (code) => {
+    await setAppLanguage(code)
     setShow(false)
     onSelect?.(code)
   }

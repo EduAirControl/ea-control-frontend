@@ -25,7 +25,7 @@ export function ThemeProvider({ children }) {
 
   const toggleDarkMode = async (value) => {
     const a11y = getAccessibilitySettings()
-    saveAccessibilitySettings({ ...a11y, darkMode: value })
+    await saveAccessibilitySettings({ ...a11y, darkMode: value })
   }
 
   const currentColors = applyColorTheme(darkMode ? darkColors : lightColors, colorTheme)

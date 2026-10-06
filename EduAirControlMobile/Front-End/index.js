@@ -7,7 +7,7 @@ import App from './App';
 // Hydrate the storage adapter (AsyncStorage → cache síncrono) antes de montar la app.
 async function bootstrap() {
   await storage.init();
-  applySavedLanguage();
+  await applySavedLanguage();
   registerRootComponent(App);
 }
 
