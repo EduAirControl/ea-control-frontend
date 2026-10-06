@@ -36,6 +36,38 @@ export const styles = StyleSheet.create({
   timezoneLabel: { fontSize: 13, marginBottom: 4 },
   input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, marginBottom: 12 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  passwordModalContent: { paddingTop: 8, paddingBottom: 6 },
+  passwordHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 18,
+  },
+  passwordHeaderIcon: {
+    width: 42, height: 42, borderRadius: 12, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  passwordHeaderTitle: {
+    flexShrink: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    lineHeight: 20,
+    maxWidth: '100%',
+  },
+  passwordFieldGroup: { marginBottom: 14 },
+  passwordFieldLabel: {
+    flexShrink: 1,
+    fontSize: 12,
+    marginBottom: 6,
+    fontWeight: '600',
+    lineHeight: 16,
+    maxWidth: '100%',
+  },
+  passwordField: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 2,
+  },
+  passwordInput: { flex: 1, fontSize: 15, paddingVertical: 11 },
+  passwordActionButton: { flex: 1, borderRadius: 12 },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 18 },
   langOption: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

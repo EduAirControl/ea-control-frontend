@@ -482,49 +482,84 @@ export default function SettingsScreen({ navigation }) {
         </View>
       </Modal>
 
-      <Modal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} title={t('settings.passwordModal.title')}>
-        <TextInput
-          style={[styles.input, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-          placeholder={t('settings.passwordModal.current')}
-          placeholderTextColor={currentColors.textMuted}
-          value={passwordData.current}
-          onChangeText={(v) => setPasswordData((p) => ({ ...p, current: v }))}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-            placeholder={t('settings.passwordModal.new')}
-            placeholderTextColor={currentColors.textMuted}
-            value={passwordData.new}
-            onChangeText={(v) => setPasswordData((p) => ({ ...p, new: v }))}
-            secureTextEntry={!showPassword.new}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, new: !p.new }))} hitSlop={8}>
-            <Ionicons name={showPassword.new ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
-          </TouchableOpacity>
+      <Modal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title={t('settings.passwordModal.title')}
+        contentStyle={styles.passwordModalContent}
+      >
+        <View style={[styles.passwordHeader, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
+          <View style={[styles.passwordHeaderIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
+            <Ionicons name="lock-closed-outline" size={24} color={currentColors.accent} />
+          </View>
+          <Text
+            style={[styles.passwordHeaderTitle, { color: currentColors.textPrimary }]}
+            numberOfLines={2}
+            adjustsFontSizeToFit={false}
+          >
+            Actualiza tu contraseña
+          </Text>
         </View>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor, color: currentColors.textPrimary }]}
-            placeholder={t('settings.passwordModal.confirm')}
-            placeholderTextColor={currentColors.textMuted}
-            value={passwordData.confirm}
-            onChangeText={(v) => setPasswordData((p) => ({ ...p, confirm: v }))}
-            secureTextEntry={!showPassword.confirm}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))} hitSlop={8}>
-            <Ionicons name={showPassword.confirm ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
-          </TouchableOpacity>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.current')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="key-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.current')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.current}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, current: v }))}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
         </View>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.new')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.new')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.new}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, new: v }))}
+              secureTextEntry={!showPassword.new}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, new: !p.new }))} hitSlop={8}>
+              <Ionicons name={showPassword.new ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.passwordFieldGroup}>
+          <Text style={[styles.passwordFieldLabel, { color: currentColors.textSecondary }]}>{t('settings.passwordModal.confirm')}</Text>
+          <View style={[styles.passwordField, { backgroundColor: currentColors.bgInput, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="shield-outline" size={18} color={currentColors.textMuted} />
+            <TextInput
+              style={[styles.passwordInput, { color: currentColors.textPrimary }]}
+              placeholder={t('settings.passwordModal.confirm')}
+              placeholderTextColor={currentColors.textMuted}
+              value={passwordData.confirm}
+              onChangeText={(v) => setPasswordData((p) => ({ ...p, confirm: v }))}
+              secureTextEntry={!showPassword.confirm}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))} hitSlop={8}>
+              <Ionicons name={showPassword.confirm ? 'eye-outline' : 'eye-off-outline'} size={20} color={currentColors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.modalActions}>
-          <Button variant="outline" onPress={() => setShowPasswordModal(false)}>
+          <Button variant="secondary" onPress={() => setShowPasswordModal(false)} style={styles.passwordActionButton}>
             {t('settings.passwordModal.cancel')}
           </Button>
-          <Button onPress={handleSavePassword}>
+          <Button onPress={handleSavePassword} style={styles.passwordActionButton}>
             {t('settings.passwordModal.save')}
           </Button>
         </View>
