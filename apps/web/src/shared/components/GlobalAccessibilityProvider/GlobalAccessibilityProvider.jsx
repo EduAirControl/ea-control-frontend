@@ -31,7 +31,17 @@ function GlobalAccessibilityProvider({ children }) {
         const handleA11yChange = () => applyA11ySettings();
         window.addEventListener("a11y-change", handleA11yChange);
 
-        return () => window.removeEventListener("a11y-change", handleA11yChange);
+        // Seguir el tema del sistema mientras el usuario no elija uno explícito
+        const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+        const handleSystemTheme = () => {
+            if (localStorage.getItem("darkMode") === null) applyA11ySettings();
+        };
+        mq?.addEventListener?.("change", handleSystemTheme);
+
+        return () => {
+            window.removeEventListener("a11y-change", handleA11yChange);
+            mq?.removeEventListener?.("change", handleSystemTheme);
+        };
     }, []);
 
     // Re-aplicar al cambiar de ruta para que ningún componente de página
