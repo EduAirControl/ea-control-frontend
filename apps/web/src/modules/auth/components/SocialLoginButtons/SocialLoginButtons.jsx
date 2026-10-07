@@ -2,14 +2,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
-import apiClient, { API_BASE } from '../../../../shared/services/apiClient';
+import apiClient from '../../../../shared/services/apiClient';
 import './SocialLoginButtons.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+let gisInitialized = false;
 
 function SocialLoginButtons() {
   const { t } = useTranslation();
-  const googleBtnRef = useRef(null);
   const [gisReady, setGisReady] = useState(false);
 
   const handleGoogleCredential = useCallback(async (response) => {
@@ -30,9 +30,8 @@ function SocialLoginButtons() {
   }, []);
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    if (!GOOGLE_CLIENT_ID || gisInitialized) return;
 
-    // Esperar a que el SDK de Google se cargue
     const initGis = () => {
       if (!window.google?.accounts?.id) return false;
       try {
@@ -40,6 +39,7 @@ function SocialLoginButtons() {
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleCredential,
         });
+        gisInitialized = true;
         setGisReady(true);
         return true;
       } catch {
@@ -47,10 +47,8 @@ function SocialLoginButtons() {
       }
     };
 
-    // Intentar inmediatamente
     if (initGis()) return;
 
-    // Si no está listo, reintentar cada 500ms hasta 10s
     const interval = setInterval(() => {
       if (initGis()) clearInterval(interval);
     }, 500);
@@ -80,7 +78,6 @@ function SocialLoginButtons() {
       <div className="social-btn-group">
         <button
           type="button"
-          ref={googleBtnRef}
           className="social-btn social-btn-google"
           onClick={handleGoogleClick}
         >
