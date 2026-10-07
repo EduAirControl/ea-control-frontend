@@ -1,8 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
-import apiClient from '../../../../shared/services/apiClient';
+import apiClient, { API_BASE } from '../../../../shared/services/apiClient';
 import './SocialLoginButtons.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -10,6 +10,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 function SocialLoginButtons() {
   const { t } = useTranslation();
   const googleBtnRef = useRef(null);
+  const [gisReady, setGisReady] = useState(false);
 
   const handleGoogleCredential = useCallback(async (response) => {
     try {
@@ -18,7 +19,9 @@ function SocialLoginButtons() {
       });
       if (data?.token || data?.accessToken) {
         localStorage.setItem('token', data.token || data.accessToken);
-        localStorage.setItem('user', JSON.stringify(data.user || {}));
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
         window.location.href = '/dashboard';
       }
     } catch (err) {
@@ -27,23 +30,46 @@ function SocialLoginButtons() {
   }, []);
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !window.google?.accounts?.id) return;
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-    });
+    if (!GOOGLE_CLIENT_ID) return;
+
+    // Esperar a que el SDK de Google se cargue
+    const initGis = () => {
+      if (!window.google?.accounts?.id) return false;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredential,
+        });
+        setGisReady(true);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    // Intentar inmediatamente
+    if (initGis()) return;
+
+    // Si no está listo, reintentar cada 500ms hasta 10s
+    const interval = setInterval(() => {
+      if (initGis()) clearInterval(interval);
+    }, 500);
+    const timeout = setTimeout(() => clearInterval(interval), 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [handleGoogleCredential]);
 
   const handleGoogleClick = () => {
-    if (GOOGLE_CLIENT_ID && window.google?.accounts?.id && googleBtnRef.current) {
+    if (gisReady && window.google?.accounts?.id) {
       window.google.accounts.id.prompt();
-    } else {
-      window.location.assign('/api/v1/auth/oauth2/google');
     }
   };
 
   const handleFacebookClick = () => {
-    window.location.assign('/api/v1/auth/oauth2/facebook');
+    window.location.assign(`${API_BASE}/api/v1/auth/oauth2/facebook`);
   };
 
   return (
