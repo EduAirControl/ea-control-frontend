@@ -52,6 +52,7 @@ import FavoritesScreen from './modules/favorites/FavoritesScreen';
 // SUPER ADMIN
 // ======================
 import SuperAdminScreen from './modules/admin/pages/SuperAdminScreen';
+import UserManagementScreen from './modules/admin/pages/UserManagementScreen';
 
 function App() {
   return (
@@ -119,6 +120,14 @@ function App() {
         element={
           <SuperAdminRoute>
             <SuperAdminScreen />
+          </SuperAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <SuperAdminRoute>
+            <UserManagementScreen />
           </SuperAdminRoute>
         }
       />

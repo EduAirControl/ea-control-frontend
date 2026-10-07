@@ -103,7 +103,12 @@ const authService = {
   },
 
   isAdmin() {
-    return String(currentUser?.role || '').toUpperCase() === 'ADMIN';
+    return String(currentUser?.role || '').toUpperCase() === 'ADMIN'
+      || String(currentUser?.role || '').toUpperCase() === 'SUPER_ADMIN';
+  },
+
+  isSuperAdmin() {
+    return String(currentUser?.role || '').toUpperCase() === 'SUPER_ADMIN';
   },
 };
 

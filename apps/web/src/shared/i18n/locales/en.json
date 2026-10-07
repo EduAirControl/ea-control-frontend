@@ -22,7 +22,10 @@
     "loginBtn": "Login",
     "signUpBtn": "Sign Up",
     "orWith": "Sign in using your account with",
-    "or": "OR"
+    "or": "OR",
+    "socialDivider": "or continue with",
+    "googleBtn": "Google",
+    "facebookBtn": "Facebook"
   },
   "signup": {
     "title": "Sign Up",
@@ -51,11 +54,22 @@
       "title": "Terms and Conditions",
       "subtitle": "Responsible use · Security · Data protection",
       "intro": "By signing up, you confirm that you have read, understood, and accepted the essential conditions for responsible use of EduAirControl:",
-      "items": ["Provide accurate, complete, and up-to-date registration information and protect your account credentials.", "Promptly report unauthorized access, lost credentials, or any situation that may compromise account security.", "Use the platform only for educational, administrative, and environmental monitoring purposes authorized by the institution.", "Do not access, alter, delete, or extract information, or interfere with systems, databases, or IoT sensors without authorization.", "Sensor readings are informative, may vary, and do not replace specialized technical assessments.", "EduAirControl applies reasonable security measures, although no system can guarantee absolute protection against all technological risks.", "Authorize the processing of personal data when necessary, in accordance with applicable law and the Personal Data Processing Policy.", "Temporary maintenance, updates, or interruptions may occur due to technical, connectivity, or IoT device issues.", "Accept updates to these terms announced through the platform; violations may restrict or suspend access."],
-      "notice": "This summary does not replace the complete document. Use of EduAirControl is subject to the complete Terms and Conditions, the Personal Data Processing Policy, and applicable legislation."
-      ,"fullDocumentPrefix": "Would you like to review all the information?",
+      "items": [
+        "Provide accurate, complete, and up-to-date registration information and protect your account credentials.",
+        "Promptly report unauthorized access, lost credentials, or any situation that may compromise account security.",
+        "Use the platform only for educational, administrative, and environmental monitoring purposes authorized by the institution.",
+        "Do not access, alter, delete, or extract information, or interfere with systems, databases, or IoT sensors without authorization.",
+        "Sensor readings are informative, may vary, and do not replace specialized technical assessments.",
+        "EduAirControl applies reasonable security measures, although no system can guarantee absolute protection against all technological risks.",
+        "Authorize the processing of personal data when necessary, in accordance with applicable law and the Personal Data Processing Policy.",
+        "Temporary maintenance, updates, or interruptions may occur due to technical, connectivity, or IoT device issues.",
+        "Accept updates to these terms announced through the platform; violations may restrict or suspend access."
+      ],
+      "notice": "This summary does not replace the complete document. Use of EduAirControl is subject to the complete Terms and Conditions, the Personal Data Processing Policy, and applicable legislation.",
+      "fullDocumentPrefix": "Would you like to review all the information?",
       "fullDocumentLink": "Read the complete document",
-      "readRequired": "You must read and accept the complete document before signing up."
+      "readRequired": "You must read and accept the complete document before signing up.",
+      "acceptBtn": "I accept the terms"
     },
     "passwordStrength": {
       "weak": "Weak password",
@@ -97,137 +111,137 @@
     "error": "Could not update the password",
     "success": "Password updated. Please sign in."
   },
-"terms": {
-  "title": "Terms and Conditions of Use",
-  "brand": "EduAirControl",
-  "subtitle": "Data Protection · Security · Responsible Use · Environmental Monitoring",
-  "sections": [
-    {
-      "title": "1. Acceptance of the Terms",
-      "paragraphs": [
-        "Welcome to EduAirControl. These Terms and Conditions establish the rules for accessing and using the platform.",
-        "By registering, accessing, or using EduAirControl, you declare that you have read and understood these terms and agree to comply with the provisions set forth herein.",
-        "Where applicable, the processing of personal data will also be subject to EduAirControl's Personal Data Processing Policy and the applicable Colombian regulations."
-      ]
+  "terms": {
+    "title": "Terms and Conditions of Use",
+    "brand": "EduAirControl",
+    "subtitle": "Data Protection · Security · Responsible Use · Environmental Monitoring",
+    "sections": [
+      {
+        "title": "1. Acceptance of the Terms",
+        "paragraphs": [
+          "Welcome to EduAirControl. These Terms and Conditions establish the rules for accessing and using the platform.",
+          "By registering, accessing, or using EduAirControl, you declare that you have read and understood these terms and agree to comply with the provisions set forth herein.",
+          "Where applicable, the processing of personal data will also be subject to EduAirControl's Personal Data Processing Policy and the applicable Colombian regulations."
+        ]
+      },
+      {
+        "title": "2. User Registration and Responsibility",
+        "paragraphs": [
+          "The information provided during registration must be truthful, complete, up to date, and verifiable.",
+          "Each user is responsible for maintaining the confidentiality of their access credentials and for the activities carried out through their account.",
+          "The user must promptly report any unauthorized access, loss of credentials, or situation that may compromise the security of their account."
+        ]
+      },
+      {
+        "title": "3. Permitted Use of the Platform",
+        "paragraphs": [
+          "EduAirControl must be used exclusively for educational, administrative, and environmental monitoring purposes authorized by the institution.",
+          "The user agrees to use the platform responsibly and in accordance with applicable Colombian legislation."
+        ],
+        "list": [
+          "Attempting to access EduAirControl accounts, systems, databases, or services without authorization.",
+          "Manipulating, altering, deleting, or extracting information without authorization.",
+          "Interfering with the operation of the platform or connected IoT devices.",
+          "Exploiting security vulnerabilities to obtain unauthorized access.",
+          "Using the platform for illegal activities or activities contrary to these terms."
+        ],
+        "note": "Unauthorized access to computer systems or breaches of data may result in the corresponding legal consequences under Colombian legislation."
+      },
+      {
+        "title": "4. Information Obtained Through IoT Sensors",
+        "paragraphs": [
+          "EduAirControl may collect and display environmental information from IoT devices, including variables such as temperature, humidity, CO₂ concentration, and noise levels, according to the sensors implemented in each environment.",
+          "This information is intended for monitoring, analysis, and decision-making support regarding the environmental conditions of educational spaces.",
+          "Data obtained through sensors may present variations, measurement errors, or interruptions resulting from device operation, communications, or external factors.",
+          "The information provided by the platform does not replace inspections, measurements, or specialized technical assessments when necessary."
+        ]
+      },
+      {
+        "title": "5. Personal Data Protection",
+        "paragraphs": [
+          "EduAirControl will process personal data in accordance with the principles and obligations established by applicable Colombian regulations, particularly Law 1581 of 2012 and its implementing regulations.",
+          "Personal data will be processed for legitimate, informed purposes related to the provision and administration of the platform's services.",
+          "When necessary, processing will be supported by the prior, express, and informed authorization of the data subject, in accordance with applicable legislation.",
+          "Data subjects may exercise their rights to know, update, and rectify their data, request information about its processing, and submit inquiries or complaints to the data controller or processor.",
+          "Specific conditions regarding the collection, storage, use, circulation, retention, and deletion of data are established in EduAirControl's Personal Data Processing Policy."
+        ]
+      },
+      {
+        "title": "6. Information Security",
+        "paragraphs": [
+          "EduAirControl will implement reasonable technical, administrative, and organizational measures intended to protect information against unauthorized access, loss, alteration, disclosure, or misuse.",
+          "However, no computer system can guarantee absolute security against all technological risks, external incidents, or circumstances beyond the platform's reasonable control.",
+          "Users must also adopt reasonable measures to protect their accounts and access credentials."
+        ]
+      },
+      {
+        "title": "7. Availability and Updates",
+        "paragraphs": [
+          "EduAirControl may experience temporary interruptions due to maintenance, updates, technical failures, connectivity issues, IoT device operation, or other technical circumstances.",
+          "The platform may receive updates, improvements, modifications, or corrections intended to improve its operation, security, and quality.",
+          "When necessary, relevant modifications will be communicated through the channels available on the platform or through the means established by the institution."
+        ]
+      },
+      {
+        "title": "8. Accuracy of Information",
+        "paragraphs": [
+          "EduAirControl will endeavor to provide clear and reliable information within the technical capabilities of the platform.",
+          "However, data obtained from sensors may be subject to variations, measurement errors, connectivity failures, or limitations inherent to the devices used.",
+          "Decisions requiring specialized technical assessment should be supported by the corresponding procedures and verifications."
+        ]
+      },
+      {
+        "title": "9. Modifications to the Terms and Conditions",
+        "paragraphs": [
+          "EduAirControl may modify these Terms and Conditions when necessary due to functional, technical, legal, or administrative changes.",
+          "Modifications will be published or communicated through the mechanisms available on the platform.",
+          "When required by applicable regulations, the user's acceptance will be requested again."
+        ]
+      },
+      {
+        "title": "10. Non-Compliance",
+        "paragraphs": [
+          "Failure to comply with these Terms and Conditions may result in the suspension or restriction of access to the platform, in accordance with the institution's policies and without prejudice to any legal actions that may apply."
+        ]
+      },
+      {
+        "title": "11. Applicable Law",
+        "paragraphs": [
+          "These Terms and Conditions shall be interpreted in accordance with applicable Colombian legislation.",
+          "Regarding personal data protection, applicable provisions shall be taken into account, including Article 15 of the Political Constitution of Colombia, Law 1581 of 2012, and its implementing regulations.",
+          "Provisions related to computer crimes shall apply where appropriate, including the conduct established under Law 1273 of 2009."
+        ]
+      },
+      {
+        "title": "12. Acceptance",
+        "paragraphs": [
+          "By selecting “Accept”, the user confirms that they have read, understood, and accepted these Terms and Conditions of Use.",
+          "Where applicable to the processing of personal data, acceptance of these terms does not replace the specific authorization that may be required under personal data protection regulations."
+        ]
+      }
+    ],
+    "metadata": {
+      "updated": "Last updated",
+      "updatedValue": "18/08/2026",
+      "responsible": "EduAirControl Representative",
+      "responsibleValue": "EduAirControl Team",
+      "email": "Contact email",
+      "emailValue": "eduaircontrol@gmail.com"
     },
-    {
-      "title": "2. User Registration and Responsibility",
-      "paragraphs": [
-        "The information provided during registration must be truthful, complete, up to date, and verifiable.",
-        "Each user is responsible for maintaining the confidentiality of their access credentials and for the activities carried out through their account.",
-        "The user must promptly report any unauthorized access, loss of credentials, or situation that may compromise the security of their account."
-      ]
-    },
-    {
-      "title": "3. Permitted Use of the Platform",
-      "paragraphs": [
-        "EduAirControl must be used exclusively for educational, administrative, and environmental monitoring purposes authorized by the institution.",
-        "The user agrees to use the platform responsibly and in accordance with applicable Colombian legislation."
-      ],
-      "list": [
-        "Attempting to access EduAirControl accounts, systems, databases, or services without authorization.",
-        "Manipulating, altering, deleting, or extracting information without authorization.",
-        "Interfering with the operation of the platform or connected IoT devices.",
-        "Exploiting security vulnerabilities to obtain unauthorized access.",
-        "Using the platform for illegal activities or activities contrary to these terms."
-      ],
-      "note": "Unauthorized access to computer systems or breaches of data may result in the corresponding legal consequences under Colombian legislation."
-    },
-    {
-      "title": "4. Information Obtained Through IoT Sensors",
-      "paragraphs": [
-        "EduAirControl may collect and display environmental information from IoT devices, including variables such as temperature, humidity, CO₂ concentration, and noise levels, according to the sensors implemented in each environment.",
-        "This information is intended for monitoring, analysis, and decision-making support regarding the environmental conditions of educational spaces.",
-        "Data obtained through sensors may present variations, measurement errors, or interruptions resulting from device operation, communications, or external factors.",
-        "The information provided by the platform does not replace inspections, measurements, or specialized technical assessments when necessary."
-      ]
-    },
-    {
-      "title": "5. Personal Data Protection",
-      "paragraphs": [
-        "EduAirControl will process personal data in accordance with the principles and obligations established by applicable Colombian regulations, particularly Law 1581 of 2012 and its implementing regulations.",
-        "Personal data will be processed for legitimate, informed purposes related to the provision and administration of the platform's services.",
-        "When necessary, processing will be supported by the prior, express, and informed authorization of the data subject, in accordance with applicable legislation.",
-        "Data subjects may exercise their rights to know, update, and rectify their data, request information about its processing, and submit inquiries or complaints to the data controller or processor.",
-        "Specific conditions regarding the collection, storage, use, circulation, retention, and deletion of data are established in EduAirControl's Personal Data Processing Policy."
-      ]
-    },
-    {
-      "title": "6. Information Security",
-      "paragraphs": [
-        "EduAirControl will implement reasonable technical, administrative, and organizational measures intended to protect information against unauthorized access, loss, alteration, disclosure, or misuse.",
-        "However, no computer system can guarantee absolute security against all technological risks, external incidents, or circumstances beyond the platform's reasonable control.",
-        "Users must also adopt reasonable measures to protect their accounts and access credentials."
-      ]
-    },
-    {
-      "title": "7. Availability and Updates",
-      "paragraphs": [
-        "EduAirControl may experience temporary interruptions due to maintenance, updates, technical failures, connectivity issues, IoT device operation, or other technical circumstances.",
-        "The platform may receive updates, improvements, modifications, or corrections intended to improve its operation, security, and quality.",
-        "When necessary, relevant modifications will be communicated through the channels available on the platform or through the means established by the institution."
-      ]
-    },
-    {
-      "title": "8. Accuracy of Information",
-      "paragraphs": [
-        "EduAirControl will endeavor to provide clear and reliable information within the technical capabilities of the platform.",
-        "However, data obtained from sensors may be subject to variations, measurement errors, connectivity failures, or limitations inherent to the devices used.",
-        "Decisions requiring specialized technical assessment should be supported by the corresponding procedures and verifications."
-      ]
-    },
-    {
-      "title": "9. Modifications to the Terms and Conditions",
-      "paragraphs": [
-        "EduAirControl may modify these Terms and Conditions when necessary due to functional, technical, legal, or administrative changes.",
-        "Modifications will be published or communicated through the mechanisms available on the platform.",
-        "When required by applicable regulations, the user's acceptance will be requested again."
-      ]
-    },
-    {
-      "title": "10. Non-Compliance",
-      "paragraphs": [
-        "Failure to comply with these Terms and Conditions may result in the suspension or restriction of access to the platform, in accordance with the institution's policies and without prejudice to any legal actions that may apply."
-      ]
-    },
-    {
-      "title": "11. Applicable Law",
-      "paragraphs": [
-        "These Terms and Conditions shall be interpreted in accordance with applicable Colombian legislation.",
-        "Regarding personal data protection, applicable provisions shall be taken into account, including Article 15 of the Political Constitution of Colombia, Law 1581 of 2012, and its implementing regulations.",
-        "Provisions related to computer crimes shall apply where appropriate, including the conduct established under Law 1273 of 2009."
-      ]
-    },
-    {
-      "title": "12. Acceptance",
-      "paragraphs": [
-        "By selecting “Accept”, the user confirms that they have read, understood, and accepted these Terms and Conditions of Use.",
-        "Where applicable to the processing of personal data, acceptance of these terms does not replace the specific authorization that may be required under personal data protection regulations."
-      ]
-    }
-  ],
-  "metadata": {
-    "updated": "Last updated",
-    "updatedValue": "18/08/2026",
-    "responsible": "EduAirControl Representative",
-    "responsibleValue": "EduAirControl Team",
-    "email": "Contact email",
-    "emailValue": "eduaircontrol@gmail.com"
+    "intro": "Welcome to EduAirControl. Before using our platform, please carefully read the following Terms and Conditions. By creating an account and using our services, you agree to comply with these provisions and applicable Colombian regulations.",
+    "item1": "The information provided during registration must be truthful, complete, and up to date. The user is responsible for reporting any changes that affect the registered information.",
+    "item2": "Each user is responsible for protecting their access credentials and for the activities carried out through their account. If unauthorized access is detected, it must be reported promptly.",
+    "item3": "The platform must only be used for educational, administrative, and environmental monitoring purposes authorized by the institution, in compliance with Colombian legislation and established usage rules.",
+    "item4": "It is prohibited to manipulate, alter, delete, extract, or access without authorization any information, databases, IoT devices, accounts, or services of EduAirControl.",
+    "item5": "The environmental data displayed by the platform corresponds to information collected through IoT sensors and is intended for monitoring, analysis, and decision-making support. This data may present variations or measurement errors and does not replace specialized technical inspections when necessary.",
+    "item6": "EduAirControl implements reasonable technical, administrative, and organizational measures to protect information against unauthorized access, loss, alteration, disclosure, or misuse. However, no computer system can guarantee absolute security.",
+    "item7": "The platform may receive updates, improvements, corrections, or modifications related to its operation, security, or services. When necessary, relevant changes will be communicated through the mechanisms available on the platform.",
+    "item8": "Personal data will be processed in accordance with applicable Colombian regulations, particularly Law 1581 of 2012 and its implementing regulations. When necessary, the data subject will be asked to provide prior, express, and informed authorization for the processing of their personal data.",
+    "footer1": "Data subjects have the right to know, update, and rectify their data, request information about its processing, and submit inquiries or complaints in accordance with applicable Colombian regulations. Specific conditions regarding data processing are established in EduAirControl's Personal Data Processing Policy.",
+    "footer2": "EduAirControl may modify these Terms and Conditions when necessary. Modifications will be published or communicated through the mechanisms available on the platform. By clicking “Accept”, you confirm that you have read, understood, and accepted these Terms and Conditions.",
+    "acceptBtn": "I have read and accept",
+    "readToEnd": "Scroll to the end of the document to enable acceptance."
   },
-  "intro": "Welcome to EduAirControl. Before using our platform, please carefully read the following Terms and Conditions. By creating an account and using our services, you agree to comply with these provisions and applicable Colombian regulations.",
-  "item1": "The information provided during registration must be truthful, complete, and up to date. The user is responsible for reporting any changes that affect the registered information.",
-  "item2": "Each user is responsible for protecting their access credentials and for the activities carried out through their account. If unauthorized access is detected, it must be reported promptly.",
-  "item3": "The platform must only be used for educational, administrative, and environmental monitoring purposes authorized by the institution, in compliance with Colombian legislation and established usage rules.",
-  "item4": "It is prohibited to manipulate, alter, delete, extract, or access without authorization any information, databases, IoT devices, accounts, or services of EduAirControl.",
-  "item5": "The environmental data displayed by the platform corresponds to information collected through IoT sensors and is intended for monitoring, analysis, and decision-making support. This data may present variations or measurement errors and does not replace specialized technical inspections when necessary.",
-  "item6": "EduAirControl implements reasonable technical, administrative, and organizational measures to protect information against unauthorized access, loss, alteration, disclosure, or misuse. However, no computer system can guarantee absolute security.",
-  "item7": "The platform may receive updates, improvements, corrections, or modifications related to its operation, security, or services. When necessary, relevant changes will be communicated through the mechanisms available on the platform.",
-  "item8": "Personal data will be processed in accordance with applicable Colombian regulations, particularly Law 1581 of 2012 and its implementing regulations. When necessary, the data subject will be asked to provide prior, express, and informed authorization for the processing of their personal data.",
-  "footer1": "Data subjects have the right to know, update, and rectify their data, request information about its processing, and submit inquiries or complaints in accordance with applicable Colombian regulations. Specific conditions regarding data processing are established in EduAirControl's Personal Data Processing Policy.",
-  "footer2": "EduAirControl may modify these Terms and Conditions when necessary. Modifications will be published or communicated through the mechanisms available on the platform. By clicking “Accept”, you confirm that you have read, understood, and accepted these Terms and Conditions.",
-  "acceptBtn": "I have read and accept",
-  "readToEnd": "Scroll to the end of the document to enable acceptance."
-},
   "dashboard": {
     "clickDetails": "Click To See Details",
     "idealRange": "Ideal range",
@@ -425,115 +439,118 @@
       "responseDesc": "We respond within 24 business hours."
     },
     "terms": {
-      "intro": "By accessing and using EduAirControl, you agree to comply with the following terms and conditions of use:",
+      "intro": "By accessing and using EduAirControl, you agree to comply with the following terms and conditions:",
       "sections": [
         {
-          "title": "Acceptance of terms",
+          "title": "Aceptación de los términos",
           "items": [
-            "By creating an account or using the platform, you confirm that you accept these terms in full.",
-            "If you do not agree with any part of them, you should refrain from using EduAirControl."
+            "Al crear una cuenta o usar la plataforma, confirmas que aceptas estos términos en su totalidad.",
+            "Si no estás de acuerdo con alguna parte, debes abstenerte de usar EduAirControl.",
+            "Al registrarte con Google o Facebook, también aceptas estos términos."
           ]
         },
         {
-          "title": "Your account",
+          "title": "Tu cuenta",
           "items": [
-            "You must provide accurate, complete and up-to-date information when registering.",
-            "You are responsible for keeping your password confidential and for all activity carried out from your account.",
-            "Notify us immediately if you suspect unauthorized use of your account."
+            "Debes proporcionar información precisa, completa y actualizada al registrarte.",
+            "Eres responsable de mantener la confidencialidad de tu contraseña y de toda la actividad realizada desde tu cuenta.",
+            "Notifícanos de inmediato si sospechas un uso no autorizado de tu cuenta.",
+            "Si usas inicio de sesión social (Google/Facebook), eres responsable de la seguridad de esa cuenta externa."
           ]
         },
         {
-          "title": "Permitted use of the platform",
+          "title": "Uso aceptable",
           "items": [
-            "The platform must be used only for authorized, educational and lawful purposes.",
-            "You may not attempt to breach, overload or interfere with the sensors, servers or operation of the system.",
-            "You may not copy, resell or redistribute the service without prior authorization."
+            "Usarás EduAirControl solo para fines legítimos de monitoreo ambiental.",
+            "No intentarás acceder a datos de otras instituciones sin autorización.",
+            "No interferirás con el funcionamiento de la plataforma."
           ]
         },
         {
-          "title": "Environmental data and reports",
+          "title": "Roles y permisos",
           "items": [
-            "Environmental data (air quality, temperature, humidity, etc.) is provided for monitoring and informational purposes only.",
-            "It should not be used as the sole source for critical safety decisions; always follow your institution’s official protocols in an emergency."
+            "Los Super Administradores gestionan usuarios, roles e instituciones.",
+            "Los Administradores gestionan los ambientes y sensores de su institución.",
+            "Los Usuarios consultan la información ambiental de su institución.",
+            "El rol de Administrador es asignado exclusivamente por un Super Administrador."
           ]
         },
         {
-          "title": "Intellectual property",
+          "title": "Propiedad intelectual",
           "items": [
-            "The EduAirControl name, logo, design and software are owned by their creators and protected by copyright.",
-            "No right to use these marks outside the platform is granted without express authorization."
+            "EduAirControl y su contenido son propiedad del SENA y sus desarrolladores.",
+            "Se prohíbe la reproducción no autorizada del software o su documentación."
           ]
         },
         {
-          "title": "Suspension and cancellation",
+          "title": "Limitación de responsabilidad",
           "items": [
-            "We may suspend or cancel accounts that violate these terms or pose a risk to the platform or other users.",
-            "You can request deletion of your account at any time from the Privacy section."
-          ]
-        },
-        {
-          "title": "Changes to these terms",
-          "items": [
-            "We may update these terms periodically to reflect improvements or legal changes.",
-            "Continued use of the platform after an update means you accept the changes."
+            "Los datos ambientales son informativos y no sustituyen diagnósticos profesionales.",
+            "No garantizamos la disponibilidad ininterrumpida del servicio.",
+            "No somos responsables por decisiones tomadas basándose en los datos mostrados."
           ]
         }
       ],
-      "footer": "Questions about these terms? Write to us at support@eduaircontrol.com."
+      "footer": "Last updated: October 2026. For inquiries: support@eduaircontrol.com"
     },
     "privacyModal": {
       "intro": "At EduAirControl we take the protection of your personal information seriously. This policy explains what data we collect and how we protect it:",
       "sections": [
         {
-          "title": "What information we collect",
+          "title": "Qué información recopilamos",
           "items": [
-            "Account data: name, email address and login credentials.",
-            "Environmental data generated by your institution’s sensors (air quality, temperature, humidity, etc.).",
-            "Usage data: preferences, language, time zone and app settings."
+            "Datos de cuenta: nombre, correo electrónico y credenciales de acceso.",
+            "Datos de inicio de sesión social: si usas Google o Facebook, recibimos tu nombre, correo y foto de perfil de ese servicio.",
+            "Datos ambientales generados por los sensores de tu institución (calidad del aire, temperatura, humedad, etc.).",
+            "Datos de uso: preferencias, idioma, zona horaria y configuración de la aplicación."
           ]
         },
         {
-          "title": "How we use your information",
+          "title": "Cómo usamos tu información",
           "items": [
-            "To give you access to the dashboard, rankings and platform notifications.",
-            "To generate environmental reports for your institution.",
-            "To improve the service and contact you about important updates."
+            "Para brindarte acceso al panel, los rankings y las notificaciones de la plataforma.",
+            "Para generar reportes e informes ambientales de tu institución.",
+            "Para personalizar tu experiencia y mejorar la plataforma.",
+            "Para verificar tu identidad y mantener la seguridad del sistema."
           ]
         },
         {
-          "title": "How we protect your data",
+          "title": "Inicio de sesión social",
           "items": [
-            "Your data is transmitted and stored encrypted.",
-            "Passwords are never stored in plain text; they are protected with secure hashing algorithms.",
-            "Access to information is restricted to authorized staff who need it to operate the platform.",
-            "We regularly review our security practices to prevent unauthorized access."
+            "Cuando usas Google o Facebook para iniciar sesión, solo recibimos tu nombre, correo electrónico y foto de perfil.",
+            "No accedemos a tu contraseña de Google o Facebook.",
+            "No publicamos nada en tus redes sociales sin tu permiso.",
+            "Puedes revocar el acceso en cualquier momento desde la configuración de tu cuenta de Google o Facebook."
           ]
         },
         {
-          "title": "Who we share your information with",
+          "title": "Protección de datos",
           "items": [
-            "We do not sell or rent your personal data to third parties.",
-            "We only share information with administrators of your own institution, or with providers strictly necessary to operate the service (for example, hosting).",
-            "We may disclose information if required by law."
+            "Las contraseñas se almacenan de forma cifrada con bcrypt.",
+            "Los datos sensibles viajan cifrados mediante HTTPS.",
+            "El acceso a la información está controlado por roles (Usuario, Administrador, Super Administrador).",
+            "Los Super Administradores solo acceden a los datos necesarios para la gestión del sistema."
           ]
         },
         {
-          "title": "Your rights",
+          "title": "Tus derechos",
           "items": [
-            "You can access, correct or update your personal data from your profile.",
-            "You can request deletion of your account and data at any time from this Settings section.",
-            "You can request a copy of the information we hold about you by contacting support."
+            "Puedes consultar, editar o eliminar tu información personal desde tu perfil.",
+            "Puedes eliminar tu cuenta en cualquier momento desde Configuraciones.",
+            "Puedes solicitar una copia de tus datos contactando a soporte.",
+            "Puedes revocar el acceso de aplicaciones sociales en cualquier momento."
           ]
         },
         {
-          "title": "Data retention",
+          "title": "Retención de datos",
           "items": [
-            "We keep your information while your account is active.",
-            "When you request account deletion, your personal data is deleted or anonymized within a reasonable period, unless the law requires us to retain it."
+            "Los datos de cuenta se conservan mientras tu cuenta esté activa.",
+            "Los datos ambientales se conservan para análisis histórico.",
+            "Al eliminar tu cuenta, tus datos personales son eliminados o anonimizados."
           ]
         }
       ],
-      "footer": "Questions about how we handle your data? Write to us at support@eduaircontrol.com."
+      "footer": "Last updated: October 2026. To exercise your rights: support@eduaircontrol.com"
     }
   },
   "google": {
@@ -609,7 +626,7 @@
     "name_short": "Name is too short",
     "required_company_code": "Company code is required",
     "invalid_company_code": "Company code must follow the format ABC-1234",
-    "uppercaseRequired:_password" : "It must contain at least one uppercase letter",
+    "uppercaseRequired:_password": "It must contain at least one uppercase letter",
     "password_min_8": "Password must be at least 8 characters"
   },
   "notifications": {
@@ -915,10 +932,42 @@
       "alert": "Alert"
     },
     "chart": {
-      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
-      "weeks": ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Current"],
-      "hours": ["00h", "03h", "06h", "09h", "12h", "15h", "18h", "21h"],
+      "weekdays": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ],
+      "months": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug"
+      ],
+      "weeks": [
+        "Wk 1",
+        "Wk 2",
+        "Wk 3",
+        "Wk 4",
+        "Current"
+      ],
+      "hours": [
+        "00h",
+        "03h",
+        "06h",
+        "09h",
+        "12h",
+        "15h",
+        "18h",
+        "21h"
+      ],
       "comfortThreshold": "comfort threshold",
       "recommendedAverage": "Recommended average: ",
       "referenceRange": "Reference range",
@@ -979,5 +1028,15 @@
     "title": "Page not found",
     "description": "The route you are looking for does not exist or has been moved.",
     "backHome": "Back to home"
+  },
+  "admin": {
+    "title": "User Management",
+    "subtitle": "Assign roles to your company administrators",
+    "usersHint": "Assign the Administrator role to users who will be administrators of their companies",
+    "colEmail": "Email",
+    "colUsername": "Username",
+    "colRoles": "Roles",
+    "colActions": "Actions",
+    "roleUpdated": "Roles updated successfully"
   }
 }
