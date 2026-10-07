@@ -115,6 +115,7 @@ export default function DevicesScreen({ navigation }) {
         <Text style={[styles.headerTitle, { color: c.textPrimary }]}>{t('devices.title')}</Text>
         <TouchableOpacity style={[styles.addBtn, { backgroundColor: c.accent }]} onPress={openAdd} activeOpacity={0.85}>
           <Ionicons name="add" size={18} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{t('management.addBtn')}</Text>
         </TouchableOpacity>
       </View>
 
