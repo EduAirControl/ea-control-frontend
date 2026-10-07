@@ -13,8 +13,9 @@ const PUBLIC_PATHS = [
 ];
 
 function handleUnauthorized() {
-  window.dispatchEvent(new Event('eduaircontrol:auth'));
+  // Solo disparar el evento si no estamos ya en una página pública
   if (PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) return;
+  window.dispatchEvent(new Event('eduaircontrol:auth'));
   window.location.assign('/login');
 }
 

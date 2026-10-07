@@ -73,3 +73,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.social-gis-button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}

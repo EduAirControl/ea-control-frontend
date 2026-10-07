@@ -11,6 +11,7 @@ let gisInitialized = false;
 
 function SocialLoginButtons() {
   const { t } = useTranslation();
+  const googleDivRef = useRef(null);
   const [gisReady, setGisReady] = useState(false);
 
   const handleGoogleCredential = useCallback(async (response) => {
@@ -61,6 +62,23 @@ function SocialLoginButtons() {
     };
   }, [handleGoogleCredential]);
 
+  // Renderizar el botón oficial de Google cuando GIS esté listo
+  useEffect(() => {
+    if (!gisReady || !googleDivRef.current) return;
+    try {
+      window.google.accounts.id.renderButton(googleDivRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 300,
+        text: 'continue_with',
+        shape: 'rectangular',
+        locale: 'es',
+      });
+    } catch {
+      // fallback: el botón custom sigue funcionando
+    }
+  }, [gisReady]);
+
   const handleGoogleClick = () => {
     if (gisReady && window.google?.accounts?.id) {
       window.google.accounts.id.prompt();
@@ -77,14 +95,19 @@ function SocialLoginButtons() {
         <span>{t('login.socialDivider', 'o continúa con')}</span>
       </div>
       <div className="social-btn-group">
-        <button
-          type="button"
-          className="social-btn social-btn-google"
-          onClick={handleGoogleClick}
-        >
-          <FcGoogle size={20} />
-          <span>{t('login.googleBtn', 'Google')}</span>
-        </button>
+        {/* Botón oficial de Google (renderizado por GIS) */}
+        <div ref={googleDivRef} className="social-gis-button" />
+        {/* Botón custom de Google (fallback) */}
+        {!gisReady && (
+          <button
+            type="button"
+            className="social-btn social-btn-google"
+            onClick={handleGoogleClick}
+          >
+            <FcGoogle size={20} />
+            <span>{t('login.googleBtn', 'Google')}</span>
+          </button>
+        )}
         <button
           type="button"
           className="social-btn social-btn-facebook"
