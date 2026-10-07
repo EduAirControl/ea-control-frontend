@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { MdOutlineMeetingRoom, MdMenu, MdClose } from 'react-icons/md';
 
-import { FaUser, FaHeart, FaBell, FaChevronDown, FaTrophy } from 'react-icons/fa';
+import { FaUser, FaHeart, FaBell, FaChevronDown, FaTrophy, FaBuilding } from 'react-icons/fa';
 
 import { IoStatsChart, IoSettings, IoLogOut } from 'react-icons/io5';
 
@@ -20,7 +20,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { user, isAdmin: isAdminUser, logout } = useAuth();
+  const { user, isAdmin: isAdminUser, isSuperAdmin, logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -63,6 +63,15 @@ function Navbar() {
             icon: <FaUser />,
             label: t('nav.management'),
             path: '/management',
+          },
+        ]
+      : []),
+    ...(isSuperAdmin
+      ? [
+          {
+            icon: <FaBuilding />,
+            label: t('nav.institutions', 'Instituciones'),
+            path: '/admin/institutions',
           },
         ]
       : []),

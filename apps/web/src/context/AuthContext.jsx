@@ -36,11 +36,13 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  const roles = (user?.roles || []).map((r) => String(r).toUpperCase());
   const value = {
     user,
     loading,
     isAuthenticated: Boolean(user),
-    isAdmin: String(user?.role || '').toUpperCase() === 'ADMIN',
+    isAdmin: roles.includes('ADMIN') || roles.includes('SUPER_ADMIN'),
+    isSuperAdmin: roles.includes('SUPER_ADMIN'),
     refresh,
     logout: () => authService.logout(),
   };

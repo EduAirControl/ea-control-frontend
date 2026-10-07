@@ -5,6 +5,7 @@ export const AuthContext = createContext({
   loading: true,
   isAuthenticated: false,
   isAdmin: false,
+  isSuperAdmin: false,
   refresh: async () => null,
   logout: async () => {},
 });

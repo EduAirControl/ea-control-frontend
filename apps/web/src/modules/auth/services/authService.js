@@ -22,6 +22,7 @@ const authService = {
         id: me.userId || null,
         email: me.email || '',
         role: me.role || 'USER',
+        roles: me.roles || (me.role ? [me.role] : []),
         name: (me.email || '').split('@')[0],
         institutionId: me.institutionId || null,
         campusId: me.campusId || null,
