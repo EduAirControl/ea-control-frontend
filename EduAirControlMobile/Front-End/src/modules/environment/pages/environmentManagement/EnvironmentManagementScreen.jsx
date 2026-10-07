@@ -239,7 +239,15 @@ export default function EnvironmentManagementScreen({ navigation }) {
     <SafeAreaView style={[styles.safe, { backgroundColor: currentColors.bgBody }]}>
       <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={currentColors.bgBody} />
 
-      <View style={[styles.header, { borderBottomColor: currentColors.borderColor }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            borderBottomColor: currentColors.borderColor,
+            paddingTop: (StatusBar.currentHeight || 0) + 10,
+          },
+        ]}
+      >
         <View style={styles.headerLeft}>
           <Ionicons name="grid-outline" size={20} color={currentColors.accent} />
           <Text style={[styles.headerTitle, { color: currentColors.textPrimary }]}>{t('management.title')}</Text>
