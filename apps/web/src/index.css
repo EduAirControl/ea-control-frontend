@@ -75,7 +75,9 @@
   --a11y-font-size: 16px;
 }
 
-/* ── Protanopia (Daltonismo Rojo) ── */
+/* ── Temas de accesibilidad (daltonismo) ──
+   Solo cambian el ACENTO. Los bordes/superficies "glass" se derivan de
+   --accent-rgb, así que se adaptan solos en claro y oscuro (uniforme). */
 body.theme-protanopia {
   --accent:                #007aa7;
   --accent-rgb:            0 122 167;
@@ -83,20 +85,14 @@ body.theme-protanopia {
   --accent-light:          #e6f5fb;
   --accent-dark:           #005a82;
   --border-nav:            #007aa7;
-  --lb-glass-border:       rgba(0, 122, 167, 0.28);
-  --lb-glass-border-hover: rgba(0, 122, 167, 0.58);
-  --lb-surface:            rgba(0, 122, 167, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-protanopia {
-  --accent:                #0085b5;
-  --accent-rgb:            0 133 181;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #2aa5d1;
+  --accent-rgb:            42 165 209;
+  --accent-hover:          #1f8cb5;
+  --accent-light:          #0b3a4a;
+  --accent-dark:           #7fd0ea;
 }
 
 /* ── Deuteranopia (Daltonismo Verde) ── */
@@ -107,20 +103,14 @@ body.theme-deuteranopia {
   --accent-light:          #eef9dc;
   --accent-dark:           #335d00;
   --border-nav:            #4f7e00;
-  --lb-glass-border:       rgba(79, 126, 0, 0.28);
-  --lb-glass-border-hover: rgba(79, 126, 0, 0.58);
-  --lb-surface:            rgba(79, 126, 0, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-deuteranopia {
-  --accent:                #4ca649;
-  --accent-rgb:            76 166 73;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #7fbf3f;
+  --accent-rgb:            127 191 63;
+  --accent-hover:          #6aa530;
+  --accent-light:          #1f2e0d;
+  --accent-dark:           #b6e08a;
 }
 
 /* ── Tritanopia (Daltonismo Azul-Amarillo) ── */
@@ -131,23 +121,14 @@ body.theme-tritanopia {
   --accent-light:          #f0ebff;
   --accent-dark:           #413460;
   --border-nav:            #5b4b8a;
-  --lb-glass-border:       rgba(91, 75, 138, 0.28);
-  --lb-glass-border-hover: rgba(91, 75, 138, 0.58);
-  --lb-surface:            rgba(91, 75, 138, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-tritanopia {
-  --accent:                #8a7ae6;
-  --accent-rgb:            138 122 230;
-  --accent-hover:          #7664d6;
-  --accent-light:          #f1eeff;
-  --accent-dark:           #5d4eb1;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #a99bf0;
+  --accent-rgb:            169 155 240;
+  --accent-hover:          #8f7fe0;
+  --accent-light:          #241f3d;
+  --accent-dark:           #cdc4ff;
 }
 
 /* ── Dark Mode ── */
@@ -170,7 +151,7 @@ body.dark-mode {
   --color-success:   #4ca649;
   --color-warning:   #ffc107;
   --color-danger:    #f23838;
-  --color-info:      #57b752;
+  --color-info:      #5aa9e6;
 
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.55);
   --shadow-nav: 0 4px 16px rgba(0, 0, 0, 0.55);

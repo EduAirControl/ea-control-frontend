@@ -17,10 +17,13 @@ const CONTROLLED_BODY_CLASSES = [...ACCESSIBILITY_THEMES.filter(Boolean), 'dark-
 const FONT_SIZES = { base: '16px', lg: '18px', xl: '20px' };
 
 function readDarkMode() {
+  const saved = localStorage.getItem(ACCESSIBILITY_STORAGE_KEYS.darkMode);
+  // Sin preferencia guardada: respetar el tema del sistema.
+  if (saved === null) {
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  }
   try {
-    return (
-      JSON.parse(localStorage.getItem(ACCESSIBILITY_STORAGE_KEYS.darkMode) || 'false') === true
-    );
+    return JSON.parse(saved) === true;
   } catch {
     return false;
   }

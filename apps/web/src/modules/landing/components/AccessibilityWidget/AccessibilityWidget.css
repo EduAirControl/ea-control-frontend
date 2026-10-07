@@ -1,8 +1,9 @@
 /* ============================================================
    ACCESSIBILITY WIDGET — EduAirControl
+   Usa los tokens del tema (acento, glass, texto) → se adapta a
+   claro/oscuro y a los temas de daltonismo automáticamente.
    ============================================================ */
 
-/* ── Contenedor raíz (posición fija) ── */
 .a11y-widget {
   position: fixed;
   bottom: 28px;
@@ -14,17 +15,17 @@
   gap: 10px;
 }
 
-/* ── Variante elevada (solo Landing): sube para dejar espacio al botón scroll-to-top ── */
 .a11y-widget--raised {
   bottom: 96px;
 }
 
-/* ── Ocultar widget cuando el menú mobile del landing está abierto ── */
 body.landing-menu-open .a11y-widget {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
 }
 
 /* ── Botón flotante ── */
@@ -32,18 +33,16 @@ body.landing-menu-open .a11y-widget {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  border: 2px solid rgba(40, 244, 214, 0.45);
-  background: rgba(8, 17, 29, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: #28f4d6;
+  border: 2px solid rgb(var(--accent-rgb) / 0.5);
+  background: var(--lb-glass-bg);
+  -webkit-backdrop-filter: var(--lb-glass-blur);
+  backdrop-filter: var(--lb-glass-blur);
+  color: var(--accent);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 6px 24px rgba(0, 0, 0, 0.35),
-    0 0 0 0 rgba(40, 244, 214, 0);
+  box-shadow: var(--shadow-md);
   transition:
     transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.3s ease,
@@ -53,15 +52,15 @@ body.landing-menu-open .a11y-widget {
 
 .a11y-trigger:hover {
   transform: scale(1.1);
-  border-color: rgba(40, 244, 214, 0.8);
+  border-color: var(--accent);
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.4),
-    0 0 0 6px rgba(40, 244, 214, 0.12);
+    var(--shadow-lg),
+    0 0 0 6px rgb(var(--accent-rgb) / 0.12);
 }
 
 .a11y-trigger--open {
-  background: rgba(40, 244, 214, 0.15);
-  border-color: #28f4d6;
+  background: rgb(var(--accent-rgb) / 0.15);
+  border-color: var(--accent);
   transform: scale(1.05) rotate(15deg);
 }
 
@@ -77,14 +76,10 @@ body.landing-menu-open .a11y-widget {
   bottom: calc(100% + 12px);
   right: 0;
   width: 280px;
-  background: rgba(8, 17, 29, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(40, 244, 214, 0.18);
+  background: var(--bg-card);
+  border: 1px solid rgb(var(--accent-rgb) / 0.25);
   border-radius: 20px;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(40, 244, 214, 0.06);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
   animation: a11y-slide-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -100,19 +95,18 @@ body.landing-menu-open .a11y-widget {
   }
 }
 
-/* ── Header del panel ── */
 .a11y-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px 12px;
-  border-bottom: 1px solid rgba(40, 244, 214, 0.1);
+  border-bottom: 1px solid var(--lb-glass-border);
 }
 
 .a11y-panel__title {
   font-size: calc(var(--a11y-font-size) * 0.875);
   font-weight: 700;
-  color: #28f4d6;
+  color: var(--accent);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -120,7 +114,7 @@ body.landing-menu-open .a11y-widget {
 .a11y-panel__close {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   font-size: calc(var(--a11y-font-size) * 0.875);
   cursor: pointer;
   padding: 4px 6px;
@@ -132,20 +126,20 @@ body.landing-menu-open .a11y-widget {
 }
 
 .a11y-panel__close:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  background: var(--lb-surface);
 }
 
-/* ── Sección genérica ── */
+/* ── Sección ── */
 .a11y-section {
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--lb-glass-border);
 }
 
 .a11y-section__label {
   font-size: calc(var(--a11y-font-size) * 0.6875);
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0 0 10px;
@@ -164,24 +158,24 @@ body.landing-menu-open .a11y-widget {
   align-items: center;
   gap: 4px;
   padding: 10px 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: var(--lb-surface);
+  border: 1.5px solid var(--lb-glass-border);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .a11y-font-btn:hover {
-  background: rgba(40, 244, 214, 0.08);
-  border-color: rgba(40, 244, 214, 0.35);
-  color: #28f4d6;
+  background: rgb(var(--accent-rgb) / 0.08);
+  border-color: rgb(var(--accent-rgb) / 0.35);
+  color: var(--accent);
 }
 
 .a11y-font-btn--active {
-  background: rgba(40, 244, 214, 0.14);
-  border-color: #28f4d6;
-  color: #28f4d6;
+  background: rgb(var(--accent-rgb) / 0.14);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .a11y-font-preview {
@@ -209,10 +203,10 @@ body.landing-menu-open .a11y-widget {
   justify-content: center;
   gap: 6px;
   padding: 10px 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: var(--lb-surface);
+  border: 1.5px solid var(--lb-glass-border);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
   font-size: calc(var(--a11y-font-size) * 0.8125);
   font-weight: 600;
   cursor: pointer;
@@ -220,15 +214,15 @@ body.landing-menu-open .a11y-widget {
 }
 
 .a11y-mode-btn:hover {
-  background: rgba(40, 244, 214, 0.08);
-  border-color: rgba(40, 244, 214, 0.35);
-  color: #28f4d6;
+  background: rgb(var(--accent-rgb) / 0.08);
+  border-color: rgb(var(--accent-rgb) / 0.35);
+  color: var(--accent);
 }
 
 .a11y-mode-btn--active {
-  background: rgba(40, 244, 214, 0.14);
-  border-color: #28f4d6;
-  color: #28f4d6;
+  background: rgb(var(--accent-rgb) / 0.14);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .a11y-mode-icon {
@@ -248,10 +242,10 @@ body.landing-menu-open .a11y-widget {
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: var(--lb-surface);
+  border: 1.5px solid var(--lb-glass-border);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -261,15 +255,15 @@ body.landing-menu-open .a11y-widget {
 }
 
 .a11y-theme-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: rgb(var(--accent-rgb) / 0.08);
+  border-color: rgb(var(--accent-rgb) / 0.35);
+  color: var(--accent);
 }
 
 .a11y-theme-btn--active {
-  background: rgba(40, 244, 214, 0.1);
-  border-color: rgba(40, 244, 214, 0.45);
-  color: white;
+  background: rgb(var(--accent-rgb) / 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .a11y-theme-dot {
@@ -286,7 +280,7 @@ body.landing-menu-open .a11y-widget {
 
 .a11y-theme-check {
   font-size: 12px;
-  color: #28f4d6;
+  color: var(--accent);
   font-weight: 700;
   margin-left: auto;
 }
@@ -299,10 +293,10 @@ body.landing-menu-open .a11y-widget {
   gap: 8px;
   width: 100%;
   padding: 13px 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid var(--lb-glass-border);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -311,8 +305,8 @@ body.landing-menu-open .a11y-widget {
 }
 
 .a11y-reset-btn:hover {
-  background: rgb(var(--color-danger-rgb) / 0.08);
-  color: #ff4d5b;
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  color: var(--color-danger);
 }
 
 .a11y-reset-btn span {
@@ -340,253 +334,4 @@ body.landing-menu-open .a11y-widget {
     width: 48px;
     height: 48px;
   }
-}
-
-/* ============================================================
-   MODO CLARO — Panel y botón trigger
-   ============================================================ */
-
-body:not(.dark-mode) .a11y-trigger {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(1, 128, 91, 0.5);
-  color: #01805b;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-}
-
-body:not(.dark-mode) .a11y-trigger:hover {
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.15),
-    0 0 0 6px rgba(1, 128, 91, 0.1);
-}
-
-body:not(.dark-mode) .a11y-trigger--open {
-  background: rgba(1, 128, 91, 0.12);
-  border-color: #01805b;
-}
-
-body:not(.dark-mode) .a11y-panel {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(1, 128, 91, 0.25);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-}
-
-body:not(.dark-mode) .a11y-panel__header {
-  border-bottom-color: rgba(1, 128, 91, 0.15);
-}
-
-body:not(.dark-mode) .a11y-panel__title {
-  color: #01805b;
-}
-
-body:not(.dark-mode) .a11y-panel__close {
-  color: rgba(0, 0, 0, 0.35);
-}
-
-body:not(.dark-mode) .a11y-panel__close:hover {
-  color: #0f172a;
-  background: rgba(0, 0, 0, 0.06);
-}
-
-body:not(.dark-mode) .a11y-section__label {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-body:not(.dark-mode) .a11y-section {
-  border-bottom-color: rgba(0, 0, 0, 0.06);
-}
-
-body:not(.dark-mode) .a11y-font-btn,
-body:not(.dark-mode) .a11y-mode-btn,
-body:not(.dark-mode) .a11y-theme-btn {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(0, 0, 0, 0.1);
-  color: rgba(15, 23, 42, 0.75);
-}
-
-body:not(.dark-mode) .a11y-font-btn:hover,
-body:not(.dark-mode) .a11y-mode-btn:hover,
-body:not(.dark-mode) .a11y-theme-btn:hover {
-  background: rgba(1, 128, 91, 0.07);
-  border-color: rgba(1, 128, 91, 0.35);
-  color: #01805b;
-}
-
-body:not(.dark-mode) .a11y-font-btn--active,
-body:not(.dark-mode) .a11y-mode-btn--active,
-body:not(.dark-mode) .a11y-theme-btn--active {
-  background: rgba(1, 128, 91, 0.12);
-  border-color: #01805b;
-  color: #015c42;
-}
-
-body:not(.dark-mode) .a11y-theme-check {
-  color: #01805b;
-}
-
-body:not(.dark-mode).theme-protanopia .a11y-font-btn,
-body:not(.dark-mode).theme-protanopia .a11y-mode-btn,
-body:not(.dark-mode).theme-protanopia .a11y-theme-btn,
-body:not(.dark-mode).theme-deuteranopia .a11y-font-btn,
-body:not(.dark-mode).theme-deuteranopia .a11y-mode-btn,
-body:not(.dark-mode).theme-deuteranopia .a11y-theme-btn,
-body:not(.dark-mode).theme-tritanopia .a11y-font-btn,
-body:not(.dark-mode).theme-tritanopia .a11y-mode-btn,
-body:not(.dark-mode).theme-tritanopia .a11y-theme-btn {
-  color: #0f172a;
-}
-
-body:not(.dark-mode).theme-protanopia .a11y-font-btn:hover,
-body:not(.dark-mode).theme-protanopia .a11y-mode-btn:hover,
-body:not(.dark-mode).theme-protanopia .a11y-theme-btn:hover,
-body:not(.dark-mode).theme-deuteranopia .a11y-font-btn:hover,
-body:not(.dark-mode).theme-deuteranopia .a11y-mode-btn:hover,
-body:not(.dark-mode).theme-deuteranopia .a11y-theme-btn:hover,
-body:not(.dark-mode).theme-tritanopia .a11y-font-btn:hover,
-body:not(.dark-mode).theme-tritanopia .a11y-mode-btn:hover,
-body:not(.dark-mode).theme-tritanopia .a11y-theme-btn:hover {
-  color: var(--accent);
-}
-
-body:not(.dark-mode).theme-protanopia .a11y-font-btn--active,
-body:not(.dark-mode).theme-protanopia .a11y-mode-btn--active,
-body:not(.dark-mode).theme-protanopia .a11y-theme-btn--active,
-body:not(.dark-mode).theme-deuteranopia .a11y-font-btn--active,
-body:not(.dark-mode).theme-deuteranopia .a11y-mode-btn--active,
-body:not(.dark-mode).theme-deuteranopia .a11y-theme-btn--active,
-body:not(.dark-mode).theme-tritanopia .a11y-font-btn--active,
-body:not(.dark-mode).theme-tritanopia .a11y-mode-btn--active,
-body:not(.dark-mode).theme-tritanopia .a11y-theme-btn--active {
-  color: #0f172a;
-}
-
-body:not(.dark-mode) .a11y-reset-btn {
-  border-top-color: rgba(0, 0, 0, 0.07);
-  color: rgba(0, 0, 0, 0.45);
-  background: transparent;
-}
-
-body:not(.dark-mode) .a11y-reset-btn:hover {
-  background: rgb(var(--color-danger-rgb) / 0.06);
-  color: #e53935;
-}
-
-/* ============================================================
-   TEMAS DE DALTONISMO — Ajustes del widget
-   ============================================================ */
-
-/* Protanopia */
-body.theme-protanopia .a11y-trigger {
-  border-color: rgba(0, 122, 167, 0.5);
-  color: #007aa7;
-}
-
-body.theme-protanopia.dark-mode .a11y-trigger {
-  color: #0085b5;
-  border-color: rgba(0, 133, 181, 0.5);
-}
-
-body.theme-protanopia .a11y-panel {
-  border-color: rgba(0, 122, 167, 0.25);
-}
-
-body.theme-protanopia .a11y-panel__title,
-body.theme-protanopia .a11y-theme-check {
-  color: #007aa7;
-}
-
-body.theme-protanopia.dark-mode .a11y-panel__title,
-body.theme-protanopia.dark-mode .a11y-theme-check {
-  color: #0085b5;
-}
-
-body.theme-protanopia .a11y-font-btn--active,
-body.theme-protanopia .a11y-mode-btn--active,
-body.theme-protanopia .a11y-theme-btn--active {
-  border-color: #007aa7;
-  background: rgba(0, 122, 167, 0.12);
-}
-
-body.theme-protanopia.dark-mode .a11y-font-btn--active,
-body.theme-protanopia.dark-mode .a11y-mode-btn--active,
-body.theme-protanopia.dark-mode .a11y-theme-btn--active {
-  border-color: #0085b5;
-  background: rgba(0, 133, 181, 0.12);
-}
-
-/* Deuteranopia */
-body.theme-deuteranopia .a11y-trigger {
-    border-color: rgba(79, 126, 0, 0.5);
-    color: #4F7E00;
-}
-
-body.theme-deuteranopia.dark-mode .a11y-trigger {
-    border-color: rgba(117, 181, 64, 0.5);
-    color: #75b540;
-}
-
-body.theme-deuteranopia .a11y-panel {
-    border-color: rgba(79, 126, 0, 0.25);
-}
-
-body.theme-deuteranopia .a11y-panel__title,
-body.theme-deuteranopia .a11y-theme-check {
-    color: #4F7E00;
-}
-
-body.theme-deuteranopia.dark-mode .a11y-panel__title,
-body.theme-deuteranopia.dark-mode .a11y-theme-check {
-    color: #75b540;
-}
-
-body.theme-deuteranopia .a11y-font-btn--active,
-body.theme-deuteranopia .a11y-mode-btn--active,
-body.theme-deuteranopia .a11y-theme-btn--active {
-    border-color: #4F7E00;
-    background: rgba(79, 126, 0, 0.12);
-}
-
-body.theme-deuteranopia.dark-mode .a11y-font-btn--active,
-body.theme-deuteranopia.dark-mode .a11y-mode-btn--active,
-body.theme-deuteranopia.dark-mode .a11y-theme-btn--active {
-    border-color: #75b540;
-    background: rgba(117, 181, 64, 0.12);
-}
-
-/* Tritanopia */
-body.theme-tritanopia .a11y-trigger {
-    border-color: rgba(91, 75, 138, 0.5);
-    color: #5B4B8A;
-}
-
-body.theme-tritanopia.dark-mode .a11y-trigger {
-    border-color: rgba(138, 122, 230, 0.5);
-    color: #8a7ae6;
-}
-
-body.theme-tritanopia .a11y-panel {
-    border-color: rgba(91, 75, 138, 0.25);
-}
-
-body.theme-tritanopia .a11y-panel__title,
-body.theme-tritanopia .a11y-theme-check {
-    color: #5B4B8A;
-}
-
-body.theme-tritanopia.dark-mode .a11y-panel__title,
-body.theme-tritanopia.dark-mode .a11y-theme-check {
-    color: #8a7ae6;
-}
-
-body.theme-tritanopia .a11y-font-btn--active,
-body.theme-tritanopia .a11y-mode-btn--active,
-body.theme-tritanopia .a11y-theme-btn--active {
-    border-color: #5B4B8A;
-    background: rgba(91, 75, 138, 0.12);
-}
-
-body.theme-tritanopia.dark-mode .a11y-font-btn--active,
-body.theme-tritanopia.dark-mode .a11y-mode-btn--active,
-body.theme-tritanopia.dark-mode .a11y-theme-btn--active {
-    border-color: #8a7ae6;
-    background: rgba(138, 122, 230, 0.12);
 }
