@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import authService from '../modules/auth/services/authService';
 import { AuthContext } from './useAuth';
 
+const PUBLIC_PATHS = ['/landing', '/guide', '/terms', '/login', '/forgot-password', '/verify-code', '/change-password'];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,13 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    hydrate();
+    // Solo verificar sesión si NO estamos en una página pública
+    const isPublic = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
+    if (!isPublic) {
+      hydrate();
+    } else {
+      setLoading(false);
+    }
 
     const handler = () => {
       authService.getCurrentUser(true).then((me) => setUser(me));
