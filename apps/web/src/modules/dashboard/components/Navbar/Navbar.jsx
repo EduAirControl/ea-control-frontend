@@ -10,7 +10,7 @@ import { IoStatsChart, IoSettings, IoLogOut } from 'react-icons/io5';
 
 import NavbarInfo from '../../components/NavbarInfo/NavbarInfo';
 import NotificationPanel from '../../../notifications/components/NotificationPanel';
-import authService from '../../../auth/services/authService';
+import { useAuth } from '../../../../context/useAuth';
 
 import logo from '../../../../shared/assets/EduAirControlLogo.png';
 
@@ -20,6 +20,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { user, isAdmin: isAdminUser, logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -37,8 +38,8 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const userRole = (authService.getUser()?.role || 'USER').toLowerCase();
-  const isAdmin = authService.isAdmin();
+  const userRole = (user?.role || 'USER').toLowerCase();
+  const isAdmin = isAdminUser;
 
   const menuItems = [
     {
@@ -76,8 +77,7 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    authService.logout();
-    go('/landing');
+    logout();
   };
 
   return (

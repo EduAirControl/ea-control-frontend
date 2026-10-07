@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../schemas/loginSchema';
 import authService from '../../services/authService';
-import { FaEnvelope, FaLock, FaBuilding } from 'react-icons/fa';
+import { FaEnvelope, FaLock } from 'react-icons/fa';
 import '../../pages/login/Login.css';
 
 function LoginForm() {
@@ -22,34 +22,15 @@ function LoginForm() {
 
   const [apiError, setApiError] = useState('');
 
-  const onSubmit = async (data) => {
+  const onSubmit = () => {
     setApiError('');
-    try {
-      await authService.login(data.email, data.password, data.companyCode);
-      navigate('/dashboard');
-    } catch (err) {
-      setApiError(err.message || t('login.error', 'Error al iniciar sesión'));
-    }
+    // El login ocurre en el Authorization Server (OAuth2 + PKCE, ADR-017);
+    // aquí solo redirigimos al gateway (BFF).
+    authService.login();
   };
 
   return (
     <form className="login-form-modern" onSubmit={handleSubmit(onSubmit)}>
-      {/* Campo de Empresa*/}
-      <div className="input-group-modern">
-        <label htmlFor="companyCode">{t('login.companyCode', 'Código de Empresa')}</label>
-        <div className="input-wrapper">
-          <FaBuilding className="input-icon" />
-          <input
-            {...register('companyCode')}
-            type="text"
-            id="companyCode"
-            placeholder={t('login.placeholderCompany', 'Ej: EDU-2024')}
-            className={errors.companyCode ? 'input-error shake' : ''}
-          />
-        </div>
-        {errors.companyCode && <p className="error-text">⚠ {t(errors.companyCode.message)}</p>}
-      </div>
-
       <div className="input-group-modern">
         <label htmlFor="email">{t('login.email')}</label>
         <div className="input-wrapper">

@@ -3,30 +3,49 @@ import authService from '../../auth/services/authService';
 
 const EMPTY = { fullName: '', email: '', title: '', phone: '', location: '', avatar: null };
 
+/**
+ * Perfil del usuario (ms-user-management). La identidad viene del BFF
+ * (authService.getUser()); el perfil se consulta/crea por el userId.
+ */
 const profileService = {
   async get() {
-    const jwtUser = authService.getUser();
-    if (!jwtUser) return EMPTY;
-    try {
-      const remote = await apiClient.get('/api/v1/profile');
-      return { ...EMPTY, ...remote };
-    } catch {
-      return {
-        ...EMPTY,
-        fullName: jwtUser.name || '',
-        email: jwtUser.email || '',
-      };
+    const user = authService.getUser();
+    if (!user) return EMPTY;
+    if (user.id) {
+      try {
+        const remote = await apiClient.get(`/api/v1/users/by-user/${user.id}`);
+        return {
+          ...EMPTY,
+          fullName: remote.fullName || '',
+          email: user.email || '',
+          title: remote.position || '',
+          phone: remote.phone || '',
+          location: remote.department || '',
+        };
+      } catch {
+        // sin perfil todavía
+      }
     }
+    return { ...EMPTY, fullName: user.name || '', email: user.email || '' };
   },
 
   async save(profile) {
-    return apiClient.put('/api/v1/profile', {
+    const user = authService.getUser();
+    const payload = {
       fullName: profile.fullName,
-      title: profile.title,
+      position: profile.title,
       phone: profile.phone,
-      location: profile.location,
-      avatar: profile.avatar,
-    });
+      department: profile.location,
+    };
+    if (!user?.id) {
+      return { ...EMPTY, ...payload };
+    }
+    try {
+      const existing = await apiClient.get(`/api/v1/users/by-user/${user.id}`);
+      return apiClient.put(`/api/v1/users/${existing.id}`, payload);
+    } catch {
+      return apiClient.post('/api/v1/users', { userId: user.id, ...payload });
+    }
   },
 };
 
