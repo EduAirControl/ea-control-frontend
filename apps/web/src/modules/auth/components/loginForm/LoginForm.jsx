@@ -22,14 +22,11 @@ function LoginForm() {
 
   const [apiError, setApiError] = useState('');
 
-  const onSubmit = async (data) => {
+  const onSubmit = () => {
     setApiError('');
-    try {
-      await authService.login(data.email, data.password, data.companyCode);
-      navigate('/dashboard');
-    } catch (err) {
-      setApiError(err.message || t('login.error', 'Error al iniciar sesión'));
-    }
+    // El login ocurre en el Authorization Server (OAuth2 + PKCE, ADR-017);
+    // aquí solo redirigimos al gateway (BFF).
+    authService.login();
   };
 
   return (

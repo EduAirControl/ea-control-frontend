@@ -1,78 +1,83 @@
-import apiClient from '../../../shared/services/apiClient';
-
-function base64UrlDecode(str) {
-  const normalized = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-  return atob(padded);
-}
-
-function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(base64UrlDecode(payload));
-  } catch {
-    return null;
-  }
-}
+import apiClient, { API_BASE } from '../../../shared/services/apiClient';
 
 const RESET_EMAIL_KEY = 'resetEmail';
-
 const AUTH_EVENT = 'eduaircontrol:auth';
+
+let currentUser = null;
 
 function notifyAuthChanged() {
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 
+/**
+ * Autenticación vía BFF (ADR-017): el SPA no maneja tokens. El login redirige al
+ * gateway (Authorization Code + PKCE) y la sesión vive en una cookie httpOnly.
+ */
 const authService = {
-  setSession(token, extraUser = {}) {
-    localStorage.setItem('token', token);
-    const claims = decodeJWT(token);
-    const email = claims?.sub || extraUser.email || '';
-    const user = {
-      email,
-      role: claims?.role || 'USER',
-      name: claims?.name || (extraUser.name ? extraUser.name.split('@')[0] : (email ? email.split('@')[0] : '')),
-      companyCode: extraUser.companyCode || null,
-    };
-    localStorage.setItem('user', JSON.stringify(user));
-    notifyAuthChanged();
-    return user;
+  async getCurrentUser(force = false) {
+    if (currentUser && !force) return currentUser;
+    try {
+      const me = await apiClient.get('/api/v1/me');
+      currentUser = {
+        email: me.email || '',
+        role: me.role || 'USER',
+        name: (me.email || '').split('@')[0],
+        institutionId: me.institutionId || null,
+        campusId: me.campusId || null,
+      };
+    } catch {
+      currentUser = null;
+    }
+    return currentUser;
   },
 
-  async login(email, password, companyCode) {
-    const data = await apiClient.post('/auth/login', { email, password, companyCode });
-    this.setSession(data.token, { name: data.name, email: data.email, role: data.role });
-    return data;
+  login() {
+    window.location.assign(`${API_BASE}/oauth2/authorization/web`);
+  },
+
+  async logout() {
+    try {
+      await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' });
+    } catch {
+      // ignore
+    }
+    currentUser = null;
+    notifyAuthChanged();
+    window.location.assign('/login');
   },
 
   async register(name, email, password, companyCode) {
-    const data = await apiClient.post('/auth/register', { name, email, password, companyCode });
-    this.setSession(data.token, { name, email, companyCode });
-    return data;
+    return apiClient.post('/api/v1/auth/register', {
+      name,
+      email,
+      password,
+      username: (name || email.split('@')[0]).trim().slice(0, 100),
+      companyCode,
+    });
   },
 
   async forgotPassword(email) {
-    return apiClient.post('/auth/forgot-password', { email });
+    return apiClient.post('/api/v1/auth/forgot-password', { email });
   },
 
   async verifyCode(email, code) {
-    return apiClient.post('/auth/verify-code', { email, code });
+    return apiClient.post('/api/v1/auth/verify-code', { email, code });
   },
 
   async resetPassword(email, code, newPassword) {
-    return apiClient.post('/auth/reset-password', { email, code, newPassword });
+    return apiClient.post('/api/v1/auth/reset-password', { email, code, newPassword });
   },
 
   async resendCode(email) {
-    return apiClient.post('/auth/resend-code', { email });
+    return apiClient.post('/api/v1/auth/resend-code', { email });
   },
 
   async changePassword(currentPassword, newPassword) {
-    return apiClient.post('/auth/change-password', { currentPassword, newPassword });
+    return apiClient.post('/api/v1/auth/change-password', { currentPassword, newPassword });
   },
 
   async deleteAccount(password) {
-    return apiClient.deleteWithBody('/auth/account', { password });
+    return apiClient.deleteWithBody('/api/v1/auth/account', { password });
   },
 
   setResetEmail(email) {
@@ -87,46 +92,16 @@ const authService = {
     sessionStorage.removeItem(RESET_EMAIL_KEY);
   },
 
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    notifyAuthChanged();
-  },
-
-  getToken() {
-    return localStorage.getItem('token');
-  },
-
   getUser() {
-    try {
-      return JSON.parse(localStorage.getItem('user'));
-    } catch {
-      return null;
-    }
+    return currentUser;
   },
 
   isAuthenticated() {
-    const token = this.getToken();
-    if (!token) return false;
-
-    const claims = decodeJWT(token);
-    if (!claims) {
-      this.logout();
-      return false;
-    }
-
-    if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      this.logout();
-      return false;
-    }
-
-    return true;
+    return Boolean(currentUser);
   },
 
   isAdmin() {
-    if (!this.isAuthenticated()) return false;
-    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || '';
-    return String(role).toUpperCase() === 'ADMIN';
+    return String(currentUser?.role || '').toUpperCase() === 'ADMIN';
   },
 };
 

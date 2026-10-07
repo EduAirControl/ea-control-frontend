@@ -1,21 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-function getToken() {
-  return localStorage.getItem('token');
-}
-
-function isAuthEndpoint(endpoint) {
-  return endpoint.startsWith('/auth/');
-}
-
-const PUBLIC_PATHS = ['/landing', '/guide', '/terms', '/login', '/forgot-password', '/verify-code', '/change-password'];
+const PUBLIC_PATHS = [
+  '/landing',
+  '/guide',
+  '/terms',
+  '/login',
+  '/forgot-password',
+  '/verify-code',
+  '/change-password',
+];
 
 function handleUnauthorized() {
-  const hadSession = Boolean(getToken());
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
   window.dispatchEvent(new Event('eduaircontrol:auth'));
-  if (!hadSession) return;
   if (PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) return;
   window.location.assign('/login');
 }
@@ -32,7 +28,9 @@ function messageFor(status, body) {
     case 404:
       return 'Recurso no encontrado';
     case 409:
-      return 'El correo ya está registrado';
+      return 'El recurso ya existe';
+    case 429:
+      return 'Demasiadas solicitudes, intenta más tarde';
     case 500:
       return 'Error del servidor';
     default:
@@ -41,21 +39,20 @@ function messageFor(status, body) {
 }
 
 async function request(endpoint, options = {}) {
-  const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    if (response.status === 401 && !isAuthEndpoint(endpoint)) {
+    if (response.status === 401) {
       handleUnauthorized();
     }
     throw new Error(messageFor(response.status, body));
@@ -76,4 +73,5 @@ const apiClient = {
   request,
 };
 
+export { API_BASE };
 export default apiClient;

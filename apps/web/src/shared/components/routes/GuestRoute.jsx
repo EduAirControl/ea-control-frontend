@@ -1,8 +1,11 @@
 import { Navigate } from 'react-router-dom';
-import authService from '../../../modules/auth/services/authService';
+import { useAuth } from '../../../context/useAuth';
 
 function GuestRoute({ children }) {
-  if (authService.isAuthenticated()) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return null;
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
