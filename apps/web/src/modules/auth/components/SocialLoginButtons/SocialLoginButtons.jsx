@@ -6,6 +6,7 @@ import apiClient from '../../../../shared/services/apiClient';
 import './SocialLoginButtons.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:8080`;
 let gisInitialized = false;
 
 function SocialLoginButtons() {

@@ -1,39 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import authService from '../modules/auth/services/authService';
 import { AuthContext } from './useAuth';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
-  const refresh = async () => {
-    const me = await authService.getCurrentUser(true);
-    setUser(me);
-    setLoading(false);
-    return me;
+  const hydrate = async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    try {
+      const me = await authService.getCurrentUser(true);
+      setUser(me);
+    } finally {
+      setLoading(false);
+      fetchingRef.current = false;
+    }
   };
 
   useEffect(() => {
-    let active = true;
-
-    const hydrate = async () => {
-      const me = await authService.getCurrentUser(true);
-      if (active) {
-        setUser(me);
-        setLoading(false);
-      }
-    };
-
     hydrate();
 
     const handler = () => {
-      hydrate();
+      authService.getCurrentUser(true).then((me) => setUser(me));
     };
     window.addEventListener('eduaircontrol:auth', handler);
-    return () => {
-      active = false;
-      window.removeEventListener('eduaircontrol:auth', handler);
-    };
+    return () => window.removeEventListener('eduaircontrol:auth', handler);
   }, []);
 
   const roles = (user?.roles || []).map((r) => String(r).toUpperCase());
@@ -43,7 +36,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user),
     isAdmin: roles.includes('ADMIN') || roles.includes('SUPER_ADMIN'),
     isSuperAdmin: roles.includes('SUPER_ADMIN'),
-    refresh,
+    refresh: hydrate,
     logout: () => authService.logout(),
   };
 
