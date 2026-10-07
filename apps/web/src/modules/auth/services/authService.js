@@ -19,6 +19,7 @@ const authService = {
     try {
       const me = await apiClient.get('/api/v1/me');
       currentUser = {
+        id: me.userId || null,
         email: me.email || '',
         role: me.role || 'USER',
         name: (me.email || '').split('@')[0],
