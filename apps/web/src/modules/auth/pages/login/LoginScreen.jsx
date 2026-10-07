@@ -1,14 +1,43 @@
-import AuthLayout from '../../components/AuthLayout/AuthLayout'
-import AuthSlider from '../../components/AuthSlider/AuthSlider'
-import { useLocation, useSearchParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import AuthLayout from '../../components/AuthLayout/AuthLayout';
+import AuthSlider from '../../components/AuthSlider/AuthSlider';
 
 function LoginScreen() {
-  const [searchParams] = useSearchParams()
-  const location = useLocation()
-  const { t } = useTranslation()
-  const initialRegister = searchParams.get('panel') === 'register'
-  const passwordReset = location.state?.passwordReset
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const initialRegister = searchParams.get('panel') === 'register';
+  const passwordReset = location.state?.passwordReset;
+  const processedRef = useRef(false);
+
+  // Manejar token del callback social (viene en el hash)
+  useEffect(() => {
+    if (processedRef.current) return;
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return;
+
+    processedRef.current = true;
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+
+    if (accessToken) {
+      localStorage.setItem('token', accessToken);
+      window.history.replaceState(null, '', window.location.pathname);
+      window.location.href = '/dashboard';
+    }
+  }, [navigate]);
+
+  // Manejar error del callback social
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   return (
     <AuthLayout className="auth-login-background">
@@ -19,7 +48,7 @@ function LoginScreen() {
       )}
       <AuthSlider initialRegister={initialRegister} />
     </AuthLayout>
-  )
+  );
 }
 
-export default LoginScreen
+export default LoginScreen;
