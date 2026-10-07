@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.local
+
+.DS_Store
+.idea/
+.vscode/
+
+# Instrucciones locales de agentes IA (no se comparten con el equipo)
+AGENTS.md
+opencode.json
+.opencode/
