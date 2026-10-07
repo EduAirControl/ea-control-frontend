@@ -5,7 +5,7 @@ import Spinner from '../Spinner/Spinner';
 function GuestRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <Spinner size="lg" label="Verificando sesión..." />;
+  if (loading) return <Spinner size="lg" label="Verificando sesión..." fullscreen />;
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }

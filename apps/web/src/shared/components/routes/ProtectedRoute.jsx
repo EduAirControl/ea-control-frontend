@@ -6,7 +6,7 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return <Spinner size="lg" label="Verificando sesión..." />;
+  if (loading) return <Spinner size="lg" label="Verificando sesión..." fullscreen />;
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }

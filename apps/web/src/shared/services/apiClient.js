@@ -55,7 +55,8 @@ async function request(endpoint, options = {}) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    if (response.status === 401) {
+    // No manejar 401 en /api/v1/me (verificación de sesión silenciosa)
+    if (response.status === 401 && endpoint !== '/api/v1/me') {
       handleUnauthorized();
     }
     throw new Error(messageFor(response.status, body));
