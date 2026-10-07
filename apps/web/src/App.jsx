@@ -3,6 +3,7 @@ import { Navigate, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './shared/components/routes/ProtectedRoute';
 import AdminRoute from './shared/components/routes/AdminRoute';
 import GuestRoute from './shared/components/routes/GuestRoute';
+import SuperAdminRoute from './shared/components/routes/SuperAdminRoute';
 import NotFoundScreen from './shared/components/routes/NotFoundScreen';
 
 // ======================
@@ -46,6 +47,11 @@ import SettingsScreen from './modules/settings/pages/SettingsScreen';
 // FAVORITES
 // ======================
 import FavoritesScreen from './modules/favorites/FavoritesScreen';
+
+// ======================
+// SUPER ADMIN
+// ======================
+import SuperAdminScreen from './modules/admin/pages/SuperAdminScreen';
 
 function App() {
   return (
@@ -104,6 +110,16 @@ function App() {
           <AdminRoute>
             <EnvironmentManagement />
           </AdminRoute>
+        }
+      />
+
+      {/* ---------- Super Admin (instituciones) ---------- */}
+      <Route
+        path="/admin/institutions"
+        element={
+          <SuperAdminRoute>
+            <SuperAdminScreen />
+          </SuperAdminRoute>
         }
       />
 
