@@ -375,34 +375,26 @@ body:not(.dark-mode) .modal-content-modern {
 
 .modal-content-modern::before {
   content: '';
-
   position: absolute;
-
-  top: -140px;
-  right: -140px;
-
-  width: 320px;
-  height: 320px;
-
+  top: -100px;
+  right: -100px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
-
   background: radial-gradient(circle, rgb(var(--accent-rgb) / 0.12), transparent 70%);
+  pointer-events: none;
 }
 
 .modal-content-modern::after {
   content: '';
-
   position: absolute;
-
-  bottom: -160px;
-  left: -120px;
-
-  width: 320px;
-  height: 320px;
-
+  bottom: -100px;
+  left: -100px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
-
   background: radial-gradient(circle, rgba(52, 131, 255, 0.12), transparent 70%);
+  pointer-events: none;
 }
 
 @keyframes modalIn {
@@ -434,9 +426,10 @@ body:not(.dark-mode) .modal-content-modern {
 
   text-align: center;
 
-  gap: 16px;
+  gap: 10px;
 
-  margin-bottom: 35px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .modal-header::after {
@@ -452,11 +445,11 @@ body:not(.dark-mode) .modal-content-modern {
 }
 
 .modal-icon {
-  width: 82px;
+  width: 56px;
 
-  height: 82px;
+  height: 56px;
 
-  border-radius: 22px;
+  border-radius: 16px;
 
   display: flex;
 
@@ -464,7 +457,7 @@ body:not(.dark-mode) .modal-content-modern {
 
   align-items: center;
 
-  font-size: 42px;
+  font-size: 28px;
 
   color: var(--accent);
 
@@ -480,7 +473,7 @@ body:not(.dark-mode) .modal-content-modern {
 .modal-header h2 {
   color: var(--text-primary, white);
 
-  font-size: 2rem;
+  font-size: 1.4rem;
 
   margin: 0;
 }
@@ -488,7 +481,7 @@ body:not(.dark-mode) .modal-content-modern {
 .modal-header p {
   color: var(--text-muted, #7ea6b8);
 
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 
   margin: 0;
 
