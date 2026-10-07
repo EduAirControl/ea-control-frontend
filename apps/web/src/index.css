@@ -218,28 +218,6 @@ a,
   border: 0;
 }
 
-.skip-link {
-  position: absolute;
-  top: -100%;
-  left: 16px;
-  z-index: 10000;
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #116b78, #0d545e);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.95rem;
-  border-radius: 0 0 12px 12px;
-  text-decoration: none;
-  transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(17, 107, 120, 0.35);
-}
-
-.skip-link:focus {
-  top: 0;
-  outline: 3px solid #116b78;
-  outline-offset: 3px;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
