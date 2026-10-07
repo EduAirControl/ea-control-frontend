@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, useWatch } from 'react-hook-form';
@@ -191,7 +192,7 @@ function SignUpForm() {
         <SocialLoginButtons />
       </form>
 
-      {showTerms && (
+      {showTerms && createPortal(
         <div className="modal-overlay-modern" onClick={() => setShowTerms(false)}>
           <div className="modal-content-modern" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -264,7 +265,8 @@ function SignUpForm() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
