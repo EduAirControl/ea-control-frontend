@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../components/AuthLayout/AuthLayout';
 import AuthSlider from '../../components/AuthSlider/AuthSlider';
@@ -7,7 +7,6 @@ import AuthSlider from '../../components/AuthSlider/AuthSlider';
 function LoginScreen() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const initialRegister = searchParams.get('panel') === 'register';
   const passwordReset = location.state?.passwordReset;
@@ -28,7 +27,7 @@ function LoginScreen() {
       window.history.replaceState(null, '', window.location.pathname);
       window.location.href = '/dashboard';
     }
-  }, [navigate]);
+  }, []);
 
   // Manejar error del callback social
   useEffect(() => {
