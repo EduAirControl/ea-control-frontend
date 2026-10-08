@@ -694,7 +694,9 @@
     "invalid_company_code": "Le code de l'entreprise doit respecter le format ABC-1234",
     "uppercase_required": "Deve conter pelo menos uma letra maiúscula",
     "uppercaseRequired:_password": "Deve conter pelo menos uma letra maiúscula.",
-    "password_min_8": "A senha deve ter pelo menos 8 caracteres"
+    "password_min_8": "A senha deve ter pelo menos 8 caracteres",
+    "forbidden": "Você não tem permissão para realizar esta ação.",
+    "notFound": "O recurso solicitado não existe."
   },
   "notifications": {
     "title": "Notificações",
@@ -1216,7 +1218,9 @@
       "wifiFail": "O ESP32 não conseguiu entrar na rede Wi-Fi",
       "badPayload": "O dispositivo rejeitou os dados recebidos",
       "timeout": "O dispositivo não respondeu a tempo",
-      "mac": "O endereço MAC é obrigatório"
+      "mac": "O endereço MAC é obrigatório",
+      "macFormat": "A MAC deve estar no formato AA:BB:CC:DD:EE:FF",
+      "macRequired": "O firmware não expõe a MAC. Atualize o firmware para registrar o nó."
     }
   },
   "provisioning": {
@@ -1238,10 +1242,12 @@
       "sending": "Enviando credenciais…",
       "waiting": "Aguardando o ESP32 (até 45 s)…",
       "success": "Conectado e configurado",
-      "error": "Erro durante o processo"
+      "error": "Erro durante o processo",
+      "resolving": "Preparando a configuração do nó…",
+      "provisioning": "O ESP32 está salvando sua configuração…"
     },
-    "successTitle": "ESP32 conectado à rede",
-    "successBody": "As credenciais foram salvas na memória do dispositivo (NVS).",
+    "successTitle": "Nó pronto para publicar",
+    "successBody": "O dispositivo salvou sua configuração e já reporta leituras. Não é preciso recompilar.",
     "registerBtn": "Salvar no servidor",
     "backToDevices": "Voltar aos dispositivos",
     "logTitle": "Registro técnico",
@@ -1249,7 +1255,8 @@
     "clear": "Limpar",
     "toasts": {
       "connected": "O ESP32 entrou na rede Wi-Fi",
-      "saved": "Dispositivo atualizado no servidor"
+      "saved": "Dispositivo atualizado no servidor",
+      "provisioned": "Nó provisionado e pronto"
     },
     "log": {
       "permissions": "Solicitando permissões de Bluetooth…",
@@ -1262,7 +1269,27 @@
       "fail": "O dispositivo respondeu STATUS:FAIL",
       "errJson": "O dispositivo respondeu STATUS:ERR_JSON",
       "error": "Processo interrompido com erros",
-      "status": "Notificação do dispositivo"
+      "status": "Notificação do dispositivo",
+      "resolving": "Consultando sensores e instalações da sala…",
+      "resolved": "Pacote de provisionamento pronto",
+      "skipped": "Instalação sem variável reconhecível, ignorada",
+      "provisioning": "O ESP32 está resgatando sua configuração…",
+      "provisioned": "Dispositivo respondeu STATUS:PROVISIONED",
+      "errProvision": "Dispositivo respondeu STATUS:ERR_PROVISION",
+      "mac": "MAC informada pelo dispositivo",
+      "macUnavailable": "O firmware não expõe a MAC; atualize-o para registrar o nó",
+      "mtuFallback": "O celular não negociou MTU; tentando o tamanho padrão"
+    },
+    "environmentLabel": "Ambiente do dispositivo",
+    "environmentPlaceholder": "Selecione uma sala",
+    "noEnvironments": "Nenhum ambiente registrado.",
+    "scanDone": "Vínculo BLE pronto",
+    "errors": {
+      "environment": "Selecione a sala onde o nó será instalado.",
+      "noInstallations": "Esse ambiente não tem sensores instalados e ativos. Crie-os primeiro.",
+      "tokenRejected": "O backend rejeitou o token. Provisione novamente.",
+      "provisionTimeout": "O dispositivo não confirmou a configuração a tempo.",
+      "backend": "O backend rejeitou a solicitação de provisionamento."
     }
   }
 }

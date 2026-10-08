@@ -1,26 +1,51 @@
 import apiClient from '../../../shared/services/apiClient'
 
-const BASE = '/api/v1/environments'
+/**
+ * Los ambientes los expone ms-classroom-management. Antes se llamaba a
+ * `/api/v1/environments`, ruta que solo existe en el monolito: en microservicios
+ * devolvia 404 y la lista salia vacia, lo que dejaba sin nada que elegir al
+ * aprovisionar un dispositivo.
+ */
+const BASE = '/api/v1/educational-environments'
+const FAVORITES = '/api/v1/favorites'
 
 /**
- * El backend devuelve `favorite` y la UI usa `isFavorite` (mismo mapeo que el web).
+ * `isFavorite` no viene en el ambiente: es estado del usuario y vive en
+ * ms-user-experience. Se resuelve aparte y se fusiona aqui.
  */
-function toUi(env) {
-  if (!env) return env
-  return { ...env, isFavorite: Boolean(env.favorite) }
-}
-
-function toList(data) {
-  return Array.isArray(data) ? data : data?.items || []
+async function withFavorites(environments) {
+  let favoriteIds = []
+  try {
+    const ids = await apiClient.get(FAVORITES)
+    favoriteIds = Array.isArray(ids) ? ids : []
+  } catch {
+    // Sin favoritos no se rompe el listado: la UI degrada a "ninguno favorito".
+    favoriteIds = []
+  }
+  const set = new Set(favoriteIds)
+  return environments.map((env) => ({
+    ...env,
+    environmentId: env.educationalEnvironmentId || env.environmentId || env.id,
+    id: env.educationalEnvironmentId || env.environmentId || env.id,
+    name: env.name,
+    location: env.code ?? env.name,
+    floor: env.floor,
+    capacity: env.occupancyCapacity,
+    envType: env.environmentTypeId,
+    isFavorite: set.has(env.educationalEnvironmentId),
+  }))
 }
 
 const environmentService = {
   async getAll() {
-    return toList(await apiClient.get(BASE)).map(toUi)
+    const data = await apiClient.get(`${BASE}?page=1&limit=100`)
+    const environments = Array.isArray(data) ? data : data?.data || []
+    return withFavorites(environments)
   },
 
   async getById(id) {
-    return toUi(await apiClient.get(`${BASE}/${id}`))
+    const [env] = await withFavorites([await apiClient.get(`${BASE}/${id}`)])
+    return env
   },
 
   async getFavorites() {
@@ -28,30 +53,34 @@ const environmentService = {
   },
 
   async create(environment) {
-    return toUi(
-      await apiClient.post(BASE, {
-        name: environment.name,
-        location: environment.location,
-        floor: environment.floor,
-        capacity: environment.capacity,
-        envType: environment.envType,
-        tempMin: environment.tempMin,
-        tempMax: environment.tempMax,
-      })
-    )
+    return apiClient.post(BASE, {
+      campusId: environment.campusId,
+      code: environment.code,
+      name: environment.name,
+      environmentTypeId: environment.envType,
+      floor: environment.floor ?? null,
+      areaM2: environment.areaM2 ?? null,
+      occupancyCapacity: environment.capacity ?? null,
+    })
   },
 
   async update(id, updates) {
-    return toUi(await apiClient.patch(`${BASE}/${id}`, updates))
+    return apiClient.patch(`${BASE}/${id}`, {
+      name: updates.name ?? null,
+      floor: updates.floor ?? null,
+      areaM2: updates.areaM2 ?? null,
+      occupancyCapacity: updates.capacity ?? null,
+    })
   },
 
   async delete(id) {
-    return apiClient.delete(`${BASE}/${id}`)
+    await apiClient.delete(`${BASE}/${id}`)
   },
 
+  /** Toggle real contra ms-user-experience; devuelve el estado resultante. */
   async toggleFavorite(id) {
-    const result = await apiClient.post(`${BASE}/${id}/favorite`, {})
-    return Boolean(result?.isFavorite)
+    const result = await apiClient.post(`${FAVORITES}/${id}/toggle`, {})
+    return Boolean(result?.favorite)
   },
 }
 

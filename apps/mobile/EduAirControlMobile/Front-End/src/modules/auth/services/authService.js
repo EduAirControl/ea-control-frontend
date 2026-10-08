@@ -16,48 +16,90 @@ function decodeJWT(token) {
   }
 }
 
+/**
+ * ms-security emite `roles` como array ("roles":["ADMIN"]), no `role` como string.
+ * Leer `role` dejaba a todos los ADMIN sin permisos y ocultaba la pestana
+ * Administracion, con ella el alta de dispositivos.
+ */
+function rolesOf(claims) {
+  if (!claims) return []
+  if (Array.isArray(claims.roles) && claims.roles.length) return claims.roles
+  if (claims.roles) return [claims.roles]
+  return []
+}
+
+function userFromClaims(claims, fallback) {
+  const roles = rolesOf(claims)
+  return {
+    // `sub` es el UUID del usuario, no el correo; el correo va en su propio claim.
+    id: claims?.sub || null,
+    email: claims?.email || fallback?.email || '',
+    name: claims?.name || claims?.preferred_username || claims?.username || fallback?.email || '',
+    roles,
+    // Se guarda el rol mas alto como singular para no romper los consumidores
+    // existentes, que comparan con 'ADMIN'.
+    role: roles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : roles[0] || 'USER',
+    institutionId: claims?.institutionId || null,
+    campusId: claims?.campusId || null,
+  }
+}
+
+async function persistSession(data, fallback) {
+  // ms-security devuelve accessToken; el monolito usaba `token`. Se acepta ambos
+  // porque el contrato de ms-security es el vigente.
+  const token = data.accessToken || data.token
+  if (!token) throw new Error('login response has no accessToken')
+
+  await storage.setItem('token', token)
+  if (data.refreshToken) await storage.setItem('refreshToken', data.refreshToken)
+
+  const user = userFromClaims(decodeJWT(token), fallback)
+  await storage.setItem('user', JSON.stringify(user))
+  return { ...data, token, user }
+}
+
 const authService = {
-  async login(email, password, companyCode) {
-    const data = await apiClient.post('/auth/login', { email, password, companyCode })
-    await storage.setItem('token', data.token)
-    const claims = decodeJWT(data.token)
-    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name: email.split('@')[0] }
-    await storage.setItem('user', JSON.stringify(user))
-    return data
+  async login(email, password) {
+    // companyCode pertenece al registro de usuario, no al login de ms-security.
+    const data = await apiClient.post('/api/v1/auth/login', { email, password })
+    return persistSession(data, { email })
   },
 
-  async register(name, email, password, companyCode) {
-    const data = await apiClient.post('/auth/register', { name, email, password, companyCode })
-    await storage.setItem('token', data.token)
-    const claims = decodeJWT(data.token)
-    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name }
-    await storage.setItem('user', JSON.stringify(user))
-    return data
+  async register(payload) {
+    const data = await apiClient.post('/api/v1/auth/register', payload)
+    return persistSession(data, { email: payload.email })
   },
 
   async logout() {
+    // El logout del servidor es best-effort: si falla igual hay que limpiar local.
+    try {
+      await apiClient.post('/api/v1/auth/logout', {})
+    } catch {
+      // ignorado a proposito
+    }
     await storage.removeItem('token')
+    await storage.removeItem('refreshToken')
     await storage.removeItem('user')
   },
 
-  async forgotPassword(email) {
-    return apiClient.post('/auth/forgot-password', { email })
+  forgotPassword(email) {
+    return apiClient.post('/api/v1/auth/forgot-password', { email })
   },
 
-  async verifyCode(email, code) {
-    return apiClient.post('/auth/verify-code', { email, code })
+  verifyCode(email, code) {
+    return apiClient.post('/api/v1/auth/verify-code', { email, code })
   },
 
-  async resendCode(email) {
-    return apiClient.post('/auth/resend-code', { email })
+  resendCode(email) {
+    return apiClient.post('/api/v1/auth/resend-code', { email })
   },
 
-  async resetPassword(email, code, newPassword) {
-    return apiClient.post('/auth/reset-password', { email, code, newPassword })
+  resetPassword(email, code, newPassword) {
+    return apiClient.post('/api/v1/auth/reset-password', { email, code, newPassword })
   },
 
-  async changePassword(currentPassword, newPassword) {
-    return apiClient.post('/auth/change-password', { currentPassword, newPassword })
+  changePassword(currentPassword, newPassword) {
+    return apiClient.post('/api/v1/auth/change-password', { currentPassword, newPassword })
   },
 
   getToken() {
@@ -89,8 +131,16 @@ const authService = {
 
   isAdmin() {
     if (!this.isAuthenticated()) return false
-    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || ''
-    return String(role).toUpperCase() === 'ADMIN'
+    const user = this.getUser()
+    const roles = user?.roles?.length ? user.roles : rolesOf(decodeJWT(this.getToken()))
+    return roles.some((r) => ['ADMIN', 'SUPER_ADMIN'].includes(String(r).toUpperCase()))
+  },
+
+  isSuperAdmin() {
+    if (!this.isAuthenticated()) return false
+    const user = this.getUser()
+    const roles = user?.roles?.length ? user.roles : rolesOf(decodeJWT(this.getToken()))
+    return roles.some((r) => String(r).toUpperCase() === 'SUPER_ADMIN')
   },
 }
 

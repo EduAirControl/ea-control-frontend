@@ -695,7 +695,9 @@
     "invalid_company_code": "Company code must follow the format ABC-1234",
     "uppercase_required": "It must contain at least one uppercase letter",
     "uppercaseRequired:_password": "It must contain at least one uppercase letter",
-    "password_min_8": "Password must be at least 8 characters"
+    "password_min_8": "Password must be at least 8 characters",
+    "forbidden": "You do not have permission to perform this action.",
+    "notFound": "The requested resource does not exist."
   },
   "notifications": {
     "title": "Notifications",
@@ -1217,7 +1219,9 @@
       "wifiFail": "The ESP32 could not join the Wi-Fi network",
       "badPayload": "The device rejected the received data",
       "timeout": "The device did not respond in time",
-      "mac": "MAC address is required"
+      "mac": "MAC address is required",
+      "macFormat": "MAC must use the AA:BB:CC:DD:EE:FF format",
+      "macRequired": "The firmware does not expose its MAC. Update the firmware to register the node."
     }
   },
   "provisioning": {
@@ -1239,10 +1243,12 @@
       "sending": "Sending credentials…",
       "waiting": "Waiting for the ESP32 (up to 45 s)…",
       "success": "Connected and configured",
-      "error": "Error during the process"
+      "error": "Error during the process",
+      "resolving": "Preparing the node configuration…",
+      "provisioning": "The ESP32 is saving its configuration…"
     },
-    "successTitle": "ESP32 connected to the network",
-    "successBody": "Credentials were stored in the device memory (NVS).",
+    "successTitle": "Node ready to publish",
+    "successBody": "The device stored its configuration and is now reporting readings. No recompile needed.",
     "registerBtn": "Save to the server",
     "backToDevices": "Back to devices",
     "logTitle": "Technical log",
@@ -1250,7 +1256,8 @@
     "clear": "Clear",
     "toasts": {
       "connected": "The ESP32 joined the Wi-Fi network",
-      "saved": "Device updated on the server"
+      "saved": "Device updated on the server",
+      "provisioned": "Node provisioned and ready"
     },
     "log": {
       "permissions": "Requesting Bluetooth permissions…",
@@ -1263,7 +1270,27 @@
       "fail": "Device replied STATUS:FAIL",
       "errJson": "Device replied STATUS:ERR_JSON",
       "error": "Process interrupted with errors",
-      "status": "Device notification"
+      "status": "Device notification",
+      "resolving": "Reading the classroom sensors and installations…",
+      "resolved": "Provisioning package ready",
+      "skipped": "Installation with no recognisable variable, ignored",
+      "provisioning": "The ESP32 is redeeming its configuration…",
+      "provisioned": "Device replied STATUS:PROVISIONED",
+      "errProvision": "Device replied STATUS:ERR_PROVISION",
+      "mac": "MAC reported by the device",
+      "macUnavailable": "The firmware does not expose its MAC; update it to register the node",
+      "mtuFallback": "The phone did not negotiate MTU; trying the default size"
+    },
+    "environmentLabel": "Device environment",
+    "environmentPlaceholder": "Select a classroom",
+    "noEnvironments": "No environments registered.",
+    "scanDone": "BLE link ready",
+    "errors": {
+      "environment": "Select the classroom where the node will be installed.",
+      "noInstallations": "That environment has no active installed sensors. Create them first.",
+      "tokenRejected": "The backend rejected the token. Provision again.",
+      "provisionTimeout": "The device did not confirm its configuration in time.",
+      "backend": "The backend rejected the provisioning request."
     }
   }
 }

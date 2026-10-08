@@ -2,10 +2,16 @@ import { PermissionsAndroid, Platform } from 'react-native'
 import { BleManager } from 'react-native-ble-plx'
 import Base64 from 'react-native-base64'
 
-// UUIDs del firmware ESP32 (ver guia_configuracion_esp32_react_native_ble.md)
+// Contrato con el firmware (ver infra/iot/esp32-node/src/main.cpp y
+// guia_configuracion_esp32_react_native_ble.md). Los tres identificadores no se
+// tocan sin cambiar los dos lados.
 export const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
 export const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
 export const PROVISIONING_DEVICE_NAME = 'ESP32_Config'
+
+/** MTU solicitado. El token viaja en el MISMO write que ssid/pass, asi que sin
+ *  esto la carga no cabe en el ATT por defecto de 23 bytes. */
+const REQUESTED_MTU = 247
 
 let manager = null
 
@@ -48,8 +54,8 @@ export async function ensureBlePermissions() {
 }
 
 /**
- * Escanea filtrando por SERVICE_UUID, conecta al primer ESP32_Config
- * y descubre servicios/características. Devuelve el dispositivo conectado.
+ * Escanea filtrando por SERVICE_UUID, conecta al primer ESP32_Config,
+ * negocia MTU y descubre servicios/caracteristicas.
  */
 export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
   const ble = getBleManager()
@@ -64,13 +70,13 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
       if (timeout) clearTimeout(timeout)
       try {
         ble.stopDeviceScan()
-      } catch (e) {
+      } catch {
         // el escaneo ya estaba detenido
       }
       fn(arg)
     }
 
-    onStatus?.('scanning')
+    onStatus?.('connecting')
 
     timeout = setTimeout(() => {
       finish(reject, new Error('SCAN_TIMEOUT'))
@@ -85,8 +91,16 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
 
       try {
         ble.stopDeviceScan()
-        onStatus?.('connecting')
         const connected = await device.connect()
+
+        // requestMTU es best-effort: si el movil lo rechaza se sigue con el MTU
+        // por defecto, que es lo que pasaba antes de este cambio.
+        try {
+          await connected.requestMTU(REQUESTED_MTU)
+        } catch (error) {
+          onStatus?.('mtu-fallback')
+        }
+
         await connected.discoverAllServicesAndCharacteristics()
         finish(resolve, connected)
       } catch (e) {
@@ -96,7 +110,32 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
   })
 }
 
-/** Suscribe las notificaciones de estado (STATUS:CONNECTED | STATUS:FAIL | STATUS:ERR_JSON). */
+/**
+ * Lee la MAC real del firmware.
+ *
+ * En Android device.id ya es la MAC, pero en iOS react-native-ble-plx devuelve un
+ * UUID periferico y el backend valida el patron AA:BB:CC:DD:EE:FF, asi que el
+ * registro fallaba con 400. El firmware expone la MAC por READ y esto lo evita.
+ *
+ * @returns {Promise<string|null>} MAC en mayusculas, o null si el firmware es
+ *          antiguo y no responde.
+ */
+export async function readDeviceMac(device) {
+  try {
+    const characteristic = await device.readCharacteristicForService(
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID
+    )
+    if (!characteristic?.value) return null
+    const text = Base64.decode(characteristic.value).trim()
+    return /^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$/.test(text) ? text.toUpperCase() : null
+  } catch {
+    // Firmware previo: no implementa READ de MAC.
+    return null
+  }
+}
+
+/** Suscribe las notificaciones de estado. */
 export function subscribeStatus(device, onMessage, onError) {
   return device.monitorCharacteristicForService(
     SERVICE_UUID,
@@ -116,9 +155,15 @@ export function subscribeStatus(device, onMessage, onError) {
   )
 }
 
-/** Envía {ssid, pass} codificado en Base64 a la característica de aprovisionamiento. */
-export async function sendCredentials(device, ssid, password) {
-  const payload = Base64.encode(JSON.stringify({ ssid, pass: password || '' }))
+/**
+ * Envia al ESP32 {ssid, pass, token} en Base64, en una sola escritura.
+ *
+ * El token es lo que permite que el firmware se autoconfigure por HTTPS sin que
+ * haya que recompilarlo con las URLs y el secreto de cada aula. Los tres campos
+ * van juntos precisamente para que el BLE siga siendo una carga corta.
+ */
+export async function sendCredentials(device, { ssid, password, token }) {
+  const payload = Base64.encode(JSON.stringify({ ssid, pass: password || '', token }))
   await device.writeCharacteristicWithResponseForService(
     SERVICE_UUID,
     CHARACTERISTIC_UUID,
@@ -130,12 +175,12 @@ export async function disconnect(device) {
   if (!device) return
   try {
     await device.cancelConnection()
-  } catch (e) {
+  } catch {
     // ya desconectado
   }
 }
 
-/** Traduce errores frecuentes de react-native-ble-plx a claves i18n (devices.errors.*). */
+/** Traduce errores de react-native-ble-plx a claves i18n (devices.errors.*). */
 export function toBleErrorKey(error) {
   const name = error?.name || error?.code || ''
   const message = String(error?.message || '')
@@ -144,6 +189,6 @@ export function toBleErrorKey(error) {
   if (name === 'BluetoothUnauthorized' || message.includes('unauthorized')) return 'devices.errors.unauthorized'
   if (name === 'BluetoothPoweredOff' || message.includes('Bluetooth is powered off')) return 'devices.errors.poweredOff'
   if (message === 'SCAN_TIMEOUT' || name === 'SCAN_TIMEOUT') return 'devices.errors.notFound'
-  if (message === 'PERMISSION_DENIED') return 'devices.errors.permission'
+  if (message === 'PERMISSION_DENIED' || name === 'PERMISSION_DENIED') return 'devices.errors.permission'
   return 'devices.errors.generic'
 }

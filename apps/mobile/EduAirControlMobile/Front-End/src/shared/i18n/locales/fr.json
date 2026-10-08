@@ -694,7 +694,9 @@
     "invalid_company_code": "Le code de l'entreprise doit respecter le format ABC-1234",
     "uppercase_required": "Il doit contenir au moins une lettre majuscule",
     "uppercaseRequired:_password": "Il doit contenir au moins une lettre majuscule",
-    "password_min_8": "Le mot de passe doit contenir au moins 8 caractères"
+    "password_min_8": "Le mot de passe doit contenir au moins 8 caractères",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action.",
+    "notFound": "La ressource demandée n'existe pas."
   },
   "notifications": {
     "title": "Notifications",
@@ -1216,7 +1218,9 @@
       "wifiFail": "L'ESP32 n'a pas pu se connecter au réseau Wi-Fi",
       "badPayload": "L'appareil a rejeté les données reçues",
       "timeout": "L'appareil n'a pas répondu à temps",
-      "mac": "L'adresse MAC est obligatoire"
+      "mac": "L'adresse MAC est obligatoire",
+      "macFormat": "La MAC doit respecter le format AA:BB:CC:DD:EE:FF",
+      "macRequired": "Le firmware n'expose pas sa MAC. Mettez-le à jour pour enregistrer le nœud."
     }
   },
   "provisioning": {
@@ -1238,10 +1242,12 @@
       "sending": "Envoi des identifiants…",
       "waiting": "En attente de l'ESP32 (45 s max)…",
       "success": "Connecté et configuré",
-      "error": "Erreur pendant le processus"
+      "error": "Erreur pendant le processus",
+      "resolving": "Préparation de la configuration du nœud…",
+      "provisioning": "L'ESP32 enregistre sa configuration…"
     },
-    "successTitle": "ESP32 connecté au réseau",
-    "successBody": "Les identifiants ont été enregistrés dans la mémoire de l'appareil (NVS).",
+    "successTitle": "Nœud prêt à publier",
+    "successBody": "Le dispositif a enregistré sa configuration et remonte déjà des mesures. Aucune recompilation nécessaire.",
     "registerBtn": "Enregistrer sur le serveur",
     "backToDevices": "Retour aux appareils",
     "logTitle": "Journal technique",
@@ -1249,7 +1255,8 @@
     "clear": "Effacer",
     "toasts": {
       "connected": "L'ESP32 s'est connecté au réseau Wi-Fi",
-      "saved": "Appareil mis à jour sur le serveur"
+      "saved": "Appareil mis à jour sur le serveur",
+      "provisioned": "Nœud provisionné et prêt"
     },
     "log": {
       "permissions": "Demande des permissions Bluetooth…",
@@ -1262,7 +1269,27 @@
       "fail": "Appareil a répondu STATUS:FAIL",
       "errJson": "Appareil a répondu STATUS:ERR_JSON",
       "error": "Processus interrompu par des erreurs",
-      "status": "Notification de l'appareil"
+      "status": "Notification de l'appareil",
+      "resolving": "Lecture des capteurs et installations de la salle…",
+      "resolved": "Paquet de provisionnement prêt",
+      "skipped": "Installation sans variable reconnue, ignorée",
+      "provisioning": "L'ESP32 échange son configuration…",
+      "provisioned": "Le dispositif a répondu STATUS:PROVISIONED",
+      "errProvision": "Le dispositif a répondu STATUS:ERR_PROVISION",
+      "mac": "MAC déclarée par le dispositif",
+      "macUnavailable": "Le firmware n'expose pas sa MAC ; mettez-le à jour pour enregistrer le nœud",
+      "mtuFallback": "Le téléphone n'a pas négocié la MTU ; tentative avec la taille par défaut"
+    },
+    "environmentLabel": "Environnement du dispositif",
+    "environmentPlaceholder": "Sélectionnez une salle",
+    "noEnvironments": "Aucun environnement enregistré.",
+    "scanDone": "Lien BLE prêt",
+    "errors": {
+      "environment": "Sélectionnez la salle où le nœud sera installé.",
+      "noInstallations": "Cet environnement n'a aucun capteur installé et actif. Créez-les d'abord.",
+      "tokenRejected": "Le backend a rejeté le jeton. Reprovisionnez.",
+      "provisionTimeout": "Le dispositif n'a pas confirmé sa configuration à temps.",
+      "backend": "Le backend a rejeté la demande de provisionnement."
     }
   }
 }

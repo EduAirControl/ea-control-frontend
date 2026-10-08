@@ -19,6 +19,22 @@ export const styles = StyleSheet.create({
   deviceMac: { fontSize: 14, fontWeight: '900', letterSpacing: 0.4 },
   deviceName: { fontSize: 11.5, marginTop: 2 },
 
+  // Selector de ambiente destino
+  select: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11,
+  },
+  selectValue: { flex: 1, fontSize: 14, fontWeight: '600' },
+  envList: { borderWidth: 1, borderRadius: 10, overflow: 'hidden', maxHeight: 200 },
+  envRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1,
+  },
+  envName: { flex: 1, fontSize: 13.5, fontWeight: '600' },
+  envCode: { fontSize: 11.5, marginLeft: 8 },
+  envEmpty: { fontSize: 12, fontStyle: 'italic', padding: 12, textAlign: 'center' },
+  warn: { fontSize: 11.5, lineHeight: 16 },
+
   statusRow: { flexDirection: 'row', alignItems: 'center' },
   statusDot: { width: 9, height: 9, borderRadius: 5 },
   statusText: { fontSize: 13.5, fontWeight: '800', marginLeft: 8, flexShrink: 1 },

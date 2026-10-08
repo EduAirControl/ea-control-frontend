@@ -57,6 +57,12 @@ export const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 13.5, paddingVertical: 0 },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // Lista de ambientes: puede ser larga, asi que hace scroll propio en lugar de
+  // empujar el modal fuera de pantalla.
+  envChips: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8,
+    borderWidth: 1, borderRadius: 10, padding: 8, maxHeight: 140,
+  },
   chip: {
     borderRadius: 999,
     borderWidth: 1,

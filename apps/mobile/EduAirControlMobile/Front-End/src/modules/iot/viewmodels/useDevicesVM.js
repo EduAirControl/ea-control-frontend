@@ -64,6 +64,7 @@ export function useDevicesVM() {
   }
 
   const removeDevice = async (device) => {
+    // device.id lo pone el adaptador (deviceId del backend), no el id del array.
     await deviceService.remove(device.id)
     setDeleteTarget(null)
     await load()
@@ -71,7 +72,6 @@ export function useDevicesVM() {
 
   const setDeviceState = async (device, estado) => {
     await deviceService.update(device.id, {
-      macAddress: device.macAddress,
       nombre: device.nombre,
       tipo: device.tipo,
       idAula: device.idAula,

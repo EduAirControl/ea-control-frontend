@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { useDevicesVM } from '../../viewmodels/useDevicesVM.js'
+import { useEnvironment } from '../../../../context/EnvironmentContext.jsx'
 import Modal from '../../../../shared/components/Modal/Modal.jsx'
 import Input from '../../../../shared/components/Input/Input.jsx'
 import Button from '../../../../shared/components/Button/Button.jsx'
@@ -28,6 +29,9 @@ const STATUS_META = {
 }
 
 const TYPES = ['esp32', 'esp32s3', 'esp8266', 'otro']
+
+/** El backend valida este patron; se comprueba aqui para no gastar un round-trip. */
+const MAC_PATTERN = /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/
 
 function Chip({ label, active, color, onPress, currentColors }) {
   return (
@@ -61,26 +65,36 @@ export default function DevicesScreen({ navigation }) {
   const { t } = useTranslation()
   const toast = useToast()
   const vm = useDevicesVM()
+  const { environments } = useEnvironment()
   const [saving, setSaving] = useState(false)
 
   const openAdd = () => {
-    vm.setForm({ macAddress: '', nombre: '', tipo: 'esp32', idAula: '' })
+    vm.setForm({
+      macAddress: '',
+      nombre: '',
+      tipo: 'esp32',
+      idAula: environments?.[0]?.id || '',
+    })
     vm.setShowAdd(true)
   }
 
   const submitAdd = async () => {
-    if (!vm.form.macAddress.trim()) {
+    const mac = vm.form.macAddress.trim().toUpperCase()
+    if (!mac) {
       toast.error(t('devices.errors.mac'))
+      return
+    }
+    if (!MAC_PATTERN.test(mac)) {
+      toast.error(t('devices.errors.macFormat'))
       return
     }
     setSaving(true)
     try {
       await vm.addDevice({
-        macAddress: vm.form.macAddress.trim().toUpperCase(),
+        macAddress: mac,
         nombre: vm.form.nombre.trim() || null,
         tipo: vm.form.tipo,
         idAula: vm.form.idAula || null,
-        estado: 'pendiente',
       })
       toast.success(t('devices.added'))
     } catch (e) {
@@ -264,6 +278,28 @@ export default function DevicesScreen({ navigation }) {
               currentColors={c}
             />
           ))}
+        </View>
+
+        {/* El ambiente decide que sensors puede publicar el nodo: sin el, el
+            aprovisionamiento falla con 409 al buscar la instalacion activa. */}
+        <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{t('provisioning.environmentLabel')}</Text>
+        <View style={[styles.envChips, { borderColor: c.borderColor }]}>
+          {(environments || []).length === 0 ? (
+            <Text style={{ color: c.textMuted, fontSize: 12, padding: 8 }}>
+              {t('provisioning.noEnvironments')}
+            </Text>
+          ) : (
+            environments.map((env) => (
+              <Chip
+                key={env.id}
+                label={env.name}
+                active={vm.form.idAula === env.id}
+                color={c.accent}
+                onPress={() => vm.setForm((p) => ({ ...p, idAula: env.id }))}
+                currentColors={c}
+              />
+            ))
+          )}
         </View>
         <View style={styles.modalActions}>
           <Button variant="outline" onPress={() => vm.setShowAdd(false)}>{t('common.cancel', 'Cancelar')}</Button>
