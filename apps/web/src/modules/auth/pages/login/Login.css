@@ -330,3 +330,23 @@ body:not(.dark-mode) .input-wrapper input::placeholder {
     font-size: 30px;
   }
 }
+
+/* OAuth2 Button */
+.btn-oauth2 {
+  width: 100%;
+  padding: 14px 24px;
+  border: 2px solid rgba(93, 230, 200, 0.3);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent, #5de6c8);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+}
+
+.btn-oauth2:hover {
+  background: rgba(93, 230, 200, 0.1);
+  border-color: var(--accent, #5de6c8);
+}

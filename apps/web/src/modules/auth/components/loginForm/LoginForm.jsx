@@ -23,11 +23,18 @@ function LoginForm() {
 
   const [apiError, setApiError] = useState('');
 
-  const onSubmit = () => {
+  const onSubmit = async (data) => {
     setApiError('');
-    // El login ocurre en el Authorization Server (OAuth2 + PKCE, ADR-017);
-    // aquí solo redirigimos al gateway (BFF).
-    authService.login();
+    try {
+      await authService.loginWithCredentials(data.email, data.password);
+      navigate('/dashboard');
+    } catch (err) {
+      setApiError(err.message || 'Error al iniciar sesión');
+    }
+  };
+
+  const handleOAuth2Login = () => {
+    authService.loginWithOAuth2();
   };
 
   return (
@@ -79,6 +86,18 @@ function LoginForm() {
       </button>
 
       {isSubmitting && <p className="loading-text">Validando credenciales...</p>}
+
+      <div className="social-divider">
+        <span>{t('login.socialDivider', 'o continúa con')}</span>
+      </div>
+
+      <button
+        type="button"
+        className="btn-oauth2"
+        onClick={handleOAuth2Login}
+      >
+        Continuar con OAuth2
+      </button>
 
       <SocialLoginButtons />
     </form>

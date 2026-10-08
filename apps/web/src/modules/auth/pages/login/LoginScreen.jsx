@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../components/AuthLayout/AuthLayout';
 import AuthSlider from '../../components/AuthSlider/AuthSlider';
+import authService from '../../services/authService';
 
 function LoginScreen() {
   const [searchParams] = useSearchParams();
@@ -11,8 +12,11 @@ function LoginScreen() {
   const initialRegister = searchParams.get('panel') === 'register';
   const passwordReset = location.state?.passwordReset;
   const processedRef = useRef(false);
+  const [onboardingUserId, setOnboardingUserId] = useState(null);
+  const [companyCode, setCompanyCode] = useState('');
+  const [onboardingError, setOnboardingError] = useState('');
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
 
-  // Manejar token del callback social (viene en el hash)
   useEffect(() => {
     if (processedRef.current) return;
     const hash = window.location.hash;
@@ -21,15 +25,20 @@ function LoginScreen() {
     processedRef.current = true;
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
+    const userId = params.get('userId');
+    const needsOnboarding = params.get('needsOnboarding');
 
     if (accessToken) {
       localStorage.setItem('token', accessToken);
       window.history.replaceState(null, '', window.location.pathname);
-      window.location.href = '/dashboard';
+      if (needsOnboarding === 'true' && userId) {
+        setOnboardingUserId(userId);
+      } else {
+        window.location.href = '/dashboard';
+      }
     }
   }, []);
 
-  // Manejar error del callback social
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const error = params.get('error');
@@ -37,6 +46,46 @@ function LoginScreen() {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
+
+  const handleOnboardingSubmit = async (e) => {
+    e.preventDefault();
+    setOnboardingError('');
+    setOnboardingLoading(true);
+    try {
+      await authService.completeSocialOnboarding(onboardingUserId, companyCode);
+      window.location.href = '/dashboard';
+    } catch (err) {
+      setOnboardingError(err.message || 'Error al completar el registro');
+    } finally {
+      setOnboardingLoading(false);
+    }
+  };
+
+  if (onboardingUserId) {
+    return (
+      <AuthLayout className="auth-login-background">
+        <form className="login-form-modern" onSubmit={handleOnboardingSubmit}>
+          <h2>Completa tu registro</h2>
+          <p>Ingresa el código de tu institución para continuar</p>
+          <div className="input-group-modern">
+            <label htmlFor="companyCode">Código de institución</label>
+            <input
+              type="text"
+              id="companyCode"
+              value={companyCode}
+              onChange={(e) => setCompanyCode(e.target.value)}
+              placeholder="SEN-444"
+              required
+            />
+          </div>
+          {onboardingError && <p className="error-text">⚠ {onboardingError}</p>}
+          <button type="submit" className="btn-login-premium" disabled={onboardingLoading}>
+            {onboardingLoading ? '...' : 'Continuar'}
+          </button>
+        </form>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout className="auth-login-background">
