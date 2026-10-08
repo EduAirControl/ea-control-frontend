@@ -22,7 +22,6 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Solo verificar sesión si NO estamos en una página pública
     const isPublic = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
     if (!isPublic) {
       hydrate();

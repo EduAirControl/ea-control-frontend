@@ -12,11 +12,40 @@ const PUBLIC_PATHS = [
   '/change-password',
 ];
 
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+function clearToken() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+}
+
 function handleUnauthorized() {
-  // Solo disparar el evento si no estamos ya en una página pública
   if (PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) return;
+  clearToken();
   window.dispatchEvent(new Event('eduaircontrol:auth'));
   window.location.assign('/login');
+}
+
+async function tryRefreshToken() {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) return false;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    localStorage.setItem('token', data.accessToken);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function messageFor(status, body) {
@@ -47,16 +76,31 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  const token = getToken();
+  const fetchOptions = { ...options, headers };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else {
+    fetchOptions.credentials = 'include';
+  }
+
+  let response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+
+  if (response.status === 401 && token && endpoint !== '/api/v1/me') {
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      headers.Authorization = `Bearer ${getToken()}`;
+      response = await fetch(`${API_BASE}${endpoint}`, { ...fetchOptions, headers });
+    } else {
+      handleUnauthorized();
+      throw new Error(messageFor(401, null));
+    }
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    // No manejar 401 en /api/v1/me (verificación de sesión silenciosa)
-    if (response.status === 401 && endpoint !== '/api/v1/me') {
+    if (response.status === 401 && !token && endpoint !== '/api/v1/me') {
       handleUnauthorized();
     }
     throw new Error(messageFor(response.status, body));
@@ -77,5 +121,5 @@ const apiClient = {
   request,
 };
 
-export { API_BASE };
+export { API_BASE, getToken, clearToken };
 export default apiClient;
