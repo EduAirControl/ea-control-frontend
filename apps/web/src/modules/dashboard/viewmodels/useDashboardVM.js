@@ -13,6 +13,7 @@ export function useDashboardVM() {
   const { environments, toggleFavorite } = useEnvironments();
   const [filter, setFilter] = useState('all');
   const [dashboardData, setDashboardData] = useState(null);
+  const [series, setSeries] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const ranked = useMemo(
@@ -41,13 +42,32 @@ export function useDashboardVM() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [summary, series] = await Promise.all([
+      const [summary, seriesData] = await Promise.all([
         apiClient.get('/api/v1/dashboard/summary'),
-        apiClient.get('/api/v1/dashboard/series'),
+        apiClient.get('/api/v1/dashboard/series', {
+          params: { period: 'day', variable: 'co2' },
+        }),
       ]);
-      setDashboardData({ summary, series });
+      setDashboardData({ summary, series: seriesData });
+      setSeries(seriesData);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSeries = async (period, variable, environmentId) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ period, variable });
+      if (environmentId && environmentId !== 'all') {
+        params.set('environmentId', environmentId);
+      }
+      const data = await apiClient.get(`/api/v1/dashboard/series?${params.toString()}`);
+      setSeries(data);
+    } catch (err) {
+      console.error('Error fetching dashboard series:', err);
     } finally {
       setLoading(false);
     }
@@ -62,7 +82,9 @@ export function useDashboardVM() {
     statusCounts,
     toggleFavorite,
     dashboardData,
+    series,
     loading,
     fetchDashboardData,
+    fetchSeries,
   };
 }

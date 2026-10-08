@@ -989,7 +989,10 @@
       "consolidatedView": "Consolidated view",
       "floor": "Floor",
       "lastReading": "Last reading",
-      "refreshData": "Refresh data"
+      "refreshData": "Refresh data",
+      "updatedNow": "updated now",
+      "updatedMinutes": "{{minutes}} min ago",
+      "updatedHours": "{{hours}} h ago"
     },
     "quickReading": {
       "title": "QUICK READING",

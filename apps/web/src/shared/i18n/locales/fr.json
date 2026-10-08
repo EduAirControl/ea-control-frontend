@@ -988,7 +988,10 @@
       "consolidatedView": "Vue consolidée",
       "floor": "Étage",
       "lastReading": "Dernière lecture",
-      "refreshData": "Actualiser les données"
+      "refreshData": "Actualiser les données",
+      "updatedNow": "mis à jour",
+      "updatedMinutes": "il y a {{minutes}} min",
+      "updatedHours": "il y a {{hours}} h"
     },
     "quickReading": {
       "title": "LECTURE RAPIDE",

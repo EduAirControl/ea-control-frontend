@@ -978,7 +978,10 @@
       "consolidatedView": "Vista consolidada",
       "floor": "Piso",
       "lastReading": "Última lectura",
-      "refreshData": "Actualizar datos"
+      "refreshData": "Actualizar datos",
+      "updatedNow": "actualizado ahora",
+      "updatedMinutes": "hace {{minutes}} min",
+      "updatedHours": "hace {{hours}} h"
     },
     "quickReading": {
       "title": "LECTURA RÁPIDA",
