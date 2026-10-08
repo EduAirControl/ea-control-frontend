@@ -197,6 +197,22 @@
   white-space: nowrap;
 }
 
+.hero-avatar-url {
+  width: min(360px, 100%);
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--lb-glass-border);
+  border-radius: 12px;
+  background: var(--lb-surface);
+  color: var(--text-primary);
+  font-size: calc(var(--a11y-font-size) * 0.875);
+  outline: none;
+}
+
+.hero-avatar-url:focus {
+  border-color: var(--accent);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
