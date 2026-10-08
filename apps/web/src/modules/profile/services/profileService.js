@@ -1,7 +1,7 @@
 import apiClient from '../../../shared/services/apiClient';
 import authService from '../../auth/services/authService';
 
-const EMPTY = { fullName: '', email: '', title: '', phone: '', location: '', avatar: null };
+const EMPTY = { fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' };
 
 /**
  * Perfil del usuario (ms-user-management). La identidad viene del BFF
@@ -21,6 +21,7 @@ const profileService = {
           title: remote.position || '',
           phone: remote.phone || '',
           location: remote.department || '',
+          avatarUrl: remote.avatarUrl || '',
         };
       } catch {
         // sin perfil todavía
@@ -37,6 +38,9 @@ const profileService = {
       phone: profile.phone,
       department: profile.location,
     };
+    if (profile.avatarUrl) {
+      payload.avatarUrl = profile.avatarUrl;
+    }
     if (!user?.id) {
       return { ...EMPTY, ...payload };
     }
