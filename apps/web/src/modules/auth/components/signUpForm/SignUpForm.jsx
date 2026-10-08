@@ -22,6 +22,7 @@ function SignUpForm() {
   const [hasReadFullTerms] = useState(
     () => sessionStorage.getItem('eduaircontrol-terms-read') === 'true'
   );
+  void hasReadFullTerms;
 
   const {
     register,
