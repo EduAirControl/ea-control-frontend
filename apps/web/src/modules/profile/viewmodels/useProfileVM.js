@@ -1,17 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 import authService from '../../auth/services/authService';
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-
 export function useProfileVM() {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
 
-  const [profile, setProfile] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatar: null });
-  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatar: null });
-  const [avatar, setAvatar] = useState(null);
+  const [profile, setProfile] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' });
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -21,7 +18,7 @@ export function useProfileVM() {
     profileService.get().then((data) => {
       setProfile(data);
       setForm(data);
-      setAvatar(data.avatar || null);
+      setAvatarUrl(data.avatarUrl || '');
     });
   }, []);
 
@@ -30,38 +27,29 @@ export function useProfileVM() {
   };
 
   const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+    const url = e.target.value.trim();
+    if (!url) return;
     setAvatarError(null);
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      setAvatarError('La imagen no debe superar 2 MB');
-      e.target.value = '';
-      return;
-    }
-
     setAvatarLoading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatar(reader.result);
+    const img = new Image();
+    img.onload = () => {
+      setAvatarUrl(url);
       setAvatarLoading(false);
     };
-    reader.onerror = () => {
+    img.onerror = () => {
       setAvatarLoading(false);
-      setAvatarError('Error al leer la imagen');
+      setAvatarError('URL de imagen inválida');
     };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    img.src = url;
   };
 
   const handleRemoveAvatar = () => {
-    setAvatar(null);
+    setAvatarUrl('');
     setAvatarError(null);
   };
 
   const handleSave = () => {
-    const updated = { ...form, avatar };
+    const updated = { ...form, avatarUrl };
     setProfile(updated);
     profileService.save(updated);
     setIsEditing(false);
@@ -69,7 +57,7 @@ export function useProfileVM() {
 
   const handleCancel = () => {
     setForm(profile);
-    setAvatar(profile.avatar || null);
+    setAvatarUrl(profile.avatarUrl || '');
     setIsEditing(false);
     setAvatarError(null);
   };
@@ -80,19 +68,14 @@ export function useProfileVM() {
     navigate('/landing');
   };
 
-  const openAvatarPicker = () => {
-    fileInputRef.current?.click();
-  };
-
   return {
     profile,
     form,
-    avatar,
+    avatarUrl,
     isEditing,
     logoutModal,
     avatarLoading,
     avatarError,
-    fileInputRef,
     setIsEditing,
     setLogoutModal,
     handleChange,
@@ -101,6 +84,5 @@ export function useProfileVM() {
     handleSave,
     handleCancel,
     handleLogout,
-    openAvatarPicker,
   };
 }
