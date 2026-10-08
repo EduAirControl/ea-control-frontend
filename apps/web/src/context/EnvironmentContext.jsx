@@ -17,6 +17,13 @@ export function EnvironmentProvider({ children }) {
       setLoading(false);
       return;
     }
+    const user = authService.getUser();
+    if (user?.role === 'SUPER_ADMIN' && !user?.institutionId) {
+      setEnvironments([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     try {
       const data = await environmentService.getAll();
       setEnvironments(data);

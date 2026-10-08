@@ -33,6 +33,7 @@ import {
 } from 'recharts';
 
 import { useEnvironment } from '../../../context/useEnvironment';
+import { useDashboardVM } from '../viewmodels/useDashboardVM';
 import Navbar from '../components/Navbar/Navbar';
 
 import './DashboardScreen.css';
@@ -233,10 +234,15 @@ function KpiCard({ className = '', icon, label, value, valueClassName, note }) {
 function DashboardScreen() {
   const { t } = useTranslation();
   const { environments = [] } = useEnvironment();
+  const { dashboardData, loading: dashboardLoading, fetchDashboardData } = useDashboardVM();
   const [period, setPeriod] = useState('day');
   const [metric, setMetric] = useState('co2');
   const [environmentId, setEnvironmentId] = useState('all');
   const [lastUpdated, setLastUpdated] = useState('hace 3 min');
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const PERIODS = useMemo(() => [
     { id: 'day', label: t('dashboardAnalysis.periods.day'), context: t('dashboardAnalysis.periods.dayContext') },
