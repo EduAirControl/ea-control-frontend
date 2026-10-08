@@ -30,9 +30,13 @@ const sensorService = {
     return items.map(toUi);
   },
 
-  async getByEnvironment() {
-    // La relación sensor-ambiente vive en las instalaciones (pendiente).
-    return [];
+  async getByEnvironment(environmentId) {
+    const data = await apiClient.get(`/api/v1/sensor-installations?educationalEnvironmentId=${environmentId}&active=true`);
+    const items = data?.data || (Array.isArray(data) ? data : []);
+    const sensorIds = items.map((inst) => inst.sensorId);
+    if (sensorIds.length === 0) return [];
+    const sensors = await Promise.all(sensorIds.map((id) => this.getById(id)));
+    return sensors.filter(Boolean);
   },
 
   async getById(id) {
@@ -56,8 +60,9 @@ const sensorService = {
   },
 
   async toggleActive(id) {
-    // El microservicio no tiene /toggle; el estado se gestiona por sensorStatusId.
-    return this.getById(id);
+    const sensor = await this.getById(id);
+    const newStatus = sensor.sensorStatusId === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    return this.update(id, { sensorStatusId: newStatus });
   },
 };
 
