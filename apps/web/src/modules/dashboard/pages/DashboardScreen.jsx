@@ -131,11 +131,6 @@ function getHistoricalValue(environment, metric, curveValue, index) {
     : Math.round(base * factor + variation);
 }
 
-function getPeriodValue(environment, metric, period) {
-  const factor = period === 'day' ? 1 : period === 'week' ? 0.98 : period === 'month' ? 0.95 : 0.91;
-  return getHistoricalValue(environment, metric, factor, 4);
-}
-
 function ChartTooltip({ active, payload, label, metric }) {
   if (!active || !payload?.length) return null;
 
@@ -231,18 +226,43 @@ function KpiCard({ className = '', icon, label, value, valueClassName, note }) {
   );
 }
 
+function formatUpdatedAt(lastUpdatedIso) {
+  return new Date(lastUpdatedIso).toLocaleString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function DashboardScreen() {
   const { t } = useTranslation();
   const { environments = [] } = useEnvironment();
-  const { dashboardData, loading: dashboardLoading, fetchDashboardData } = useDashboardVM();
+  const {
+    dashboardData,
+    series,
+    loading: dashboardLoading,
+    fetchDashboardData,
+    fetchSeries,
+  } = useDashboardVM();
   const [period, setPeriod] = useState('day');
   const [metric, setMetric] = useState('co2');
   const [environmentId, setEnvironmentId] = useState('all');
-  const [lastUpdated, setLastUpdated] = useState('hace 3 min');
+  const [manualUpdatedText, setManualUpdatedText] = useState(null);
+  const summary = dashboardData?.summary;
+  const lastUpdated = manualUpdatedText
+    ? manualUpdatedText
+    : summary?.lastUpdated
+      ? formatUpdatedAt(summary.lastUpdated)
+      : t('dashboardAnalysis.context.updatedMinutes', { minutes: 3 });
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    fetchSeries(period, metric, environmentId);
+  }, [fetchSeries, period, metric, environmentId]);
 
   const PERIODS = useMemo(() => [
     { id: 'day', label: t('dashboardAnalysis.periods.day'), context: t('dashboardAnalysis.periods.dayContext') },
@@ -290,42 +310,50 @@ function DashboardScreen() {
       ? t('dashboardAnalysis.context.allEnvironments')
       : visibleEnvironments[0]?.name || 'Sin ambiente seleccionado';
 
-  const chartData = useMemo(
-    () =>
-      PERIOD_LABELS[period].map((label, index) => {
-        const row = { label };
-        visibleEnvironments.forEach((environment, environmentIndex) => {
-          row[`environment-${environment.id}`] = getHistoricalValue(
-            environment,
-            metric,
-            CURVES[period][index],
-            index + environmentIndex
-          );
-        });
-        return row;
-      }),
-    [metric, period, visibleEnvironments, PERIOD_LABELS]
-  );
+  const chartData = useMemo(() => {
+    if (series?.length) {
+      return series.map((point) => ({
+        label: new Date(point.bucket).toLocaleString(undefined, { day: '2-digit', month: 'short' }),
+        [metric]: Number(point.value),
+      }));
+    }
+    return PERIOD_LABELS[period].map((label, index) => {
+      const row = { label };
+      visibleEnvironments.forEach((environment, environmentIndex) => {
+        row[`environment-${environment.id}`] = getHistoricalValue(
+          environment,
+          metric,
+          CURVES[period][index],
+          index + environmentIndex
+        );
+      });
+      return row;
+    });
+  }, [metric, period, series, visibleEnvironments, PERIOD_LABELS]);
+
+  const hasSeries = Boolean(series?.length);
 
   const comparisonData = useMemo(
     () =>
       visibleEnvironments.map((environment, index) => ({
         name: environment.name.replace('Ambiente ', ''),
-        value: getPeriodValue(environment, metric, period),
+        value: getBaseValue(environment, metric),
         color: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length],
       })),
-    [metric, period, visibleEnvironments]
+    [metric, visibleEnvironments]
   );
 
   const average = useMemo(() => {
+    const real = summary?.averages?.[metric];
+    if (real != null) return Number(real);
     if (!visibleEnvironments.length) return 0;
     return (
       visibleEnvironments.reduce(
-        (total, environment) => total + getPeriodValue(environment, metric, period),
+        (total, environment) => total + getBaseValue(environment, metric),
         0
       ) / visibleEnvironments.length
     );
-  }, [metric, period, visibleEnvironments]);
+  }, [metric, summary, visibleEnvironments]);
 
   const statusCounts = useMemo(
     () =>
@@ -341,8 +369,10 @@ function DashboardScreen() {
   );
 
   const handleRefresh = () => {
-    setLastUpdated('actualizado ahora');
-    window.setTimeout(() => setLastUpdated('hace 3 min'), 2600);
+    setManualUpdatedText('actualizado ahora');
+    window.setTimeout(() => setManualUpdatedText(null), 2600);
+    fetchDashboardData();
+    fetchSeries(period, metric, environmentId);
   };
 
   const kpiDefinitions = [
@@ -580,18 +610,25 @@ function DashboardScreen() {
                   </p>
                 </div>
                 <span className="analysis-live-pill">
-                  <span /> {t('dashboardAnalysis.chart.syncedData')}
+                  <span /> {dashboardLoading ? 'Sincronizando…' : t('dashboardAnalysis.chart.syncedData')}
                 </span>
               </div>
               <div className="analysis-chart-legend">
-                {visibleEnvironments.map((environment, index) => (
-                  <span key={environment.id}>
-                    <i
-                      style={{ background: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length] }}
-                    />
-                    {environment.name}
+                {hasSeries ? (
+                  <span>
+                    <i style={{ background: metricInfo.color }} />
+                    {metricLabels[metric]}
                   </span>
-                ))}
+                ) : (
+                  visibleEnvironments.map((environment, index) => (
+                    <span key={environment.id}>
+                      <i
+                        style={{ background: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length] }}
+                      />
+                      {environment.name}
+                    </span>
+                  ))
+                )}
                 <span className="comfort-legend">
                   <i /> {t('dashboardAnalysis.chart.comfortThreshold')}
                 </span>
@@ -600,27 +637,42 @@ function DashboardScreen() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 15, right: 8, left: -17, bottom: 0 }}>
                     <defs>
-                      {visibleEnvironments.map((environment, index) => (
-                        <linearGradient
-                          key={environment.id}
-                          id={`analysis-fill-${environment.id}`}
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
+                      {hasSeries ? (
+                        <linearGradient id="analysis-fill-series" x1="0" y1="0" x2="0" y2="1">
                           <stop
                             offset="0%"
-                            stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
+                            stopColor={metricInfo.color}
                             stopOpacity={0.2}
                           />
                           <stop
                             offset="100%"
-                            stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
+                            stopColor={metricInfo.color}
                             stopOpacity={0}
                           />
                         </linearGradient>
-                      ))}
+                      ) : (
+                        visibleEnvironments.map((environment, index) => (
+                          <linearGradient
+                            key={environment.id}
+                            id={`analysis-fill-${environment.id}`}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
+                              stopOpacity={0.2}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        ))
+                      )}
                     </defs>
                     <CartesianGrid
                       stroke="rgba(167,188,208,.11)"
@@ -647,19 +699,32 @@ function DashboardScreen() {
                       stroke="rgba(185,203,197,.5)"
                       strokeDasharray="5 5"
                     />
-                    {visibleEnvironments.map((environment, index) => (
+                    {hasSeries ? (
                       <Area
-                        key={environment.id}
                         type="monotone"
-                        dataKey={`environment-${environment.id}`}
-                        name={environment.name}
-                        stroke={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                        fill={`url(#analysis-fill-${environment.id})`}
+                        dataKey={metric}
+                        name={metricLabels[metric]}
+                        stroke={metricInfo.color}
+                        fill="url(#analysis-fill-series)"
                         strokeWidth={2.5}
                         activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
                         isAnimationActive={false}
                       />
-                    ))}
+                    ) : (
+                      visibleEnvironments.map((environment, index) => (
+                        <Area
+                          key={environment.id}
+                          type="monotone"
+                          dataKey={`environment-${environment.id}`}
+                          name={environment.name}
+                          stroke={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
+                          fill={`url(#analysis-fill-${environment.id})`}
+                          strokeWidth={2.5}
+                          activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
+                          isAnimationActive={false}
+                        />
+                      ))
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

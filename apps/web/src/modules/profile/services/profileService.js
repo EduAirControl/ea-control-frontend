@@ -37,10 +37,8 @@ const profileService = {
       position: profile.title,
       phone: profile.phone,
       department: profile.location,
+      avatarUrl: profile.avatarUrl || '',
     };
-    if (profile.avatarUrl) {
-      payload.avatarUrl = profile.avatarUrl;
-    }
     if (!user?.id) {
       return { ...EMPTY, ...payload };
     }

@@ -988,7 +988,10 @@
       "consolidatedView": "Visão consolidada",
       "floor": "Andar",
       "lastReading": "Última leitura",
-      "refreshData": "Atualizar dados"
+      "refreshData": "Atualizar dados",
+      "updatedNow": "atualizado agora",
+      "updatedMinutes": "há {{minutes}} min",
+      "updatedHours": "há {{hours}} h"
     },
     "quickReading": {
       "title": "LEITURA RÁPIDA",

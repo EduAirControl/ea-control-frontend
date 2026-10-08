@@ -11,7 +11,6 @@ export function useProfileVM() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
-  const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
 
   useEffect(() => {
@@ -27,20 +26,14 @@ export function useProfileVM() {
   };
 
   const handleAvatarChange = (e) => {
-    const url = e.target.value.trim();
-    if (!url) return;
+    const url = e.target.value;
+    setAvatarUrl(url);
     setAvatarError(null);
-    setAvatarLoading(true);
+    const trimmed = url.trim();
+    if (!trimmed) return;
     const img = new Image();
-    img.onload = () => {
-      setAvatarUrl(url);
-      setAvatarLoading(false);
-    };
-    img.onerror = () => {
-      setAvatarLoading(false);
-      setAvatarError('URL de imagen inválida');
-    };
-    img.src = url;
+    img.onerror = () => setAvatarError('URL de imagen inválida');
+    img.src = trimmed;
   };
 
   const handleRemoveAvatar = () => {
@@ -49,8 +42,10 @@ export function useProfileVM() {
   };
 
   const handleSave = () => {
-    const updated = { ...form, avatarUrl };
+    const trimmedUrl = (avatarUrl || '').trim();
+    const updated = { ...form, avatarUrl: trimmedUrl };
     setProfile(updated);
+    setAvatarUrl(trimmedUrl);
     profileService.save(updated);
     setIsEditing(false);
   };
@@ -74,7 +69,6 @@ export function useProfileVM() {
     avatarUrl,
     isEditing,
     logoutModal,
-    avatarLoading,
     avatarError,
     setIsEditing,
     setLogoutModal,
