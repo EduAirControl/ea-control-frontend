@@ -51,8 +51,8 @@ const environmentService = {
   },
 
   async getFavorites() {
-    // Los favoritos pertenecen a ms-user-experience (pendiente).
-    return [];
+    const ids = await apiClient.get('/api/v1/favorites');
+    return Array.isArray(ids) ? ids : [];
   },
 
   async create(environment) {
@@ -67,9 +67,9 @@ const environmentService = {
     return apiClient.delete(`${BASE}/${id}`);
   },
 
-  async toggleFavorite() {
-    // Los favoritos pertenecen a ms-user-experience (pendiente).
-    return false;
+  async toggleFavorite(id) {
+    const result = await apiClient.post(`/api/v1/favorites/${id}/toggle`);
+    return result?.favorite ?? false;
   },
 };
 

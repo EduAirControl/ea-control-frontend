@@ -4,14 +4,14 @@ import { useAllEnvironmentsVM } from "../../environment/viewmodels/useAllEnviron
 export const useNotifications = () => {
   const { environments } = useAllEnvironmentsVM();
 
-  // Generar notificaciones a partir de los ambientes
+  // Generar notificaciones solo de ambientes favoritos
   const generatedNotifications = useMemo(() => {
     const list = [];
 
     let alerts = 0;
     let warnings = 0;
 
-    environments.forEach((env) => {
+    environments.filter((env) => env.isFavorite).forEach((env) => {
       // CO₂
       if (env.co2 > 1000) {
         alerts++;

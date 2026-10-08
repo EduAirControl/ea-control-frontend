@@ -41,10 +41,12 @@ export function EnvironmentProvider({ children }) {
     };
   }, [loadEnvironments]);
 
-  const toggleFavorite = async (id, favorite) => {
+  const toggleFavorite = async (id) => {
     const snapshot = environments;
+    const target = environments.find((env) => env.id === id);
+    const newValue = target ? !target.isFavorite : false;
     setEnvironments((prev) =>
-      prev.map((env) => (env.id === id ? { ...env, isFavorite: favorite } : env))
+      prev.map((env) => (env.id === id ? { ...env, isFavorite: newValue } : env))
     );
     try {
       const isFavorite = await environmentService.toggleFavorite(id);
