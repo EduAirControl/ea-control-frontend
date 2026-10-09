@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { useProvisioningVM } from '../../viewmodels/useProvisioningVM.js'
-import deviceService from '../../services/deviceService.js'
+import sensorService from '../../../environment/services/sensorService.js'
 import Input from '../../../../shared/components/Input/Input.jsx'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
@@ -38,8 +38,8 @@ export default function ProvisioningScreen() {
   const toast = useToast()
   const vm = useProvisioningVM()
 
-  const registeredDevice = route.params?.device || null
-  const [mac, setMac] = useState(registeredDevice?.macAddress || null)
+  const environmentId = route.params?.environmentId || null
+  const [mac, setMac] = useState(route.params?.macAddress || null)
   const [saving, setSaving] = useState(false)
   const [registered, setRegistered] = useState(false)
 
@@ -57,28 +57,16 @@ export default function ProvisioningScreen() {
   const syncBackend = async () => {
     setSaving(true)
     try {
-      if (registeredDevice) {
-        await deviceService.update(registeredDevice.id, {
-          macAddress: registeredDevice.macAddress,
-          nombre: registeredDevice.nombre,
-          tipo: registeredDevice.tipo,
-          idAula: registeredDevice.idAula,
-          ssid: vm.ssid.trim(),
-          estado: 'conectado',
-          firmwareVersion: registeredDevice.firmwareVersion,
-        })
-      } else {
-        if (!mac) {
-          toast.error(t('devices.errors.mac'))
-          return
-        }
-        await deviceService.create({
-          macAddress: mac.toUpperCase(),
-          nombre: t('devices.newDeviceName', { mac }),
-          tipo: 'esp32',
-          ssid: vm.ssid.trim(),
-          estado: 'conectado',
-        })
+      if (!mac) {
+        toast.error(t('devices.errors.mac'))
+        return
+      }
+      // Alta del sensor en ms-sensor-management e instalacion en el ambiente.
+      // El numero de serie es la MAC del modulo; los UUID de modelo y estado
+      // salen de la configuracion (no hay endpoint de catalogo todavia).
+      const sensor = await sensorService.create({ sensorId: mac.toUpperCase() })
+      if (environmentId) {
+        await sensorService.install(sensor.id, environmentId)
       }
       setRegistered(true)
       toast.success(t('provisioning.toasts.saved'))
@@ -116,11 +104,11 @@ export default function ProvisioningScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.deviceMac, { color: c.textPrimary }]}>
-                {mac || registeredDevice?.macAddress || '—'}
+                {mac || '—'}
               </Text>
               <Text style={[styles.deviceName, { color: c.textMuted }]} numberOfLines={1}>
-                {registeredDevice?.nombre || t('devices.noName')}
-                {registeredDevice?.ssid ? ` · ${registeredDevice.ssid}` : ''}
+                {t('devices.noName')}
+                {vm.ssid ? ` · ${vm.ssid}` : ''}
               </Text>
             </View>
           </View>
@@ -204,7 +192,7 @@ export default function ProvisioningScreen() {
               </Button>
             )}
             {registered && (
-              <TouchableOpacity style={styles.linkBtn} onPress={() => navigation.navigate('Devices')}>
+              <TouchableOpacity style={styles.linkBtn} onPress={() => navigation.navigate('ManagementHome')}>
                 <Text style={[styles.linkTxt, { color: c.accent }]}>{t('provisioning.backToDevices')}</Text>
                 <Ionicons name="chevron-forward" size={14} color={c.accent} />
               </TouchableOpacity>

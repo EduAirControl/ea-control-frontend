@@ -25,7 +25,7 @@ import { styles } from './EnvironmentManagementScreen.styles'
 const TABS = [
   { id: 'environments', key: 'management.tabEnvironments', icon: 'business-outline' },
   { id: 'sensors', key: 'management.tabSensors', icon: 'hardware-chip-outline' },
-  { id: 'devices', key: 'management.tabDevices', icon: 'wifi-outline' },
+  { id: 'provisioning', key: 'management.tabProvisioning', icon: 'wifi-outline' },
 ]
 
 function SummaryCard({ label, value, emoji, accent, active, onPress, currentColors }) {
@@ -270,8 +270,8 @@ export default function EnvironmentManagementScreen({ navigation }) {
               key={item.id}
               style={[styles.tabBtn, active && { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}
               onPress={() => {
-                if (item.id === 'devices') {
-                  navigation.navigate('Devices')
+                if (item.id === 'provisioning') {
+                  navigation.navigate('Provisioning')
                   return
                 }
                 setTab(item.id)
