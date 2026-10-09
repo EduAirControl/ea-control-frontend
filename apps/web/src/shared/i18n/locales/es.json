@@ -663,7 +663,14 @@
     "warning": "Advertencia",
     "warningMessage": "El ambiente {{name}} presenta condiciones irregulares",
     "dailySummary": "Resumen diario",
-    "summaryMessage": "Hoy {{alerts}} ambientes en alerta y {{warnings}} con advertencias"
+    "summaryMessage": "Hoy {{alerts}} ambientes en alerta y {{warnings}} con advertencias",
+    "thresholdExceeded": "Valor fuera de umbral",
+    "thresholdExceededMessage": "El ambiente registró {{value}} en {{variable}} ({{severity}})",
+    "thresholdAlert": "Alerta",
+    "thresholdWarning": "Advertencia",
+    "thresholdInfo": "Informativo",
+    "environmentId": "Ambiente {{id}}",
+    "acknowledge": "Reconocer"
   },
   "leaderboard": {
     "title": "Ranking de Ambientes",

@@ -640,7 +640,14 @@
     "warning": "Warning",
     "warningMessage": "Environment {{name}} has irregular conditions",
     "dailySummary": "Daily summary",
-    "summaryMessage": "{{alerts}} environments in alert and {{warnings}} with warnings"
+    "summaryMessage": "{{alerts}} environments in alert and {{warnings}} with warnings",
+    "thresholdExceeded": "Value out of range",
+    "thresholdExceededMessage": "Environment recorded {{value}} for {{variable}} ({{severity}})",
+    "thresholdAlert": "Alert",
+    "thresholdWarning": "Warning",
+    "thresholdInfo": "Info",
+    "environmentId": "Environment {{id}}",
+    "acknowledge": "Acknowledge"
   },
   "leaderboard": {
     "title": "Environment Ranking",
