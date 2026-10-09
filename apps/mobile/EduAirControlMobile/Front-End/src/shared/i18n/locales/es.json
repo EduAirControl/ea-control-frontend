@@ -677,7 +677,8 @@
     "tabEnvironments": "Ambientes",
     "tabSensors": "Sensores y variables",
     "tabDevices": "Dispositivos IoT",
-    "noAdmin": "No tienes permisos para acceder a esta sección"
+    "noAdmin": "No tienes permisos para acceder a esta sección",
+    "tabProvisioning": "Aprovisionamiento"
   },
   "editModal": {
     "dateFormatTitle": "Formato de fecha",

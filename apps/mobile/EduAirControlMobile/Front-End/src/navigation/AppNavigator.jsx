@@ -14,7 +14,6 @@ import SettingsScreen from '../modules/settings/pages/settings/SettingsScreen'
 import AllEnvironmentsScreen from '../modules/environment/pages/allEnvironments/AllEnvironmentsScreen'
 import EnvironmentDetailScreen from '../modules/environment/pages/environmentDetail/EnvironmentDetailScreen'
 import EnvironmentManagementScreen from '../modules/environment/pages/environmentManagement/EnvironmentManagementScreen'
-import DevicesScreen from '../modules/iot/pages/devices/DevicesScreen'
 import ProvisioningScreen from '../modules/iot/pages/provisioning/ProvisioningScreen'
 
 const Tab = createBottomTabNavigator()
@@ -45,7 +44,6 @@ function ManagementStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ManagementHome" component={EnvironmentManagementScreen} />
       <Stack.Screen name="EnvironmentDetail" component={EnvironmentDetailScreen} />
-      <Stack.Screen name="Devices" component={DevicesScreen} />
       <Stack.Screen name="Provisioning" component={ProvisioningScreen} />
     </Stack.Navigator>
   )

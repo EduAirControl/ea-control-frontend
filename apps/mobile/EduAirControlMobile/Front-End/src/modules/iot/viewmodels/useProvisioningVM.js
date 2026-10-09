@@ -129,7 +129,7 @@ export function useProvisioningVM() {
 
     try {
       await sendCredentials(device, ssid.trim(), password)
-    } catch (e) {
+    } catch {
       statusResolverRef.current = null
       setPhase('error')
       setErrorKey('devices.errors.generic')

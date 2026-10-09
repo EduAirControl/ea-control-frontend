@@ -64,7 +64,7 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
       if (timeout) clearTimeout(timeout)
       try {
         ble.stopDeviceScan()
-      } catch (e) {
+      } catch {
         // el escaneo ya estaba detenido
       }
       fn(arg)
@@ -130,7 +130,7 @@ export async function disconnect(device) {
   if (!device) return
   try {
     await device.cancelConnection()
-  } catch (e) {
+  } catch {
     // ya desconectado
   }
 }
