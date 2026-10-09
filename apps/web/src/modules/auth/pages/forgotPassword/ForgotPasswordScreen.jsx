@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from "../../components/AuthLayout/AuthLayout";
 import ForgotPasswordForm from '../../components/ForgotPasswordForm/ForgotPasswordForm'
-import { BackButton } from "../../../../shared/components";
 import "./ForgotPassword.css";
 
 function ForgotPasswordScreen() {
@@ -10,10 +9,8 @@ function ForgotPasswordScreen() {
   const { t } = useTranslation()
 
   return (
-    <AuthLayout>
-      <BackButton onClick={() => navigate('/')} />
+    <AuthLayout className="auth-login-background">
       <div className="forgot-password-content">
-        <div className="forgot-icon">🔒</div>
         <h1>{t('forgotPassword.title')}</h1>
         <p className="forgot-description">{t('forgotPassword.description')}</p>
         <ForgotPasswordForm />
