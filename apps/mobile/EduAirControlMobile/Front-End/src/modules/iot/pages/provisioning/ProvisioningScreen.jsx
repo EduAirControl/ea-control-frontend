@@ -263,6 +263,14 @@ export default function ProvisioningScreen() {
             {vm.isBusy && <ActivityIndicator size="small" color={c.accent} style={{ marginLeft: 'auto' }} />}
           </View>
 
+          {/* Un fallo de BLE sin explicacion se parece demasiado a "esta cargando":
+              aqui se dice que se puede volver a intentar. */}
+          {vm.phase === 'error' && (
+            <Text style={[styles.hint, { color: c.error }]}>
+              {t('provisioning.errors.retryHint')}
+            </Text>
+          )}
+
           <Button
             onPress={handleScan}
             disabled={vm.isBusy || vm.phase === 'ready' || success}

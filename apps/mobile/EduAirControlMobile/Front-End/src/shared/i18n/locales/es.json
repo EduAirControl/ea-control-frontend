@@ -1195,7 +1195,9 @@
       "wifiFail": "El ESP32 no pudo conectarse a la red Wi-Fi",
       "badPayload": "El dispositivo rechazó los datos recibidos",
       "timeout": "El dispositivo no respondió a tiempo",
-      "mac": "La dirección MAC es obligatoria"
+      "mac": "La dirección MAC es obligatoria",
+      "bleUnavailable": "Bluetooth no disponible. La app necesita una compilación de desarrollo (dev build), no Expo Go.",
+      "permissionTimeout": "El permiso de Bluetooth no llegó a responder. Revísalo en los ajustes de la app."
     }
   },
   "provisioning": {
@@ -1251,7 +1253,8 @@
     "notRegistered": "Aún sin registrar",
     "errors": {
       "model": "Elige un modelo de sensor",
-      "environment": "Elige un ambiente"
+      "environment": "Elige un ambiente",
+      "retryHint": "Pulsa «Escanear» para volver a intentarlo."
     },
     "statusLabel": "Estado del sensor"
   }
