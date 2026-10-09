@@ -109,6 +109,17 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <Field
+              icon="business-outline"
+              value={form.companyCode}
+              onChangeText={(v) => handleChange('companyCode', v.toUpperCase())}
+              placeholder={t('login.placeholderCompany')}
+              autoCapitalize="characters"
+            />
+            {errors.companyCode && (
+              <Text style={[styles.errorText, { color: c.error }]}>{errors.companyCode}</Text>
+            )}
+
+            <Field
               icon="mail-outline"
               value={form.email}
               onChangeText={(v) => handleChange('email', v)}

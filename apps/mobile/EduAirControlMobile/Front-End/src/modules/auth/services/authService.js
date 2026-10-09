@@ -4,18 +4,18 @@ import storage from '../../../shared/storage/storage'
 const BASE = '/api/v1/auth'
 
 function base64UrlDecode(str) {
-  const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-  return atob(padded)
+const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
+const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+return atob(padded)
 }
 
 function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1]
-    return JSON.parse(base64UrlDecode(payload))
-  } catch {
-    return null
-  }
+try {
+const payload = token.split('.')[1]
+return JSON.parse(base64UrlDecode(payload))
+} catch {
+return null
+}
 }
 
 /**
@@ -49,117 +49,80 @@ async function storeSession(data) {
 }
 
 const authService = {
-  /** `LoginRequest` es solo `{email, password}`: el `companyCode` lo ignora el backend. */
-  async login(email, password) {
-    const data = await apiClient.post(`${BASE}/login`, { email, password })
-    return storeSession(data)
+  async login(email, password, companyCode) {
+    const data = await apiClient.post('/auth/login', { email, password, companyCode })
+    await storage.setItem('token', data.token)
+    const claims = decodeJWT(data.token)
+    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name: email.split('@')[0] }
+    await storage.setItem('user', JSON.stringify(user))
+    return data
   },
 
-  /** `RegisterRequest`: `{email, password, username, companyCode, campusId?}`. */
-  async register(name, email, password, companyCode, campusId) {
-    const data = await apiClient.post(`${BASE}/register`, {
-      email,
-      password,
-      username: name,
-      companyCode,
-      ...(campusId ? { campusId } : {}),
-    })
-    return storeSession(data)
-  },
-
-  async refresh() {
-    const refreshToken = storage.getItem('refreshToken')
-    if (!refreshToken) return false
-    const data = await apiClient.post(`${BASE}/refresh`, { refreshToken })
-    await storeSession(data)
-    return true
+  async register(name, email, password, companyCode) {
+    const data = await apiClient.post('/auth/register', { name, email, password, companyCode })
+    await storage.setItem('token', data.token)
+    const claims = decodeJWT(data.token)
+    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name }
+    await storage.setItem('user', JSON.stringify(user))
+    return data
   },
 
   async logout() {
-    const refreshToken = storage.getItem('refreshToken')
-    // Mejor esfuerzo: si el backend no responde, la sesión local se limpia igual.
-    try {
-      await apiClient.post(`${BASE}/logout`, { refreshToken, allDevices: false })
-    } catch {
-      // ignorado a propósito
-    }
-    await clearSession()
+    await storage.removeItem('token')
+    await storage.removeItem('user')
   },
 
   async forgotPassword(email) {
-    return apiClient.post(`${BASE}/forgot-password`, { email })
+    return apiClient.post('/auth/forgot-password', { email })
   },
 
   async verifyCode(email, code) {
-    return apiClient.post(`${BASE}/verify-code`, { email, code })
+    return apiClient.post('/auth/verify-code', { email, code })
   },
 
   async resendCode(email) {
-    return apiClient.post(`${BASE}/resend-code`, { email })
+    return apiClient.post('/auth/resend-code', { email })
   },
 
   async resetPassword(email, code, newPassword) {
-    return apiClient.post(`${BASE}/reset-password`, { email, code, newPassword })
+    return apiClient.post('/auth/reset-password', { email, code, newPassword })
   },
 
   async changePassword(currentPassword, newPassword) {
-    return apiClient.post(`${BASE}/change-password`, { currentPassword, newPassword })
-  },
-
-  async deleteAccount() {
-    await apiClient.delete(`${BASE}/account`)
-    await clearSession()
+    return apiClient.post('/auth/change-password', { currentPassword, newPassword })
   },
 
   getToken() {
     return storage.getItem('token')
   },
 
-  getRefreshToken() {
-    return storage.getItem('refreshToken')
-  },
-
-  getUser() {
-    try {
-      return JSON.parse(storage.getItem('user'))
-    } catch {
-      return null
-    }
-  },
+getUser() {
+try {
+return JSON.parse(storage.getItem('user'))
+} catch {
+return null
+}
+},
 
   isAuthenticated() {
     const token = storage.getItem('token')
     if (!token) return false
     const claims = decodeJWT(token)
     if (!claims) {
-      clearSession()
+      this.logout()
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      clearSession()
+      this.logout()
       return false
     }
     return true
   },
 
-  /**
-   * Los roles viajan como lista en `roles`. Se acepta `role` (string) por si
-   * llegara un token antiguo.
-   */
-  roles() {
-    const user = this.getUser()
-    if (user?.roles?.length) return user.roles
-    const claims = decodeJWT(this.getToken()) || {}
-    if (Array.isArray(claims.roles)) return claims.roles
-    return claims.role ? [claims.role] : []
-  },
-
   isAdmin() {
-    return this.roles().some((r) => String(r).toUpperCase() === 'ADMIN')
-  },
-
-  isSuperAdmin() {
-    return this.roles().some((r) => String(r).toUpperCase() === 'SUPER_ADMIN')
+    if (!this.isAuthenticated()) return false
+    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || ''
+    return String(role).toUpperCase() === 'ADMIN'
   },
 }
 
