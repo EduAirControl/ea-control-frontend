@@ -16,6 +16,7 @@ import EnvironmentDetailScreen from '../modules/environment/pages/environmentDet
 import EnvironmentManagementScreen from '../modules/environment/pages/environmentManagement/EnvironmentManagementScreen'
 import DevicesScreen from '../modules/iot/pages/devices/DevicesScreen'
 import ProvisioningScreen from '../modules/iot/pages/provisioning/ProvisioningScreen'
+import SuperAdminScreen from '../modules/admin/pages/superAdmin/SuperAdminScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -74,6 +75,7 @@ export default function AppNavigator() {
   const { currentColors } = useTheme()
   const { t } = useTranslation()
   const isAdmin = authService.isAdmin()
+  const isSuperAdmin = authService.isSuperAdmin()
 
   return (
     <Tab.Navigator
@@ -122,6 +124,18 @@ export default function AppNavigator() {
           name="Management"
           component={ManagementStack}
           options={{ tabBarLabel: t('nav.management') }}
+        />
+      )}
+      {isSuperAdmin && (
+        <Tab.Screen
+          name="SuperAdmin"
+          component={SuperAdminScreen}
+          options={{
+            tabBarLabel: t('nav.superAdmin', 'Super Admin'),
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? 'shield' : 'shield-outline'} size={size} color={color} />
+            ),
+          }}
         />
       )}
       <Tab.Screen
