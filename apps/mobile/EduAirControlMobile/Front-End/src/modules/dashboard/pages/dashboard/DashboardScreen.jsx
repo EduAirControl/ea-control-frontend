@@ -346,14 +346,6 @@ export default function DashboardScreen({ navigation }) {
     vm.healthPercent || 0
   )
 
-  /*
-   * Navegación al detalle de un ambiente.
-   */
-  const handleEnvironmentPress = (id) => {
-    navigation.navigate('EnvironmentDetail', {
-      envId: id,
-    })
-  }
 
   return (
     <SafeAreaView
