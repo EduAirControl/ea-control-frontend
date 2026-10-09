@@ -1,11 +1,9 @@
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from "../../components/AuthLayout/AuthLayout";
 import ForgotPasswordForm from '../../components/ForgotPasswordForm/ForgotPasswordForm'
 import "./ForgotPassword.css";
 
 function ForgotPasswordScreen() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
 
   return (

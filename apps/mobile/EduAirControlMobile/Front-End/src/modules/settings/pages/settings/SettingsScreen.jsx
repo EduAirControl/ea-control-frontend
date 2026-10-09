@@ -71,7 +71,7 @@ function Toggle({ value, onValueChange, currentColors }) {
   )
 }
 
-function SectionCard({ icon, title, children, currentColors, style }) {
+function SectionCard({ icon, title, children, currentColors }) {
   return (
     <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
       <View style={styles.cardHeader}>
@@ -108,7 +108,8 @@ export default function SettingsScreen({ navigation }) {
   const [dateFormat, setDateFormat] = useState('DD-MM-YYYY')
   const [dateFormatDraft, setDateFormatDraft] = useState('DD-MM-YYYY')
   const [reminders, setReminders] = useState({ alerts: true, warnings: true, daily: false, sound: true })
-  const [privacy, setPrivacy] = useState({ visible: false })
+  // El valor se persiste y se restaura pero la UI no lo lee todavia.
+  const [, setPrivacy] = useState({ visible: false })
   const [showLangModal, setShowLangModal] = useState(false)
   const [showDateFormatModal, setShowDateFormatModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)

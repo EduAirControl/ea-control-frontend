@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "web": "expo start --web",
-    "check:android": "expo export --platform android --output-dir dist-android"
+    "check:android": "expo export --platform android --output-dir dist-android",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -41,5 +42,13 @@
     "react-native-worklets": "0.5.1",
     "zod": "^4.6.5"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^15.15.0"
+  }
 }
