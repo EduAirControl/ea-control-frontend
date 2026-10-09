@@ -21,38 +21,81 @@ export function destroyBleManager() {
   }
 }
 
+/**
+ * Tiempo maximo que se espera al dialogo de permisos.
+ *
+ * En un build sin los permisos BLE declarados (por ejemplo Expo Go) la peticion
+ * nativa no llega a resolver nunca: sin este limite la pantalla se queda en
+ * "escaneando" para siempre y no se ve que ha fallado.
+ */
+const PERMISSION_TIMEOUT_MS = 5000
+
 export async function ensureBlePermissions() {
   if (Platform.OS !== 'android') return true
 
-  if (Platform.Version >= 31) {
-    const grants = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-      PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-    ])
-    const granted = Object.values(grants).every(
-      (value) => value === PermissionsAndroid.RESULTS.GRANTED
-    )
-    if (!granted) {
-      throw new Error('PERMISSION_DENIED')
+  const ask = async () => {
+    if (Platform.Version >= 31) {
+      const grants = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+      ])
+      return Object.values(grants).every(
+        (value) => value === PermissionsAndroid.RESULTS.GRANTED
+      )
     }
-    return true
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+    )
+    return granted === PermissionsAndroid.RESULTS.GRANTED
   }
 
-  const granted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-  )
-  if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-    throw new Error('PERMISSION_DENIED')
+  let granted
+  try {
+    granted = await Promise.race([
+      ask(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('PERMISSION_TIMEOUT')), PERMISSION_TIMEOUT_MS)
+      ),
+    ])
+  } catch (e) {
+    throw new Error(e?.message === 'PERMISSION_TIMEOUT' ? 'PERMISSION_TIMEOUT' : 'PERMISSION_DENIED')
   }
+
+  if (!granted) throw new Error('PERMISSION_DENIED')
   return true
 }
 
 /**
- * Escanea filtrando por SERVICE_UUID, conecta al primer ESP32_Config
- * y descubre servicios/características. Devuelve el dispositivo conectado.
+ * ¿Es el nodo que buscamos?
+ *
+ * El nombre es la señal fuerte. Si no llega en el anuncio (ocurre en algunos
+ * Android) se acepta el service UUID, que es nuestro y no lo comparte nadie.
+ */
+function isProvisioningDevice(device) {
+  const name = device?.name || device?.localName
+  if (name === PROVISIONING_DEVICE_NAME) return true
+  const services = device?.serviceUUIDs || []
+  return services.some((u) => String(u).toLowerCase() === SERVICE_UUID.toLowerCase())
+}
+
+/**
+ * Escanea, conecta con el primer ESP32_Config y descubre sus servicios.
+ *
+ * Se escanea SIN filtro de service UUID: filtrar a nivel de sistema hace que
+ * Android descarte periféricos, sobre todo con `neverForLocation`. El filtro se
+ * aplica aqui, sobre cada resultado.
+ *
+ * @throws Error('BLE_UNAVAILABLE') si el modulo nativo no esta (Expo Go)
+ * @throws Error('PERMISSION_DENIED') / Error('PERMISSION_TIMEOUT')
+ * @throws Error('SCAN_TIMEOUT') si no aparece ningun nodo
  */
 export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
-  const ble = getBleManager()
+  let ble
+  try {
+    ble = getBleManager()
+  } catch {
+    return Promise.reject(new Error('BLE_UNAVAILABLE'))
+  }
 
   return new Promise((resolve, reject) => {
     let settled = false
@@ -76,12 +119,12 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
       finish(reject, new Error('SCAN_TIMEOUT'))
     }, timeoutMs)
 
-    ble.startDeviceScan([SERVICE_UUID], null, async (error, device) => {
+    ble.startDeviceScan(null, null, async (error, device) => {
       if (error) {
         finish(reject, error)
         return
       }
-      if (!device || device.name !== PROVISIONING_DEVICE_NAME) return
+      if (!isProvisioningDevice(device)) return
 
       try {
         ble.stopDeviceScan()
@@ -154,6 +197,10 @@ export function toBleErrorKey(error) {
   if (name === 'LocationServicesDisabled' || message.includes('Location services')) return 'devices.errors.location'
   if (name === 'BluetoothUnauthorized' || message.includes('unauthorized')) return 'devices.errors.unauthorized'
   if (name === 'BluetoothPoweredOff' || message.includes('Bluetooth is powered off')) return 'devices.errors.poweredOff'
+  // Sin modulo nativo (Expo Go): no hay forma de escanear.
+  if (message === 'BLE_UNAVAILABLE' || name === 'BleModuleNotFound') return 'devices.errors.bleUnavailable'
+  // El dialogo de permisos no llego a responderse.
+  if (message === 'PERMISSION_TIMEOUT') return 'devices.errors.permissionTimeout'
   if (message === 'SCAN_TIMEOUT' || name === 'SCAN_TIMEOUT') return 'devices.errors.notFound'
   if (message === 'PERMISSION_DENIED') return 'devices.errors.permission'
   return 'devices.errors.generic'

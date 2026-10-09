@@ -65,7 +65,7 @@ export function useProvisioningVM() {
     } catch (e) {
       setPhase('error')
       setErrorKey(toBleErrorKey(e))
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', e?.message)
       return null
     }
 
@@ -100,9 +100,11 @@ export function useProvisioningVM() {
       pushLog('provisioning.log.ready')
       return device
     } catch (e) {
+      // El codigo del error se deja en el log: sin el, un fallo de BLE es un
+      // "algo falló" imposible de diagnosticar desde el movil.
       setPhase('error')
       setErrorKey(toBleErrorKey(e))
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', e?.message)
       return null
     }
   }, [pushLog])
