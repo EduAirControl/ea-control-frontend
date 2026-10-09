@@ -70,6 +70,22 @@ function messageFor(status, body) {
   }
 }
 
+/**
+ * Convierte { params } en query string, descartando los vacíos.
+ *
+ * <p>Antes cada llamada que necesitaba filtros se los montaba a mano y había
+ * llamadas que se los pasaban como segundo argumento de `get`, que los ignoraba:
+ * los filtros se perdían en silencio.
+ */
+function buildUrl(endpoint, params) {
+  if (!params) return endpoint;
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+  ).toString();
+  if (!query) return endpoint;
+  return `${endpoint}${endpoint.includes('?') ? '&' : '?'}${query}`;
+}
+
 async function request(endpoint, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
@@ -111,7 +127,7 @@ async function request(endpoint, options = {}) {
 }
 
 const apiClient = {
-  get: (endpoint) => request(endpoint),
+  get: (endpoint, options = {}) => request(buildUrl(endpoint, options.params), options),
   post: (endpoint, body) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
   put: (endpoint, body) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
   patch: (endpoint, body) => request(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
@@ -121,5 +137,5 @@ const apiClient = {
   request,
 };
 
-export { API_BASE, getToken, clearToken };
+export { API_BASE, getToken, clearToken, buildUrl };
 export default apiClient;
