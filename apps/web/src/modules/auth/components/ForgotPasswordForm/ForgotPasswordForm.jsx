@@ -27,17 +27,19 @@ function ForgotPasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Input
-        label={t('forgotPassword.emailLabel')}
-        type="email"
-        placeholder={t('login.placeholder')}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
+    <form className="login-form-modern" onSubmit={handleSubmit}>
+      <div className="input-group-modern">
+        <Input
+          label={t('forgotPassword.emailLabel')}
+          type="email"
+          placeholder="ejemplo@correo.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
       {apiError && <p className="error-text">⚠ {apiError}</p>}
-      <button type="submit" className="btn-send-code" disabled={isSubmitting}>
+      <button type="submit" className="btn-login-premium" disabled={isSubmitting}>
         {isSubmitting ? '...' : t('forgotPassword.sendBtn')}
       </button>
       <p className="try-another">{t('forgotPassword.tryAnother')}</p>
