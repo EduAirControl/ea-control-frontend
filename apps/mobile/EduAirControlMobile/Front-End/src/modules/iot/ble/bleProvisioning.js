@@ -116,9 +116,20 @@ export function subscribeStatus(device, onMessage, onError) {
   )
 }
 
-/** Envía {ssid, pass} codificado en Base64 a la característica de aprovisionamiento. */
-export async function sendCredentials(device, ssid, password) {
-  const payload = Base64.encode(JSON.stringify({ ssid, pass: password || '' }))
+/**
+ * Envía la configuración del nodo codificada en Base64.
+ *
+ * El payload lleva también la credencial del dispositivo y el id de su
+ * instalación: sin ellos el ESP32 no puede enviar medidas aunque conecte al
+ * Wi-Fi. Ver guia_configuracion_esp32_react_native_ble.md.
+ */
+export async function sendCredentials(device, ssid, password, token, installationId) {
+  const payload = Base64.encode(JSON.stringify({
+    ssid,
+    pass: password || '',
+    token: token || '',
+    installationId: installationId || '',
+  }))
   await device.writeCharacteristicWithResponseForService(
     SERVICE_UUID,
     CHARACTERISTIC_UUID,

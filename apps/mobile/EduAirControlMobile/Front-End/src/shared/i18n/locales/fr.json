@@ -1264,6 +1264,17 @@
       "errJson": "Appareil a répondu STATUS:ERR_JSON",
       "error": "Processus interrompu par des erreurs",
       "status": "Notification de l'appareil"
-    }
+    },
+    "configLabel": "Configuration du nœud",
+    "modelLabel": "Modèle de capteur",
+    "environmentLabel": "Environnement",
+    "noEnvironments": "Aucun environnement disponible",
+    "registered": "Enregistré comme {{id}}",
+    "notRegistered": "Pas encore enregistré",
+    "errors": {
+      "model": "Choisissez un modèle de capteur",
+      "environment": "Choisissez un environnement"
+    },
+    "statusLabel": "État du capteur"
   }
 }

@@ -40,14 +40,13 @@ export const ENV_FIELD_BY_VARIABLE = {
 }
 
 /**
- * Alta de un sensor: exige `sensorModelId` y `sensorStatusId` como UUID.
- *
- * <p>ms-sensor-management no expone un catálogo de modelos ni de estados, así que
- * se toman de la configuración de la app. Sin ellos, el backend responde 400 con
- * el campo que falta: no se inventa ninguno.
+ * Credencial del dispositivo: la emite ms-security y el ESP32 la usa como
+ * `Authorization: Bearer` al enviar mediciones.
  */
-const SENSOR_MODEL_ID = process.env.EXPO_PUBLIC_SENSOR_MODEL_ID || null
-const SENSOR_STATUS_ID = process.env.EXPO_PUBLIC_SENSOR_STATUS_ID || null
+const DEVICE_TOKENS = '/api/v1/device-tokens'
+const SENSOR_MODELS = '/api/v1/sensor-models'
+const SENSOR_STATUSES = '/api/v1/sensor-statuses'
+const MEASUREMENT_UNITS = '/api/v1/measurement-units'
 
 function toUi(sensor) {
   if (!sensor) return sensor
@@ -84,12 +83,33 @@ const sensorService = {
 
   async create(data) {
     const serial = String(data.sensorId || data.serialNumber || '').trim().toUpperCase()
-    const sensorModelId = data.sensorModelId || SENSOR_MODEL_ID
-    const sensorStatusId = data.sensorStatusId || SENSOR_STATUS_ID
+    const { sensorModelId, sensorStatusId } = data
     if (!sensorModelId || !sensorStatusId) {
-      throw new Error('Faltan sensorModelId/sensorStatusId: configura EXPO_PUBLIC_SENSOR_MODEL_ID y EXPO_PUBLIC_SENSOR_STATUS_ID')
+      throw new Error('Faltan sensorModelId/sensorStatusId: elige un modelo y un estado del catálogo')
     }
     return toUi(await apiClient.post(BASE, { serialNumber: serial, sensorModelId, sensorStatusId }))
+  },
+
+  // --- catálogos (ms-sensor-management) ---
+
+  async listModels() {
+    return toList(await apiClient.get(SENSOR_MODELS, { params: { limit: 100 } }))
+  },
+
+  async listStatuses() {
+    return toList(await apiClient.get(SENSOR_STATUSES, { params: { limit: 100 } }))
+  },
+
+  async listUnits() {
+    return toList(await apiClient.get(MEASUREMENT_UNITS, { params: { limit: 100 } }))
+  },
+
+  /**
+   * Pide la credencial de ingesta del sensor. El `subject` del token es el
+   * propio sensorId: el ESP32 solo puede enviar medidas, no hacer nada mas.
+   */
+  async requestDeviceToken(sensorId) {
+    return apiClient.post(DEVICE_TOKENS, { subject: sensorId })
   },
 
   async update(id, updates) {
