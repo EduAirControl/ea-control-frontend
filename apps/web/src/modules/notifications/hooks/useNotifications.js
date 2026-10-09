@@ -1,147 +1,104 @@
-import { useMemo, useState, useEffect } from "react";
-import { useAllEnvironmentsVM } from "../../environment/viewmodels/useAllEnvironmentsVM";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useEnvironments } from "../../../context/useEnvironment";
+import alertService from "../services/alertService";
 
+const SEVERITY_TO_TYPE = {
+  CRITICAL: "danger",
+  WARNING: "warning",
+  INFO: "info",
+};
+
+const SEVERITY_TO_LABEL = {
+  CRITICAL: "notifications.thresholdAlert",
+  WARNING: "notifications.thresholdWarning",
+  INFO: "notifications.thresholdInfo",
+};
+
+/**
+ * Alertas reales del backend (ms-environment-monitoring).
+ *
+ * <p>Antes se sintetizaban en el navegador a partir de {@code env.co2}/{@code env.temp},
+ * que nunca se cargaban: el panel solo mostraba el resumen diario y estaba vacío.
+ * Ahora se leen de {@code GET /api/v1/alerts} y el reconocimiento es
+ * {@code POST /api/v1/alerts/{id}/acknowledge}, que es lo que el servicio guarda.
+ */
 export const useNotifications = () => {
-  const { environments } = useAllEnvironmentsVM();
-
-  // Generar notificaciones solo de ambientes favoritos
-  const generatedNotifications = useMemo(() => {
-    const list = [];
-
-    let alerts = 0;
-    let warnings = 0;
-
-    environments.filter((env) => env.isFavorite).forEach((env) => {
-      // CO₂
-      if (env.co2 > 1000) {
-        alerts++;
-
-        list.push({
-          id: `co2-${env.id}`,
-          type: "danger",
-          title: "notifications.co2High",
-          message: "notifications.co2Message",
-          data: {
-            name: env.nameKey,
-            value: env.co2,
-          },
-          time: new Date(),
-          read: false,
-        });
-      }
-
-      // Temperatura
-      if (env.temp > 28) {
-        alerts++;
-
-        list.push({
-          id: `temp-${env.id}`,
-          type: "danger",
-          title: "notifications.tempHigh",
-          message: "notifications.tempMessage",
-          data: {
-            name: env.nameKey,
-            value: env.temp,
-          },
-          time: new Date(),
-          read: false,
-        });
-      }
-
-      // Ruido
-      if (env.noise > 70) {
-        warnings++;
-
-        list.push({
-          id: `noise-${env.id}`,
-          type: "warning",
-          title: "notifications.warning",
-          message: "notifications.warningMessage",
-          data: {
-            name: env.nameKey,
-          },
-          time: new Date(),
-          read: false,
-        });
-      }
-    });
-
-    // Resumen diario
-    list.push({
-      id: "summary",
-      type: "info",
-      title: "notifications.dailySummary",
-      message: "notifications.summaryMessage",
-      data: {
-        alerts,
-        warnings,
-      },
-      time: new Date(),
-      read: false,
-    });
-
-    // Más recientes primero
-    list.sort((a, b) => b.time.getTime() - a.time.getTime());
-
-    return list;
-  }, [environments]);
-
-  // Estado real de notificaciones
+  const { environments } = useEnvironments();
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const nameOf = useCallback(
+    (environmentId) => {
+      const env = environments.find((e) => e.id === environmentId);
+      return env?.name || env?.code || environmentId;
+    },
+    [environments]
+  );
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const alerts = await alertService.listActive(50);
+      setNotifications(
+        alerts.map((a) => ({
+          id: a.id,
+          type: SEVERITY_TO_TYPE[a.severityCode] || "info",
+          title: "notifications.thresholdExceeded",
+          message: "notifications.thresholdExceededMessage",
+          data: {
+            name: nameOf(a.environmentId),
+            variable: a.variableCode || "",
+            value: a.triggeringValue ?? "",
+            severity: SEVERITY_TO_LABEL[a.severityCode] || "notifications.thresholdInfo",
+          },
+          time: a.raisedAt ? new Date(a.raisedAt) : new Date(),
+          read: Boolean(a.acknowledgedAt),
+          alertId: a.id,
+        }))
+      );
+    } catch {
+      // Sin alertas no hay nada que pintar: no romper el panel por un fallo de red.
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [nameOf]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
 
   /**
-   * Mantiene el estado de "leídas"
-   * cuando cambian los ambientes.
+   * Marca como leída en la UI y reconoce en el backend. Optimista: si el
+   * reconocimiento falla, el estado local se revierte.
    */
-  useEffect(() => {
-    setNotifications((prev) => {
-      return generatedNotifications.map((newNotification) => {
-        const old = prev.find((n) => n.id === newNotification.id);
-
-        if (old) {
-          return {
-            ...newNotification,
-            read: old.read,
-          };
-        }
-
-        return newNotification;
-      });
-    });
-  }, [generatedNotifications]);
-
-  // Cantidad sin leer
-  const unreadCount = useMemo(() => {
-    return notifications.filter((n) => !n.read).length;
-  }, [notifications]);
-
-  // Marcar una
   const markAsRead = (id) => {
+    const snapshot = notifications;
     setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? {
-              ...notification,
-              read: true,
-            }
-          : notification
-      )
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    alertService.acknowledge(id).catch(() => setNotifications(snapshot));
   };
 
-  // Marcar todas
+  /** Reconoce todas. No hay bulk en el backend: se hace una por una. */
   const markAllRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({
-        ...notification,
-        read: true,
-      }))
-    );
+    const snapshot = notifications;
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    Promise.all(
+      snapshot.filter((n) => !n.read).map((n) => alertService.acknowledge(n.id))
+    ).catch(() => setNotifications(snapshot));
   };
 
   return {
     notifications,
     unreadCount,
+    loading,
+    refresh: load,
     markAsRead,
     markAllRead,
   };

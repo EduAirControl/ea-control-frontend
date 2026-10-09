@@ -639,7 +639,14 @@
     "warning": "Avertissement",
     "warningMessage": "L'environnement {{name}} présente des conditions irrégulières",
     "dailySummary": "Résumé quotidien",
-    "summaryMessage": "{{alerts}} environnements en alerte et {{warnings}} avertissements aujourd’hui"
+    "summaryMessage": "{{alerts}} environnements en alerte et {{warnings}} avertissements aujourd’hui",
+    "thresholdExceeded": "Valeur hors seuil",
+    "thresholdExceededMessage": "L'environnement a enregistré {{value}} pour {{variable}} ({{severity}})",
+    "thresholdAlert": "Alerte",
+    "thresholdWarning": "Avertissement",
+    "thresholdInfo": "Information",
+    "environmentId": "Environnement {{id}}",
+    "acknowledge": "Accuser réception"
   },
   "leaderboard": {
     "title": "Classement des Environnements",
