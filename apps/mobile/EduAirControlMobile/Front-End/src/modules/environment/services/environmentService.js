@@ -1,48 +1,75 @@
 import apiClient from '../../../shared/services/apiClient'
 
-const BASE = '/api/v1/environments'
-
 /**
- * El backend devuelve `favorite` y la UI usa `isFavorite` (mismo mapeo que el web).
+ * Ambientes educativos (ms-classroom-management) y favoritos
+ * (ms-user-experience).
+ *
+ * <p>Antes apuntaba a `/api/v1/environments`, que no existe: la lista entera era
+ * un 404. El backend sirve `/api/v1/educational-environments` y los favoritos en
+ * `/api/v1/favorites`.
  */
+const BASE = '/api/v1/educational-environments'
+
 function toUi(env) {
   if (!env) return env
-  return { ...env, isFavorite: Boolean(env.favorite) }
+  return {
+    id: env.id,
+    code: env.code,
+    name: env.name,
+    floor: env.floor,
+    capacity: env.occupancyCapacity,
+    envType: env.environmentTypeId,
+    campusId: env.campusId,
+    status: env.status,
+    isFavorite: Boolean(env.favorite),
+  }
 }
 
 function toList(data) {
-  return Array.isArray(data) ? data : data?.items || []
+  if (Array.isArray(data)) return data
+  return data?.data || data?.items || []
+}
+
+function toPayload(environment) {
+  const payload = {}
+  if (environment.campusId) payload.campusId = environment.campusId
+  if (environment.code) payload.code = environment.code
+  if (environment.name) payload.name = environment.name
+  if (environment.environmentTypeId) payload.environmentTypeId = environment.environmentTypeId
+  if (environment.floor !== undefined && environment.floor !== null) {
+    payload.floor = Number(environment.floor)
+  }
+  if (environment.capacity !== undefined) payload.occupancyCapacity = Number(environment.capacity)
+  if (environment.status) payload.status = environment.status
+  return payload
 }
 
 const environmentService = {
   async getAll() {
-    return toList(await apiClient.get(BASE)).map(toUi)
+    return toList(await apiClient.get(BASE, { params: { limit: 100 } })).map(toUi)
   },
 
   async getById(id) {
     return toUi(await apiClient.get(`${BASE}/${id}`))
   },
 
-  async getFavorites() {
-    return (await this.getAll()).filter((env) => env.isFavorite)
+  /** Última medición por (ambiente, variable) de todos los ambientes. */
+  async getMetrics() {
+    const rows = await apiClient.get('/api/v1/environments/current')
+    return Array.isArray(rows) ? rows : []
+  },
+
+  async getFavoriteIds() {
+    const ids = await apiClient.get('/api/v1/favorites')
+    return Array.isArray(ids) ? ids : []
   },
 
   async create(environment) {
-    return toUi(
-      await apiClient.post(BASE, {
-        name: environment.name,
-        location: environment.location,
-        floor: environment.floor,
-        capacity: environment.capacity,
-        envType: environment.envType,
-        tempMin: environment.tempMin,
-        tempMax: environment.tempMax,
-      })
-    )
+    return toUi(await apiClient.post(BASE, toPayload(environment)))
   },
 
   async update(id, updates) {
-    return toUi(await apiClient.patch(`${BASE}/${id}`, updates))
+    return toUi(await apiClient.patch(`${BASE}/${id}`, toPayload(updates)))
   },
 
   async delete(id) {
@@ -50,8 +77,8 @@ const environmentService = {
   },
 
   async toggleFavorite(id) {
-    const result = await apiClient.post(`${BASE}/${id}/favorite`, {})
-    return Boolean(result?.isFavorite)
+    const result = await apiClient.post(`/api/v1/favorites/${id}/toggle`)
+    return Boolean(result?.favorite)
   },
 }
 
