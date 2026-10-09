@@ -107,7 +107,13 @@ export function useProvisioningVM() {
     }
   }, [pushLog])
 
-  const submit = useCallback(async () => {
+  /**
+   * Envía las credenciales al nodo y espera su respuesta.
+   *
+   * @param {{token: string, installationId: string}} deviceConfig credencial del
+   *   dispositivo e id de instalación; van en el mismo payload BLE que el Wi-Fi.
+   */
+  const submit = useCallback(async (deviceConfig = {}) => {
     const device = deviceRef.current
     if (!device) {
       setErrorKey('devices.errors.notConnected')
@@ -128,7 +134,13 @@ export function useProvisioningVM() {
     })
 
     try {
-      await sendCredentials(device, ssid.trim(), password)
+      await sendCredentials(
+        device,
+        ssid.trim(),
+        password,
+        deviceConfig.token,
+        deviceConfig.installationId
+      )
     } catch {
       statusResolverRef.current = null
       setPhase('error')

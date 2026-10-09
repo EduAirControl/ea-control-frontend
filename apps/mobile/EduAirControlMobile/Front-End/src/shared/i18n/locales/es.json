@@ -1242,6 +1242,17 @@
       "errJson": "Dispositivo respondió STATUS:ERR_JSON",
       "error": "Proceso interrumpido con errores",
       "status": "Notificación del dispositivo"
-    }
+    },
+    "configLabel": "Configuración del nodo",
+    "modelLabel": "Modelo de sensor",
+    "environmentLabel": "Ambiente",
+    "noEnvironments": "No hay ambientes disponibles",
+    "registered": "Registrado como {{id}}",
+    "notRegistered": "Aún sin registrar",
+    "errors": {
+      "model": "Elige un modelo de sensor",
+      "environment": "Elige un ambiente"
+    },
+    "statusLabel": "Estado del sensor"
   }
 }

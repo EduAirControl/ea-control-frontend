@@ -1265,6 +1265,17 @@
       "errJson": "Device replied STATUS:ERR_JSON",
       "error": "Process interrupted with errors",
       "status": "Device notification"
-    }
+    },
+    "configLabel": "Node settings",
+    "modelLabel": "Sensor model",
+    "environmentLabel": "Environment",
+    "noEnvironments": "No environments available",
+    "registered": "Registered as {{id}}",
+    "notRegistered": "Not registered yet",
+    "errors": {
+      "model": "Choose a sensor model",
+      "environment": "Choose an environment"
+    },
+    "statusLabel": "Sensor status"
   }
 }
