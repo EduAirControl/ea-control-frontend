@@ -3,7 +3,7 @@ import {
   IoSearchOutline,
   IoAddOutline,
   IoSwapVerticalOutline,
-  IoRadioOutline,
+  IoBusinessOutline,
 } from 'react-icons/io5';
 import { MdOutlineGridView } from 'react-icons/md';
 import { TbBuildingCommunity } from 'react-icons/tb';
@@ -13,7 +13,7 @@ import ManagementCard from '../components/management/ManagementCard/ManagementCa
 import AddEnvironmentModal from '../components/management/AddEnvironmentModal/AddEnvironmentModal';
 import EditEnvironmentModal from '../components/management/EditEnvironmentModal/EditEnvironmentModal';
 import DeleteEnvironmentModal from '../components/management/DeleteEnvironmentModal/DeleteEnvironmentModal';
-import SensorVariablePanel from '../components/management/SensorVariablePanel/SensorVariablePanel';
+import CampusManagementPanel from '../components/management/CampusManagementPanel/CampusManagementPanel';
 import { useManagementVM } from '../viewmodels/useManagementVM';
 import './EnvironmentManagement.css';
 
@@ -47,7 +47,6 @@ function EnvironmentManagement() {
   const { t } = useTranslation();
   const [activeView, setActiveView] = useState('environments');
   const {
-    environments,
     filtered,
     stats,
     search,
@@ -172,16 +171,16 @@ function EnvironmentManagement() {
           <button
             type="button"
             role="tab"
-            aria-selected={activeView === 'sensors'}
-            className={activeView === 'sensors' ? 'active' : ''}
-            onClick={() => setActiveView('sensors')}
+            aria-selected={activeView === 'campuses'}
+            className={activeView === 'campuses' ? 'active' : ''}
+            onClick={() => setActiveView('campuses')}
           >
-            <IoRadioOutline size={17} /> Sensores y variables
+            <IoBusinessOutline size={17} /> Campuses
           </button>
         </div>
 
-        {activeView === 'sensors' ? (
-          <SensorVariablePanel environments={environments} />
+        {activeView === 'campuses' ? (
+          <CampusManagementPanel />
         ) : (
           <>
             {/* ── Summary cards ── */}

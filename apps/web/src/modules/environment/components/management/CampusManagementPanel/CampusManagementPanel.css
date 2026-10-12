@@ -1,0 +1,69 @@
+.campus-panel {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1rem, 2.4vw, 1.75rem);
+  border: 1px solid #e5eaf0;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 28px rgb(25 45 75 / 5%);
+}
+
+.campus-panel__header,
+.campus-panel__list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.campus-panel__header h2,
+.campus-panel__list-heading h3,
+.campus-panel__header p { margin: 0; }
+.campus-panel__header h2 { margin-top: .25rem; color: #18283f; font-size: 1.25rem; }
+.campus-panel__header p { margin-top: .4rem; color: #66758a; font-size: .9rem; }
+.campus-panel__eyebrow { color: #2777a8; font-size: .72rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.campus-panel__count { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .75rem; border-radius: 999px; background: #eff7fb; color: #236e99; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+
+.campus-panel__form {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr auto;
+  align-items: end;
+  gap: .85rem;
+  padding: 1rem;
+  border-radius: .8rem;
+  background: #f7f9fc;
+}
+
+.campus-panel__form label { display: grid; gap: .4rem; color: #44536a; font-size: .8rem; font-weight: 650; }
+.campus-panel__form label span { color: #d24d4d; }
+.campus-panel__form input { width: 100%; min-width: 0; height: 2.6rem; padding: 0 .75rem; border: 1px solid #d9e1ea; border-radius: .55rem; background: white; color: #26364b; font: inherit; font-size: .88rem; }
+.campus-panel__form input:focus { outline: 2px solid #7bb8d4; outline-offset: 1px; }
+.campus-panel__form button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 2.6rem; padding: 0 .95rem; border: 0; border-radius: .55rem; background: #176f9b; color: white; font: inherit; font-size: .85rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.campus-panel__form button:disabled { opacity: .5; cursor: not-allowed; }
+
+.campus-panel__notice { padding: .8rem 1rem; border: 1px solid #f1d49d; border-radius: .65rem; background: #fff8e9; color: #76521a; font-size: .88rem; }
+.campus-panel__list-heading { padding-top: .15rem; }
+.campus-panel__list-heading h3 { color: #26364b; font-size: .98rem; }
+.campus-panel__list-heading button { border: 0; background: transparent; color: #24769c; font: inherit; font-size: .82rem; font-weight: 650; cursor: pointer; }
+.campus-panel__list-heading button:disabled { opacity: .55; cursor: wait; }
+.campus-panel__empty { margin: 0; padding: 1.5rem; border: 1px dashed #d6dee8; border-radius: .7rem; color: #708096; text-align: center; font-size: .9rem; }
+.campus-panel__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); gap: .75rem; }
+.campus-panel__card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .4rem .7rem; padding: .9rem; border: 1px solid #e5eaf0; border-radius: .75rem; }
+.campus-panel__card-icon { display: grid; width: 2.3rem; height: 2.3rem; grid-row: span 2; place-items: center; border-radius: .65rem; background: #edf6fa; color: #287da2; font-size: 1.15rem; }
+.campus-panel__card-main { display: grid; gap: .15rem; min-width: 0; }
+.campus-panel__card-main strong { overflow: hidden; color: #26364b; font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+.campus-panel__card-main span { color: #78879a; font-size: .75rem; }
+.campus-panel__city { display: inline-flex; align-items: center; gap: .25rem; grid-column: 2; color: #65758a; font-size: .76rem; }
+.campus-panel__status { grid-column: 3; grid-row: 1 / span 2; padding: .3rem .5rem; border-radius: 999px; background: #eff2f5; color: #66758a; font-size: .68rem; font-weight: 700; }
+.campus-panel__status--active { background: #e8f6ef; color: #24804f; }
+
+@media (max-width: 850px) {
+  .campus-panel__form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .campus-panel__form button { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+  .campus-panel__header { align-items: flex-start; flex-direction: column; }
+  .campus-panel__form { grid-template-columns: 1fr; }
+  .campus-panel__form button { grid-column: auto; }
+}
