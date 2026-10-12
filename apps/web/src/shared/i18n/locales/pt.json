@@ -9,7 +9,8 @@
     "management": "Gestão",
     "greeting": "Olá",
     "admin": "Administrador",
-    "user": "Usuário"
+    "user": "Usuário",
+    "institutions": "Instituições"
   },
   "login": {
     "title": "Entrar",
@@ -1046,14 +1047,26 @@
     "description": "A rota que você procura não existe ou foi movida.",
     "backHome": "Voltar ao início"
   },
-  "admin": {
-    "title": "Gestão de Usuários",
-    "subtitle": "Atribua funções aos administradores das suas empresas",
-    "usersHint": "Atribua a função de Administrador aos usuários que serão administradores de suas empresas",
+  "superadmin": {
+    "title": "Instituições",
+    "subtitle": "Criar e gerir instituições (multi-tenant)",
+    "refresh": "Atualizar",
+    "createTitle": "Nova instituição",
+    "code": "Código",
+    "name": "Nome",
+    "type": "Tipo",
+    "create": "Criar",
+    "listTitle": "Registradas",
+    "empty": "Ainda não há instituições.",
+    "status": "Estado",
+    "activate": "Ativar",
+    "deactivate": "Desativar",
+    "usersTitle": "Usuários e funções",
+    "usersHint": "Atribua a função de Administrador aos usuários que administrarão suas empresas",
+    "noUsers": "Ainda não há usuários.",
     "colEmail": "E-mail",
     "colUsername": "Usuário",
     "colRoles": "Funções",
-    "colActions": "Ações",
-    "roleUpdated": "Funções atualizadas com sucesso"
+    "colActions": "Ações"
   }
 }

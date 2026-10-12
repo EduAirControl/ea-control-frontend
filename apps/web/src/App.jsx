@@ -52,7 +52,6 @@ import FavoritesScreen from './modules/favorites/FavoritesScreen';
 // SUPER ADMIN
 // ======================
 import SuperAdminScreen from './modules/admin/pages/SuperAdminScreen';
-import UserManagementScreen from './modules/admin/pages/UserManagementScreen';
 
 function App() {
   return (
@@ -114,7 +113,7 @@ function App() {
         }
       />
 
-      {/* ---------- Super Admin (instituciones) ---------- */}
+      {/* ---------- Super Admin (instituciones + usuarios y roles) ---------- */}
       <Route
         path="/admin/institutions"
         element={
@@ -123,14 +122,8 @@ function App() {
           </SuperAdminRoute>
         }
       />
-      <Route
-        path="/admin/users"
-        element={
-          <SuperAdminRoute>
-            <UserManagementScreen />
-          </SuperAdminRoute>
-        }
-      />
+      {/* La gestion de usuarios se integro en la pantalla de instituciones. */}
+      <Route path="/admin/users" element={<Navigate to="/admin/institutions" replace />} />
 
       {/* ---------- User ---------- */}
       <Route

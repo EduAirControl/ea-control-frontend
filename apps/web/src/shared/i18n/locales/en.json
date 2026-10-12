@@ -9,7 +9,8 @@
     "management": "Management",
     "greeting": "Hello",
     "admin": "Administrator",
-    "user": "User"
+    "user": "User",
+    "institutions": "Institutions"
   },
   "login": {
     "title": "Login",
@@ -1047,14 +1048,26 @@
     "description": "The route you are looking for does not exist or has been moved.",
     "backHome": "Back to home"
   },
-  "admin": {
-    "title": "User Management",
-    "subtitle": "Assign roles to your company administrators",
-    "usersHint": "Assign the Administrator role to users who will be administrators of their companies",
+  "superadmin": {
+    "title": "Institutions",
+    "subtitle": "Create and manage institutions (multi-tenant)",
+    "refresh": "Refresh",
+    "createTitle": "New institution",
+    "code": "Code",
+    "name": "Name",
+    "type": "Type",
+    "create": "Create",
+    "listTitle": "Registered",
+    "empty": "There are no institutions yet.",
+    "status": "Status",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "usersTitle": "Users and roles",
+    "usersHint": "Grant the Administrator role to users who will administer their companies",
+    "noUsers": "There are no users yet.",
     "colEmail": "Email",
     "colUsername": "Username",
     "colRoles": "Roles",
-    "colActions": "Actions",
-    "roleUpdated": "Roles updated successfully"
+    "colActions": "Actions"
   }
 }
