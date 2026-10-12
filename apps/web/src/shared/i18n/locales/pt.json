@@ -579,6 +579,14 @@
     "qualityDesc": "Com base nos níveis de CO₂, temperatura, umidade e ruído do ambiente.",
     "notFound": "Ambiente não encontrado"
   },
+  "sensors": {
+    "title": "Dispositivos",
+    "empty": "Não há dispositivos vinculados a este ambiente.",
+    "uninstall": "Desvincular",
+    "uninstallDone": "Dispositivo desvinculado do ambiente",
+    "unlinkError": "Não foi possível desvincular o dispositivo",
+    "confirmUnlink": "Desvincular este dispositivo do ambiente?"
+  },
   "management": {
     "toast": {
       "created": "Ambiente adicionado",

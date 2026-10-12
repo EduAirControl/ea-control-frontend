@@ -580,6 +580,14 @@
     "qualityDesc": "Based on CO₂, temperature, humidity and noise levels in the environment.",
     "notFound": "Environment not found"
   },
+  "sensors": {
+    "title": "Devices",
+    "empty": "No devices linked to this environment.",
+    "uninstall": "Unlink",
+    "uninstallDone": "Device unlinked from the environment",
+    "unlinkError": "Could not unlink the device",
+    "confirmUnlink": "Unlink this device from the environment?"
+  },
   "management": {
     "toast": {
       "created": "Environment added",
