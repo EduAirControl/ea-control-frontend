@@ -57,6 +57,16 @@
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
   --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.18);
 
+  /* ── Escala de z-index ──
+     Antes habia 21 valores sueltos (de 0 a 99999) y un Toast podia quedar
+     tapado por la pantalla de carga. Con estos cinco niveles queda claro que
+     cada capa esta por encima de la anterior. */
+  --z-panel:    100;   /* paneles laterales: notificaciones, filtros */
+  --z-modal:    200;   /* modales y dialogs */
+  --z-tooltip:  300;   /* tooltips, siempre encima del modal que los contiene */
+  --z-toast:    400;   /* avisos: tienen que verse siempre */
+  --z-loading:  500;   /* pantalla de carga, solo por debajo de un toast */
+
   /* ── Radios de borde ── */
   --radius-sm: 10px;
   --radius-md: 16px;
@@ -231,7 +241,7 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll;
 
   color: var(--text-primary);
   position: relative;
@@ -379,7 +389,7 @@ button {
 }
 .navbar-item.logout:hover {
   background-color: #ffe0e0;
-  color: #ff4444;
+  color: #b91c1c;
 }
 
 .navbar-info {

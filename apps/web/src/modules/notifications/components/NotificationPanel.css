@@ -7,7 +7,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
-  z-index: 5000;
+  z-index: var(--z-panel);
   animation: notifFade 0.25s ease;
 }
 
@@ -139,7 +139,7 @@ HEADER
 
   border-radius: 50%;
 
-  background: #ef4444;
+  background: #c62828;
   color: #fff;
 
   font-size: 11px;

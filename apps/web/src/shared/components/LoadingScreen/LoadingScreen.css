@@ -7,7 +7,7 @@
   justify-content: center;
   gap: 1rem;
   background: var(--bg-body, #f0fafa);
-  z-index: 99999;
+  z-index: var(--z-loading);
 }
 
 .loading-screen__spinner {

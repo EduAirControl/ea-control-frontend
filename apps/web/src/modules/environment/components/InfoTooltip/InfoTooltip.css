@@ -31,7 +31,7 @@ body:not(.dark-mode) .info-tooltip-btn {
 
 .info-tooltip-popover {
   position: fixed;
-  z-index: 6000;
+  z-index: var(--z-tooltip);
   width: 260px;
   padding: 14px 16px;
   border-radius: 12px;
