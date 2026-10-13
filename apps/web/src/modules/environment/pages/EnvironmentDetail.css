@@ -309,6 +309,27 @@ body.theme-tritanopia .detail-metric-icon {
   margin: 0;
 }
 
+.detail-unlink-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning, #ff9f43);
+  background: transparent;
+  border: 1px solid var(--warning, #ff9f43);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.detail-unlink-btn:hover {
+  background: var(--warning, #ff9f43);
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .detail-container {

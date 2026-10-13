@@ -26,6 +26,15 @@ const catalogService = {
     }));
   },
 
+  async createCampus(campus) {
+    return apiClient.post('/api/v1/campuses', {
+      code: campus.code.trim().toUpperCase(),
+      name: campus.name.trim(),
+      city: campus.city.trim() || undefined,
+      status: 'ACTIVE',
+    });
+  },
+
   async getEnvironmentTypes() {
     const data = await apiClient.get('/api/v1/environment-types', { params: { limit: 100 } });
     return unwrap(data).map((t) => ({

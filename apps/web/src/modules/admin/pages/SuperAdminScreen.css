@@ -186,3 +186,29 @@
   background: var(--bg-subtle);
   color: var(--text-muted);
 }
+
+/* ── Tarjeta de usuarios y roles ───────────────────────────── */
+
+.superadmin-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.superadmin-badges,
+.superadmin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Rol ya concedido: se marca en positivo para distinguirlo de un boton suelto. */
+.superadmin-btn.small.active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.superadmin-btn.small.active:hover {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}

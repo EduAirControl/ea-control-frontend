@@ -154,8 +154,13 @@ const authService = {
     return claims.role ? [claims.role] : []
   },
 
+  /**
+   * SUPER_ADMIN cuenta como administrador, igual que en la web (AuthContext): sin esto
+   * un SUPER_ADMIN no ve la pestaña de gestion.
+   */
   isAdmin() {
-    return this.roles().some((r) => String(r).toUpperCase() === 'ADMIN')
+    const roles = this.roles().map((r) => String(r).toUpperCase())
+    return roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
   },
 
   isSuperAdmin() {

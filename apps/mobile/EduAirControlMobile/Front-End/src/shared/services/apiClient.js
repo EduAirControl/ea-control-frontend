@@ -62,6 +62,15 @@ async function clearSession() {
 }
 
 async function request(endpoint, options = {}, baseUrl = API_BASE) {
+  const { params, ...fetchOptions } = options
+  const query = new URLSearchParams()
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) query.append(key, String(value))
+  })
+  const queryString = query.toString()
+  const url = queryString
+    ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`
+    : endpoint
   const token = getToken()
   const headers = {
     'Content-Type': 'application/json',
@@ -70,8 +79,8 @@ async function request(endpoint, options = {}, baseUrl = API_BASE) {
   }
 
   const doFetch = () =>
-    fetch(`${baseUrl}${endpoint}`, {
-      ...options,
+    fetch(`${baseUrl}${url}`, {
+      ...fetchOptions,
       headers: { ...headers, ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
     })
 
@@ -104,7 +113,11 @@ async function request(endpoint, options = {}, baseUrl = API_BASE) {
       throw new Error(error.message || i18n.t('errors.sessionExpired'))
     }
 
-    throw new Error(error.message || `Error ${response.status}`)
+    // El status se adjunta al error: sin el, un 409 (serial ya dado de alta)
+    // es indistinguible de cualquier otro fallo para el llamador.
+    const httpError = new Error(error.message || `Error ${response.status}`)
+    httpError.status = response.status
+    throw httpError
   }
 
   if (response.status === 204) return null

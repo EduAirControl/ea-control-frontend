@@ -1,13 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WiThermometer, WiHumidity } from 'react-icons/wi';
 import { MdCo2 } from 'react-icons/md';
 import { HiSpeakerWave } from 'react-icons/hi2';
 import { FaHeart, FaRegHeart, FaUser, FaMapMarkerAlt } from 'react-icons/fa';
-import { IoCheckmarkCircle, IoWarning, IoAlertCircle } from 'react-icons/io5';
+import { IoCheckmarkCircle, IoWarning, IoAlertCircle, IoHardwareChipOutline, IoUnlinkOutline } from 'react-icons/io5';
 import Navbar from '../../dashboard/components/Navbar/Navbar';
 import { BackButton } from '../../../shared/components';
 import { useEnvironment } from '../../../context/useEnvironment';
+import { useToast } from '../../../shared/hooks/useToast';
+import sensorService from '../services/sensorService';
 import { STATUS_COLORS, QUALITY_COLORS, IDEAL_RANGES } from '../constants/environments';
 import './EnvironmentDetail.css';
 
@@ -34,6 +37,59 @@ function EnvironmentDetailScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { environments, toggleFavorite } = useEnvironment();
+  const toast = useToast();
+
+  const [devices, setDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(true);
+
+  const loadDevices = useCallback(async () => {
+    if (!id) {
+      setDevices([]);
+      setDevicesLoading(false);
+      return;
+    }
+    try {
+      const installations = await sensorService.listInstallationsByEnvironment(id, { active: true });
+      if (!installations.length) {
+        setDevices([]);
+        return;
+      }
+      const rows = await Promise.all(
+        installations.map(async (installation) => {
+          let sensor = null;
+          try {
+            sensor = await sensorService.getSensor(installation.sensorId);
+          } catch {
+            sensor = null;
+          }
+          return { installation, sensor };
+        })
+      );
+      setDevices(rows);
+    } catch {
+      setDevices([]);
+    } finally {
+      setDevicesLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadDevices();
+  }, [loadDevices]);
+
+  const handleUnlink = async (installation) => {
+    const ok = window.confirm(
+      t('sensors.confirmUnlink', '¿Desvincular este dispositivo del ambiente?')
+    );
+    if (!ok) return;
+    try {
+      await sensorService.removeInstallation(installation.sensorInstallationId ?? installation.id);
+      toast.success(t('sensors.uninstallDone', 'Dispositivo desvinculado del ambiente'));
+      await loadDevices();
+    } catch (error) {
+      toast.error(error.message || t('sensors.unlinkError', 'No fue posible desvincular el dispositivo'));
+    }
+  };
 
   const env = environments.find((e) => String(e.id) === String(id));
 
@@ -215,6 +271,37 @@ function EnvironmentDetailScreen() {
             <p style={{ color: statusColor, fontWeight: 600 }}>{t(env.statusKey)}</p>
           </div>
         </div>
+
+        {/* Dispositivos */}
+        <h2 className="detail-section-title">
+          <IoHardwareChipOutline /> {t('sensors.title') || 'Dispositivos'}
+        </h2>
+
+        {devicesLoading ? (
+          <div className="detail-info-card">
+            <p>{t('common.loading') || 'Cargando…'}</p>
+          </div>
+        ) : !devices.length ? (
+          <div className="detail-info-card">
+            <p>{t('sensors.empty') || 'No hay dispositivos vinculados a este ambiente.'}</p>
+          </div>
+        ) : (
+          <div className="detail-info-row">
+            {devices.map(({ installation, sensor }) => (
+              <div className="detail-info-card" key={installation.sensorInstallationId ?? installation.id}>
+                <h3>
+                  <IoHardwareChipOutline /> {sensor?.serialNumber || installation.sensorId}
+                </h3>
+                <button
+                  className="detail-unlink-btn"
+                  onClick={() => handleUnlink(installation)}
+                >
+                  <IoUnlinkOutline /> {t('sensors.uninstall') || 'Desvincular'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <br />
       </main>

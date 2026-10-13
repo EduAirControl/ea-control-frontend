@@ -9,7 +9,8 @@
     "management": "Gestion",
     "greeting": "Bonjour",
     "admin": "Administrateur",
-    "user": "Utilisateur"
+    "user": "Utilisateur",
+    "institutions": "Institutions"
   },
   "login": {
     "title": "Se connecter",
@@ -579,6 +580,14 @@
     "qualityDesc": "Basé sur les niveaux de CO₂, température, humidité et bruit de l'environnement.",
     "notFound": "Environnement introuvable"
   },
+  "sensors": {
+    "title": "Périphériques",
+    "empty": "Aucun périphérique lié à cet environnement.",
+    "uninstall": "Dissocier",
+    "uninstallDone": "Périphérique dissocié de l’environnement",
+    "unlinkError": "Impossible de dissocier le périphérique",
+    "confirmUnlink": "Dissocier ce périphérique de l’environnement ?"
+  },
   "management": {
     "toast": {
       "created": "Environnement ajouté",
@@ -1038,14 +1047,26 @@
     "description": "La page que vous cherchez n’existe pas ou a été déplacée.",
     "backHome": "Retour à l’accueil"
   },
-  "admin": {
-    "title": "Gestion des utilisateurs",
-    "subtitle": "Attribuez des rôles aux administrateurs de vos entreprises",
-    "usersHint": "Attribuez le rôle Administrateur aux utilisateurs qui seront administrateurs de leurs entreprises",
+  "superadmin": {
+    "title": "Institutions",
+    "subtitle": "Créer et gérer les institutions (multi-tenant)",
+    "refresh": "Actualiser",
+    "createTitle": "Nouvelle institution",
+    "code": "Code",
+    "name": "Nom",
+    "type": "Type",
+    "create": "Créer",
+    "listTitle": "Enregistrées",
+    "empty": "Il n'y a pas encore d'institutions.",
+    "status": "État",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "usersTitle": "Utilisateurs et rôles",
+    "usersHint": "Attribuez le rôle Administrateur aux utilisateurs qui administreront leurs entreprises",
+    "noUsers": "Il n'y a pas encore d'utilisateurs.",
     "colEmail": "E-mail",
     "colUsername": "Nom d'utilisateur",
     "colRoles": "Rôles",
-    "colActions": "Actions",
-    "roleUpdated": "Rôles mis à jour avec succès"
+    "colActions": "Actions"
   }
 }

@@ -9,7 +9,8 @@
     "management": "Gestión",
     "greeting": "Hola",
     "admin": "Administrador",
-    "user": "Usuario"
+    "user": "Usuario",
+    "institutions": "Instituciones"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -603,6 +604,14 @@
     "qualityDesc": "Basado en los niveles de CO₂, temperatura, humedad y ruido del ambiente.",
     "notFound": "Ambiente no encontrado"
   },
+  "sensors": {
+    "title": "Dispositivos",
+    "empty": "No hay dispositivos vinculados a este ambiente.",
+    "uninstall": "Desvincular",
+    "uninstallDone": "Dispositivo desvinculado del ambiente",
+    "unlinkError": "No fue posible desvincular el dispositivo",
+    "confirmUnlink": "¿Desvincular este dispositivo del ambiente?"
+  },
   "management": {
     "toast": {
       "created": "Ambiente agregado",
@@ -1028,14 +1037,26 @@
     "description": "La ruta que buscas no existe o fue movida.",
     "backHome": "Volver al inicio"
   },
-  "admin": {
-    "title": "Gestión de Usuarios",
-    "subtitle": "Asigna roles a los administradores de tus compañías",
-    "usersHint": "Asigna el rol de Administrador a los usuarios que serán administradores de sus compañías",
+  "superadmin": {
+    "title": "Instituciones",
+    "subtitle": "Alta y gestión de instituciones (multi-tenant)",
+    "refresh": "Recargar",
+    "createTitle": "Nueva institución",
+    "code": "Código",
+    "name": "Nombre",
+    "type": "Tipo",
+    "create": "Crear",
+    "listTitle": "Registradas",
+    "empty": "Aún no hay instituciones.",
+    "status": "Estado",
+    "activate": "Activar",
+    "deactivate": "Desactivar",
+    "usersTitle": "Usuarios y roles",
+    "usersHint": "Asigna el rol de Administrador a los usuarios que administrarán sus compañías",
+    "noUsers": "Aún no hay usuarios.",
     "colEmail": "Correo",
     "colUsername": "Usuario",
     "colRoles": "Roles",
-    "colActions": "Acciones",
-    "roleUpdated": "Roles actualizados correctamente"
+    "colActions": "Acciones"
   }
 }
