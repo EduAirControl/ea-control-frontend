@@ -99,7 +99,7 @@ function LoginForm() {
         Continuar con OAuth2
       </button>
 
-      <SocialLoginButtons />
+      <SocialLoginButtons showDivider={false} />
     </form>
   );
 }

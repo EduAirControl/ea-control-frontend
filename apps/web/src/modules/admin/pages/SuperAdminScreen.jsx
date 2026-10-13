@@ -120,7 +120,7 @@ function SuperAdminScreen() {
           <form className="superadmin-form" onSubmit={handleCreate}>
             <input
               type="text"
-              placeholder={t('superadmin.code', 'Código (ej. SEN-444)')}
+              placeholder={t('superadmin.code', 'Código (ej. SEN-4444)')}
               value={form.code}
               onChange={(e) => handleChange('code', e.target.value.toUpperCase())}
               maxLength={20}

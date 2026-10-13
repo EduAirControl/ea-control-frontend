@@ -74,7 +74,7 @@ function LoginScreen() {
               id="companyCode"
               value={companyCode}
               onChange={(e) => setCompanyCode(e.target.value)}
-              placeholder="SEN-444"
+              placeholder="SEN-4444"
               required
             />
           </div>

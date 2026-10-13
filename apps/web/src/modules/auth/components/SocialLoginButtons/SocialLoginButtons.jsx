@@ -5,7 +5,7 @@ import './SocialLoginButtons.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:8080`;
 
-function SocialLoginButtons() {
+function SocialLoginButtons({ showDivider = true }) {
   const { t } = useTranslation();
 
   const handleGoogleClick = () => {
@@ -19,9 +19,11 @@ function SocialLoginButtons() {
 
   return (
     <>
-      <div className="social-divider">
-        <span>{t('login.socialDivider', 'o continúa con')}</span>
-      </div>
+      {showDivider && (
+        <div className="social-divider">
+          <span>{t('login.socialDivider', 'o continúa con')}</span>
+        </div>
+      )}
       <div className="social-btn-group">
         <button type="button" className="social-btn social-btn-google" onClick={handleGoogleClick}>
           <FcGoogle size={20} />
