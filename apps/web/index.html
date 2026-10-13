@@ -45,11 +45,12 @@
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
-      @media (prefers-color-scheme: dark) {
-        #initial-loader { background: #0f172a; }
-        #initial-loader .spinner { border-color: rgba(255,255,255,0.1); border-top-color: #01805b; }
-        #initial-loader .text { color: #94a3b8; }
-      }
+      /* El splash replica el tema que ya eligio el usuario. Sin esto, quien
+         tiene dark mode guardado en localStorage ve un destello claro al abrir
+         la app: este bloque se pinta antes de que React monte. */
+      #initial-loader.is-dark { background: #0f172a; }
+      #initial-loader.is-dark .spinner { border-color: rgba(255,255,255,0.1); border-top-color: #01805b; }
+      #initial-loader.is-dark .text { color: #94a3b8; }
     </style>
   </head>
   <body>
@@ -58,6 +59,17 @@
       <span class="text">Cargando...</span>
     </div>
     <div id="root"></div>
+    <script>
+      // Antes del primer pintado: aplicar el tema guardado al splash para que
+      // no haya parpadeo claro->oscuro al entrar con dark mode activado.
+      try {
+        if (JSON.parse(localStorage.getItem('darkMode') || 'false')) {
+          document.getElementById('initial-loader').classList.add('is-dark');
+        }
+      } catch (e) {
+        // localStorage puede no estar disponible (modo privado): se queda en claro
+      }
+    </script>
     <script>
       const loader = document.getElementById('initial-loader');
       const observer = new MutationObserver(() => {
