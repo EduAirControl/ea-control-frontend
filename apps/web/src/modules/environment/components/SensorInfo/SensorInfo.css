@@ -4,22 +4,22 @@
   align-items:flex-start;
   padding:20px;
   border-radius:18px;
-  background:#fff;
-  border:1px solid #ececec;
+  background:var(--bg-card);
+  border:1px solid var(--border-card);
   transition:.25s;
 }
 
 .sensor-card:hover{
   transform:translateY(-4px);
-  box-shadow:0 12px 28px rgba(0,0,0,.08);
+  box-shadow:var(--shadow-md);
 }
 
 .sensor-icon{
   width:60px;
   height:60px;
   border-radius:16px;
-  background:#eef9f1;
-  color:#16a34a;
+  background:var(--bg-subtle);
+  color:var(--color-success);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -34,7 +34,7 @@
 .sensor-content h4{
   font-size:17px;
   font-weight:700;
-  color:#222;
+  color:var(--text-primary);
   margin-bottom:8px;
 }
 
@@ -42,29 +42,12 @@
   display:block;
   font-size:22px;
   font-weight:700;
-  color:#16a34a;
+  color:var(--color-success);
   margin-bottom:10px;
 }
 
 .sensor-content p{
-  color:#777;
+  color:var(--text-muted);
   font-size:14px;
   line-height:1.6;
-}
-
-body.dark-mode .sensor-card{
-  background:#1f2937;
-  border-color:#374151;
-}
-
-body.dark-mode .sensor-content h4{
-  color:white;
-}
-
-body.dark-mode .sensor-content p{
-  color:#9ca3af;
-}
-
-body.dark-mode .sensor-icon{
-  background:#243447;
 }
