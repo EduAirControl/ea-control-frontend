@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
@@ -17,6 +18,10 @@ import { getMetricColor } from '../../utils/environmentHelpers.js'
 import { METRIC_DEFINITIONS } from '../../constants/metricDefinitions.js'
 import { METRIC_ICONS } from '../../../../shared/constants/iconMap.js'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
+import sensorService from '../../services/sensorService.js'
+import authService from '../../../auth/services/authService.js'
+import { usePolling } from '../../../../shared/hooks/usePolling.js'
+import { useEffect, useState, useCallback } from 'react'
 import { styles } from './EnvironmentDetailScreen.styles.js'
 
 function getProgress(value, min, max) {
@@ -36,7 +41,7 @@ function MetricTile({ metric, currentColors }) {
   const { t } = useTranslation()
   const range = METRIC_RANGES[metric.key]
   const raw = metric.getRaw(metric.environment)
-  const color = getMetricColor(metric.key, raw)
+  const color = getMetricColor(metric.key, raw, currentColors)
   const pct = getProgress(raw, range.min, range.max)
 
   return (
@@ -71,9 +76,63 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
   const { currentColors } = useTheme()
   const { t } = useTranslation()
   const toast = useToast()
-  const { environments, toggleFavorite } = useEnvironments()
+  const { environments, toggleFavorite, refreshEnvironments } = useEnvironments()
 
   const env = environments.find((e) => e.id === envId)
+
+  const [devices, setDevices] = useState([])
+  const [devicesLoading, setDevicesLoading] = useState(true)
+
+  const loadDevices = useCallback(async () => {
+    if (!envId) {
+      setDevices([])
+      setDevicesLoading(false)
+      return
+    }
+    setDevicesLoading(true)
+    try {
+      const installations = await sensorService.listInstallationsByEnvironment(envId, { active: true })
+      if (!installations.length) {
+        setDevices([])
+        return
+      }
+      const sensors = await Promise.all(
+        installations.map(async (installation) => {
+          let sensor = null
+          try {
+            sensor = await sensorService.getById(installation.sensorId)
+          } catch {
+            sensor = null
+          }
+          return { installation, sensor }
+        })
+      )
+      setDevices(sensors)
+    } catch {
+      setDevices([])
+    } finally {
+      setDevicesLoading(false)
+    }
+  }, [envId])
+
+  useEffect(() => {
+    loadDevices()
+  }, [loadDevices])
+
+  usePolling(() => {
+    refreshEnvironments()
+    loadDevices()
+  }, 30000)
+
+  const handleUnlink = async (installation) => {
+    try {
+      await sensorService.removeInstallation(installation.sensorInstallationId ?? installation.id)
+      toast.success(t('sensors.uninstallDone', 'Dispositivo desvinculado del ambiente'))
+      await loadDevices()
+    } catch (e) {
+      toast.error(e.message)
+    }
+  }
 
   if (!env) {
     return (
@@ -88,7 +147,7 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
     )
   }
 
-  const status = getEnvironmentStatus(env.statusKey, t)
+  const status = getEnvironmentStatus(env.statusKey, t, currentColors)
   const score = calculateEnvironmentScore(env)
   const metrics = METRIC_DEFINITIONS.map((def) => ({
     ...def,
@@ -156,7 +215,7 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
 
           <View style={styles.badgeRow}>
             <View style={[styles.statusBadge, { backgroundColor: status.bg, borderColor: status.color }]}>
-              <Ionicons name="pulse-outline" size={14} color={status.color} />
+              <Ionicons name={status.icon} size={14} color={status.color} accessibilityElementsHidden />
               <Text style={[styles.statusBadgeText, { color: status.color }]}>{status.text}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: `${currentColors.accent}18`, borderColor: currentColors.accent }]}>
@@ -209,6 +268,55 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
           <Ionicons name="people-outline" size={16} color={currentColors.textMuted} />
           <Text style={[styles.infoText, { color: currentColors.textPrimary }]}>{env.capacity || 0} {t('detail.people')}</Text>
         </View>
+
+        <View style={styles.sectionHeader}>
+          <Ionicons name="hardware-chip-outline" size={18} color={currentColors.accent} />
+          <Text style={[styles.sectionTitle, { color: currentColors.textPrimary }]}>{t('sensors.title')}</Text>
+        </View>
+        {devicesLoading ? (
+          <ActivityIndicator style={{ marginVertical: 14 }} color={currentColors.accent} />
+        ) : !devices.length ? (
+          <View style={[styles.infoCard, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
+            <Ionicons name="hardware-chip-outline" size={16} color={currentColors.textMuted} />
+            <Text style={[styles.infoText, { color: currentColors.textMuted }]}>{t('sensors.empty')}</Text>
+          </View>
+        ) : (
+          devices.map(({ installation, sensor }) => (
+            <View
+              key={installation.sensorInstallationId ?? installation.id}
+              style={[styles.infoCard, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}
+            >
+              <Ionicons name="hardware-chip-outline" size={16} color={currentColors.textMuted} />
+              <Text style={[styles.infoText, { color: currentColors.textPrimary, flex: 1 }]} numberOfLines={1}>
+                {sensor?.serialNumber || installation.sensorId}
+              </Text>
+              <TouchableOpacity
+                onPress={() => handleUnlink(installation)}
+                style={[styles.unlinkBtn, { borderColor: currentColors.warning || '#ff9f43' }]}
+              >
+                <Ionicons name="unlink-outline" size={14} color={currentColors.warning || '#ff9f43'} />
+                <Text style={[styles.unlinkTxt, { color: currentColors.warning || '#ff9f43' }]}>
+                  {t('sensors.uninstall', 'Desvincular')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+        {authService.isAdmin() && (
+          <TouchableOpacity
+            style={[styles.provisionBtn, { backgroundColor: currentColors.accent }]}
+            onPress={() =>
+              navigation.navigate('Management', {
+                screen: 'Provisioning',
+                params: { environmentId: env.id },
+              })
+            }
+            activeOpacity={0.85}
+          >
+            <Ionicons name="add-circle-outline" size={16} color="#fff" />
+            <Text style={styles.provisionBtnTxt}>{t('sensors.provisionNew', 'Aprovisionar dispositivo')}</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={{ height: 30 }} />
       </ScrollView>

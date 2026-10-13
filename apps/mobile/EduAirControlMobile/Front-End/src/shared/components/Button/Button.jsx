@@ -4,11 +4,11 @@ import { useTheme } from '../../../context/ThemeContext.jsx'
 import { styles } from './Button.styles'
 
 const VARIANTS = {
-  primary: (c) => ({ backgroundColor: c.accent, text: '#ffffff' }),
+  primary: (c) => ({ backgroundColor: c.accentButton || c.accent, text: '#ffffff' }),
   secondary: (c) => ({ backgroundColor: c.glassSurface, borderColor: c.glassBorder, text: c.textPrimary }),
   outline: (c) => ({ backgroundColor: 'transparent', borderColor: c.accent, text: c.accent }),
   ghost: (c) => ({ backgroundColor: 'transparent', text: c.accent }),
-  danger: (c) => ({ backgroundColor: c.error, text: '#ffffff' }),
+  danger: (c) => ({ backgroundColor: c.errorButton || c.error, text: '#ffffff' }),
 }
 
 const SIZES = {
@@ -39,6 +39,8 @@ function Button({
     <Pressable
       disabled={inactive}
       onPress={onPress}
+      accessibilityRole={props.accessibilityRole || 'button'}
+      accessibilityState={{ disabled: inactive, ...props.accessibilityState }}
       style={({ pressed }) => [
         styles.base,
         {

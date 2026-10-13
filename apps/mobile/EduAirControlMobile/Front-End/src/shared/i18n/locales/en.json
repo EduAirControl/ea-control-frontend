@@ -95,7 +95,8 @@
     "or": "OR",
     "noName": "No Name",
     "loading": "Loading…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "retry": "Retry"
   },
   "forgotPassword": {
     "title": "Forgot Password",
@@ -396,6 +397,7 @@
     "autoTimezone": "Automatic timezone",
     "updateBtn": "Update",
     "accessibleThemes": "Accessible themes",
+    "accessibleThemesHint": "Choose the palette that is easiest for you to distinguish. Statuses also include icons and labels.",
     "themeNormal": "Normal",
     "themeProtanopia": "Protanopia",
     "themeDeuteranopia": "Deuteranopia",
@@ -674,7 +676,17 @@
     "tabSensors": "Sensors and variables",
     "tabDevices": "IoT Devices",
     "noAdmin": "You don't have permission to access this section",
-    "tabProvisioning": "Provisioning"
+    "tabProvisioning": "Provisioning",
+    "requiredCode": "Code is required",
+    "requiredCampus": "Select a campus",
+    "requiredType": "Select an environment type",
+    "invalidCapacity": "Capacity must be 1 or more",
+    "codeLabel": "Code",
+    "codePlaceholder": "e.g. A-102",
+    "floorLabel": "Floor",
+    "floorPlaceholder": "e.g. 1",
+    "campusLabel": "Campus",
+    "typeLabel": "Environment type"
   },
   "editModal": {
     "dateFormatTitle": "Date format",
@@ -712,7 +724,15 @@
     "summaryMessage": "{{alerts}} environments in alert and {{warnings}} with warnings",
     "all": "All",
     "alerts": "Alerts",
-    "activeAlerts": "{{count}} active alerts"
+    "activeAlerts": "{{count}} active alerts",
+    "severity": {
+      "CRITICAL": "Critical alert",
+      "WARNING": "Warning",
+      "INFO": "Info"
+    },
+    "alertMessage": "{{variable}} out of range in {{environment}}{{value}}",
+    "unknownEnvironment": "unknown environment",
+    "loadError": "Could not load alerts"
   },
   "leaderboard": {
     "title": "Environment Ranking",
@@ -1061,14 +1081,17 @@
       "referenceRange": "Reference range",
       "co2Range": "Below 800 ppm",
       "throughTime": "over time",
-      "syncedData": "Synced data"
+      "syncedData": "Synced data",
+      "noData": "No measurements in this period"
     },
     "kpi": {
       "averagePrefix": "Average ",
       "vsPreviousPeriod": "7.4% vs. previous period",
       "environmentsInRange": "environments in range",
       "requireFollowUp": "require follow-up",
-      "requireAttention": "require attention"
+      "requireAttention": "require attention",
+      "measurementsCount": "recorded measurements",
+      "noSummary": "No summary available"
     },
     "context": {
       "environments": "Environments",
@@ -1115,7 +1138,10 @@
     "heroLine1": "The environmental quality",
     "contextLabel": "CONTEXT",
     "updatedNow": "updated just now",
-    "updatedAgo": "3 min ago"
+    "updatedAgo": "no data",
+    "updatedMinutes": "{{count}} min ago",
+    "updatedHours": "{{count}} h ago",
+    "updatedDays": "{{count}} d ago"
   },
   "sensors": {
     "title": "Sensors and variables",
@@ -1172,7 +1198,21 @@
     "unitNoise": "dB",
     "eyebrow": "Technical management",
     "synced": "Synced {{time}}",
-    "syncNow": "Synced just now"
+    "syncNow": "Synced just now",
+    "statusUninstalled": "Not installed",
+    "summaryUninstalled": "Not installed",
+    "colModel": "Model",
+    "colInstalled": "Installed",
+    "uninstall": "Unlink",
+    "uninstallDone": "Device unlinked from the environment",
+    "requiredModel": "Select a model and a status from the catalog",
+    "modelLabel": "Model",
+    "neverSeen": "Never reported",
+    "searchPlaceholderDevice": "Search serial, model or environment…",
+    "editSubtitleDevice": "Change the model, status or environment of the device.",
+    "statusCatalogError": "Status catalog unavailable",
+    "provisionNew": "Provision device",
+    "catalogError": "Could not load catalogs"
   },
   "devices": {
     "title": "IoT Devices",
@@ -1260,7 +1300,7 @@
       "scanning": "Scanning by SERVICE_UUID…",
       "connecting": "ESP32_Config found, connecting…",
       "ready": "Link established and characteristics discovered",
-      "sending": "Writing {ssid, pass} as Base64…",
+      "sending": "Writing credentials (SSID, password, token, installation) to the node…",
       "waiting": "Waiting for the ESP32 status notification…",
       "connected": "Device replied STATUS:CONNECTED",
       "fail": "Device replied STATUS:FAIL",

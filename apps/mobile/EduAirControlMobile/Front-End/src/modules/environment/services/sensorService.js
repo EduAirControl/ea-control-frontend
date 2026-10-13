@@ -50,9 +50,13 @@ const MEASUREMENT_UNITS = '/api/v1/measurement-units'
 
 function toUi(sensor) {
   if (!sensor) return sensor
+  // ms-sensor-management expone `sensorId`; el flujo de aprovisionamiento
+  // necesita una clave `id` normalizada para instalar el sensor y pedir token.
+  const id = sensor.sensorId ?? sensor.id
   return {
     ...sensor,
-    sensorId: sensor.id,
+    id,
+    sensorId: id,
     type: sensor.variable || sensor.variableCode || 'temperature',
     environmentId: sensor.educationalEnvironmentId,
     min: sensor.min,
@@ -70,15 +74,14 @@ function sensorPath(id) {
 }
 
 const sensorService = {
-  async getAll(environmentId) {
-    const data = await apiClient.get(BASE, {
-      params: { limit: 100, ...(environmentId ? { educationalEnvironmentId: environmentId } : {}) },
-    })
+  /** Sensores del catálogo (el backend no filtra por ambiente: hazlo vía instalaciones). */
+  async getAll() {
+    const data = await apiClient.get(BASE, { params: { limit: 100 } })
     return toList(data).map(toUi)
   },
 
-  async getByEnvironment(environmentId) {
-    return this.getAll(environmentId)
+  async getById(id) {
+    return toUi(await apiClient.get(sensorPath(id)))
   },
 
   async create(data) {
@@ -134,8 +137,33 @@ const sensorService = {
     return apiClient.post(`${INSTALLATIONS}/${encodeURIComponent(installationId)}/remove`)
   },
 
-  async listInstallations(sensorId) {
-    return toList(await apiClient.get(INSTALLATIONS, { params: { limit: 100, sensorId } }))
+  /**
+   * Instalaciones de un sensor. `active: true` pide solo las abiertas
+   * (`removedAt IS NULL`), que es lo que necesita el aprovisionamiento para
+   * decidir si reutiliza o reinstala.
+   */
+  async listInstallations(sensorId, { active } = {}) {
+    return toList(await apiClient.get(INSTALLATIONS, { params: { limit: 100, sensorId, active } }))
+  },
+
+  /** Instalaciones abiertas de un ambiente (dispositivos vinculados). */
+  async listInstallationsByEnvironment(educationalEnvironmentId, { active = true } = {}) {
+    return toList(
+      await apiClient.get(INSTALLATIONS, {
+        params: { limit: 100, educationalEnvironmentId, active },
+      })
+    )
+  },
+
+  /**
+   * Serial exacto. `GET /sensors?q=` es búsqueda parcial, así que se filtra en
+   * cliente: hace falta al recuperar un sensor que ya existía (409 en el alta).
+   */
+  async findBySerial(serial) {
+    const wanted = String(serial || '').trim().toUpperCase()
+    if (!wanted) return null
+    const rows = toList(await apiClient.get(BASE, { params: { q: wanted, limit: 100 } }))
+    return rows.map(toUi).find((s) => String(s.serialNumber || s.sensorId).toUpperCase() === wanted) || null
   },
 
   async listVariables() {

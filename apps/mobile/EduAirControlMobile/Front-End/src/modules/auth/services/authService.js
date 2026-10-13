@@ -4,18 +4,18 @@ import storage from '../../../shared/storage/storage'
 const BASE = '/api/v1/auth'
 
 function base64UrlDecode(str) {
-  const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-  return atob(padded)
+const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
+const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+return atob(padded)
 }
 
 function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1]
-    return JSON.parse(base64UrlDecode(payload))
-  } catch {
-    return null
-  }
+try {
+const payload = token.split('.')[1]
+return JSON.parse(base64UrlDecode(payload))
+} catch {
+return null
+}
 }
 
 /**
@@ -111,32 +111,32 @@ const authService = {
     await clearSession()
   },
 
-  getToken() {
-    return storage.getItem('token')
-  },
-
   getRefreshToken() {
     return storage.getItem('refreshToken')
   },
 
-  getUser() {
-    try {
-      return JSON.parse(storage.getItem('user'))
-    } catch {
-      return null
-    }
+  getToken() {
+    return storage.getItem('token')
   },
+
+getUser() {
+try {
+return JSON.parse(storage.getItem('user'))
+} catch {
+return null
+}
+},
 
   isAuthenticated() {
     const token = storage.getItem('token')
     if (!token) return false
     const claims = decodeJWT(token)
     if (!claims) {
-      clearSession()
+      this.logout()
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      clearSession()
+      this.logout()
       return false
     }
     return true
@@ -155,12 +155,14 @@ const authService = {
   },
 
   /**
-   * SUPER_ADMIN cuenta como administrador, igual que en la web (AuthContext): sin esto
-   * un SUPER_ADMIN no ve la pestaña de gestion.
+   * SUPER_ADMIN cuenta como administrador, igual que en la web (AuthContext): sin
+   * esto un SUPER_ADMIN no ve la pestana de gestion.
    */
   isAdmin() {
-    const roles = this.roles().map((r) => String(r).toUpperCase())
-    return roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+    return this.roles().some((r) => {
+      const role = String(r).toUpperCase()
+      return role === 'ADMIN' || role === 'SUPER_ADMIN'
+    })
   },
 
   isSuperAdmin() {

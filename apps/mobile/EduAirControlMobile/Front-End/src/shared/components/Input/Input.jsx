@@ -20,6 +20,8 @@ const Input = forwardRef(function Input(
           placeholder={placeholder}
           placeholderTextColor={c.textMuted}
           editable={!disabled}
+          accessibilityLabel={props.accessibilityLabel || label || placeholder}
+          accessibilityState={{ disabled: Boolean(disabled) }}
           multiline={multiline}
           secureTextEntry={secureTextEntry ?? type === 'password'}
           selectionColor={c.accent}

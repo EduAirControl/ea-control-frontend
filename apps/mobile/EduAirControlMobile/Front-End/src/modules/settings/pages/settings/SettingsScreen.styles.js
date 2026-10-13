@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   cardDesc: { fontSize: 12, marginBottom: 10, opacity: 0.8 },
   row: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14,
+    minHeight: 48, paddingVertical: 10, paddingHorizontal: 8, borderRadius: 14,
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, marginRight: 8 },
   rowLabel: { fontSize: 14, flex: 1, fontWeight: '600' },
@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
   toggle: { width: 50, height: 29, borderRadius: 15, padding: 3, justifyContent: 'center', alignItems: 'flex-start' },
   toggleCircle: { width: 23, height: 23, borderRadius: 12, backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1 },
+  chip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1 },
   chipLabel: { fontSize: 12, fontWeight: '700' },
   timezoneWrap: { marginTop: 12, gap: 8 },
   timezoneLabel: { fontSize: 13, marginBottom: 4 },

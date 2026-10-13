@@ -59,12 +59,16 @@ const DATE_FORMATS = [
   { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD', sample: '2026/10/06' },
 ]
 
-function Toggle({ value, onValueChange, currentColors }) {
+function Toggle({ value, onValueChange, currentColors, accessibilityLabel }) {
   return (
     <TouchableOpacity
-      style={[styles.toggle, { backgroundColor: value ? currentColors.accent : currentColors.borderColor }]}
+      style={[styles.toggle, { backgroundColor: value ? (currentColors.accentButton || currentColors.accent) : currentColors.borderColor }]}
       onPress={() => onValueChange(!value)}
       activeOpacity={0.8}
+      accessibilityRole="switch"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ checked: value }}
+      hitSlop={8}
     >
       <View style={[styles.toggleCircle, value && { transform: [{ translateX: 20 }] }]} />
     </TouchableOpacity>
@@ -76,7 +80,7 @@ function SectionCard({ icon, title, children, currentColors }) {
     <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
       <View style={styles.cardHeader}>
         <Ionicons name={icon} size={18} color={currentColors.accent} />
-        <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>{title}</Text>
+        <Text accessibilityRole="header" style={[styles.cardTitle, { color: currentColors.textPrimary }]}>{title}</Text>
       </View>
       {children}
     </View>
@@ -384,7 +388,7 @@ export default function SettingsScreen({ navigation }) {
             icon={darkMode ? 'moon' : 'moon-outline'}
             label={t('settings.darkMode')}
             currentColors={currentColors}
-            right={<Toggle value={darkMode} onValueChange={toggleDarkMode} currentColors={currentColors} />}
+            right={<Toggle value={darkMode} onValueChange={toggleDarkMode} currentColors={currentColors} accessibilityLabel={t('settings.darkMode')} />}
           />
           <Row icon="eye-outline" label={t('settings.accessibleThemes')} value={themeLabel(colorTheme)} currentColors={currentColors} color={colorTheme === '' ? null : currentColors.accent} />
           <View style={styles.chipWrap}>
@@ -397,13 +401,21 @@ export default function SettingsScreen({ navigation }) {
                   colorTheme === c.key && { backgroundColor: currentColors.accentDim },
                 ]}
                 onPress={() => handleThemeChange(c.key)}
+                accessibilityRole="radio"
+                accessibilityLabel={t(c.label)}
+                accessibilityState={{ selected: colorTheme === c.key }}
+                hitSlop={3}
               >
                 <Text style={[styles.chipLabel, { color: colorTheme === c.key ? currentColors.accent : currentColors.textSecondary }]}>
                   {t(c.label)}
                 </Text>
+                {colorTheme === c.key && <Ionicons name="checkmark-circle" size={17} color={currentColors.accent} accessibilityElementsHidden />}
               </TouchableOpacity>
             ))}
           </View>
+          <Text style={[styles.cardDesc, { color: currentColors.textMuted }]}>
+            {t('settings.accessibleThemesHint', 'Elige la paleta que distingas mejor. Los estados también muestran iconos y etiquetas.')}
+          </Text>
         </SectionCard>
 
         <SectionCard icon="globe-outline" title={t('settings.langAndDates')} currentColors={currentColors}>
@@ -426,7 +438,7 @@ export default function SettingsScreen({ navigation }) {
             icon="time-outline"
             label={t('settings.autoTimezone')}
             currentColors={currentColors}
-            right={<Toggle value={autoTimezone} onValueChange={(v) => { setAutoTimezone(v); persist('autoTimezone', v) }} currentColors={currentColors} />}
+            right={<Toggle value={autoTimezone} onValueChange={(v) => { setAutoTimezone(v); persist('autoTimezone', v) }} currentColors={currentColors} accessibilityLabel={t('settings.autoTimezone')} />}
           />
           {!autoTimezone && (
             <View style={styles.timezoneWrap}>

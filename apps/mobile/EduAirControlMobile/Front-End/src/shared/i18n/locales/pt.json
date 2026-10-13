@@ -95,7 +95,8 @@
     "or": "OU",
     "noName": "sem nome",
     "loading": "Carregando…",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "retry": "Tentar novamente"
   },
   "forgotPassword": {
     "title": "Esqueci minha senha",
@@ -395,6 +396,7 @@
     "autoTimezone": "Fuso horário automático",
     "updateBtn": "Atualizar",
     "accessibleThemes": "Temas acessíveis",
+    "accessibleThemesHint": "Escolha a paleta mais fácil de distinguir. Os estados também têm ícones e rótulos.",
     "themeNormal": "Normal",
     "themeProtanopia": "Protanopia",
     "themeDeuteranopia": "Deuteranopia",
@@ -673,7 +675,17 @@
     "tabSensors": "Sensores e variáveis",
     "tabDevices": "Dispositivos IoT",
     "noAdmin": "Você não tem permissão para acessar esta seção",
-    "tabProvisioning": "Provisionamento"
+    "tabProvisioning": "Provisionamento",
+    "requiredCode": "O código é obrigatório",
+    "requiredCampus": "Selecione um campus",
+    "requiredType": "Selecione um tipo de ambiente",
+    "invalidCapacity": "A capacidade deve ser 1 ou mais",
+    "codeLabel": "Código",
+    "codePlaceholder": "ex. A-102",
+    "floorLabel": "Andar",
+    "floorPlaceholder": "ex. 1",
+    "campusLabel": "Campus",
+    "typeLabel": "Tipo de ambiente"
   },
   "editModal": {
     "dateFormatTitle": "Formato de data",
@@ -711,7 +723,15 @@
     "summaryMessage": "{{alerts}} ambientes em alerta e {{warnings}} com avisos hoje",
     "all": "Todas",
     "alerts": "Alertas",
-    "activeAlerts": "{{count}} alertas ativas"
+    "activeAlerts": "{{count}} alertas ativas",
+    "severity": {
+      "CRITICAL": "Alerta crítico",
+      "WARNING": "Aviso",
+      "INFO": "Informação"
+    },
+    "alertMessage": "{{variable}} fora do intervalo em {{environment}}{{value}}",
+    "unknownEnvironment": "ambiente desconhecido",
+    "loadError": "Não foi possível carregar os alertas"
   },
   "leaderboard": {
     "title": "Ranking de Ambientes",
@@ -1060,14 +1080,17 @@
       "referenceRange": "Faixa de referência",
       "co2Range": "Abaixo de 800 ppm",
       "throughTime": "ao longo do tempo",
-      "syncedData": "Dados sincronizados"
+      "syncedData": "Dados sincronizados",
+      "noData": "Sem medições neste período"
     },
     "kpi": {
       "averagePrefix": "Média ",
       "vsPreviousPeriod": "7,4% vs. período anterior",
       "environmentsInRange": "ambientes dentro da faixa",
       "requireFollowUp": "requerem acompanhamento",
-      "requireAttention": "requerem atenção"
+      "requireAttention": "requerem atenção",
+      "measurementsCount": "medições registradas",
+      "noSummary": "Sem resumo disponível"
     },
     "context": {
       "environments": "Ambientes",
@@ -1114,7 +1137,10 @@
     "heroLine1": "A qualidade ambiental",
     "contextLabel": "CONTEXTO",
     "updatedNow": "atualizado agora",
-    "updatedAgo": "há 3 min"
+    "updatedAgo": "sem dados",
+    "updatedMinutes": "há {{count}} min",
+    "updatedHours": "há {{count}} h",
+    "updatedDays": "há {{count}} d"
   },
   "sensors": {
     "title": "Sensores e variáveis",
@@ -1171,7 +1197,21 @@
     "unitNoise": "dB",
     "eyebrow": "Gestão técnica",
     "synced": "Sincronizado {{time}}",
-    "syncNow": "Sincronizado agora"
+    "syncNow": "Sincronizado agora",
+    "statusUninstalled": "Não instalado",
+    "summaryUninstalled": "Não instalado",
+    "colModel": "Modelo",
+    "colInstalled": "Instalado",
+    "uninstall": "Desvincular",
+    "uninstallDone": "Dispositivo desvinculado do ambiente",
+    "requiredModel": "Selecione um modelo e um estado do catálogo",
+    "modelLabel": "Modelo",
+    "neverSeen": "Nunca reportou",
+    "searchPlaceholderDevice": "Buscar serial, modelo ou ambiente…",
+    "editSubtitleDevice": "Altere o modelo, o estado ou o ambiente do dispositivo.",
+    "statusCatalogError": "Catálogo de estados indisponível",
+    "provisionNew": "Provisionar dispositivo",
+    "catalogError": "Não foi possível carregar os catálogos"
   },
   "devices": {
     "title": "Dispositivos IoT",
@@ -1259,7 +1299,7 @@
       "scanning": "Escaneando por SERVICE_UUID…",
       "connecting": "ESP32_Config encontrado, conectando…",
       "ready": "Link estabelecido e características descobertas",
-      "sending": "Gravando {ssid, pass} em Base64…",
+      "sending": "Gravando credenciais (SSID, senha, token, instalação) no nó…",
       "waiting": "Aguardando notificação de status do ESP32…",
       "connected": "O dispositivo respondeu STATUS:CONNECTED",
       "fail": "O dispositivo respondeu STATUS:FAIL",

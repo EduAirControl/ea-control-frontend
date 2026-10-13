@@ -54,4 +54,14 @@ export const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 16,
   },
   infoText: { flex: 1, fontSize: 14, fontWeight: '600' },
+  unlinkBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6,
+  },
+  unlinkTxt: { fontSize: 12, fontWeight: '700' },
+  provisionBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderRadius: 14, paddingVertical: 14, marginTop: 4,
+  },
+  provisionBtnTxt: { color: '#fff', fontSize: 14, fontWeight: '800' },
 })

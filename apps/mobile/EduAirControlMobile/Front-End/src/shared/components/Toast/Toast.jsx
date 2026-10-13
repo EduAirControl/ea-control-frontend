@@ -24,7 +24,7 @@ function ToastItem({ toast, onClose }) {
   const { currentColors: c } = useTheme()
   const color = COLORS[toast.type] || COLORS.info
   return (
-    <View style={[styles.toast, { backgroundColor: c.bgCard, borderColor: c.borderColor, borderLeftColor: color }]}>
+    <View accessibilityRole="alert" accessibilityLiveRegion="assertive" style={[styles.toast, { backgroundColor: c.bgCard, borderColor: c.borderColor, borderLeftColor: color }]}>
       <Ionicons name={ICONS[toast.type]} size={20} color={color} />
       <Text style={[styles.message, { color: c.textPrimary }]}>{toast.message}</Text>
       <Pressable onPress={() => onClose(toast.id)} hitSlop={8} accessibilityLabel="Cerrar">

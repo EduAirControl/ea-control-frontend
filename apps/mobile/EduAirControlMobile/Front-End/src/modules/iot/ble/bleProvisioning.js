@@ -68,12 +68,14 @@ export async function ensureBlePermissions() {
 /**
  * ¿Es el nodo que buscamos?
  *
- * El nombre es la señal fuerte. Si no llega en el anuncio (ocurre en algunos
- * Android) se acepta el service UUID, que es nuestro y no lo comparte nadie.
+ * El nombre es la señal fuerte. Android puede entregar `name`/`localName` en
+ * null (paquete de nombre en el scan response, o nombre retirado por el sistema
+ * en escaneos sin filtro), asi que el service UUID es el respaldo: es nuestro y
+ * no lo comparte nadie.
  */
 function isProvisioningDevice(device) {
-  const name = device?.name || device?.localName
-  if (name === PROVISIONING_DEVICE_NAME) return true
+  const name = String(device?.name || device?.localName || '').trim()
+  if (name.toUpperCase() === PROVISIONING_DEVICE_NAME.toUpperCase()) return true
   const services = device?.serviceUUIDs || []
   return services.some((u) => String(u).toLowerCase() === SERVICE_UUID.toLowerCase())
 }
@@ -81,9 +83,11 @@ function isProvisioningDevice(device) {
 /**
  * Escanea, conecta con el primer ESP32_Config y descubre sus servicios.
  *
- * Se escanea SIN filtro de service UUID: filtrar a nivel de sistema hace que
- * Android descarte periféricos, sobre todo con `neverForLocation`. El filtro se
- * aplica aqui, sobre cada resultado.
+ * Se escanea CON el service UUID como filtro de sistema. Con el permiso
+ * `neverForLocation` (plugin react-native-ble-plx) Android 12+ retira el
+ * nombre y los service UUIDs de los resultados de escaneo sin filtro: sin este
+ * filtro la app "no ve" el nodo aunque los Ajustes del telefono si lo muestren.
+ * El filtro ademas ignora el resto de perifericos cercanos.
  *
  * @throws Error('BLE_UNAVAILABLE') si el modulo nativo no esta (Expo Go)
  * @throws Error('PERMISSION_DENIED') / Error('PERMISSION_TIMEOUT')
@@ -119,7 +123,7 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
       finish(reject, new Error('SCAN_TIMEOUT'))
     }, timeoutMs)
 
-    ble.startDeviceScan(null, null, async (error, device) => {
+    ble.startDeviceScan([SERVICE_UUID], null, async (error, device) => {
       if (error) {
         finish(reject, error)
         return
@@ -130,6 +134,16 @@ export function scanAndConnect({ onStatus, timeoutMs = 20000 } = {}) {
         ble.stopDeviceScan()
         onStatus?.('connecting')
         const connected = await device.connect()
+        // El payload de provisioning (SSID + pass + JWT de ~600 chars +
+        // installationId) son ~800 bytes: con el MTU por defecto de 23 el
+        // "long write" de Android lo fragmenta en ~40 prepares y el Bluedroid
+        // del ESP32 lo rechaza (el nodo no recibe nada). Con MTU 512 caben dos
+        // paquetes y el write llega entero.
+        try {
+          await connected.requestMtu(512)
+        } catch {
+          // Si el SO no permite negociar MTU se sigue con el default.
+        }
         await connected.discoverAllServicesAndCharacteristics()
         finish(resolve, connected)
       } catch (e) {
@@ -160,24 +174,35 @@ export function subscribeStatus(device, onMessage, onError) {
 }
 
 /**
- * Envía la configuración del nodo codificada en Base64.
+ * Envía la configuración del nodo en JSON plano, troceada.
  *
- * El payload lleva también la credencial del dispositivo y el id de su
- * instalación: sin ellos el ESP32 no puede enviar medidas aunque conecte al
- * Wi-Fi. Ver guia_configuracion_esp32_react_native_ble.md.
+ * El payload (SSID + pass + JWT de ~600 chars + installationId) son ~800
+ * bytes: con el MTU por defecto (o incluso con 512 si la negociacion falla)
+ * el "long write" de Android al Bluedroid del ESP32 falla en la practica y
+ * el nodo no recibe nada. Se escriben trozos seguros bajo el MTU negociado;
+ * el firmware los acumula (IncompleteInput) y parsea el JSON completo al
+ * final.
  */
 export async function sendCredentials(device, ssid, password, token, installationId) {
-  const payload = Base64.encode(JSON.stringify({
+  const payload = JSON.stringify({
     ssid,
     pass: password || '',
     token: token || '',
     installationId: installationId || '',
-  }))
-  await device.writeCharacteristicWithResponseForService(
-    SERVICE_UUID,
-    CHARACTERISTIC_UUID,
-    payload
-  )
+  })
+  // Largo util = MTU - 3 (ATT). Se resta margen extra por si el stack anade
+  // cabeceras; y se limita a 400 para no hacer writes gigantes si el MTU es
+  // muy grande. Minimo 20 (el ATT por defecto de 23).
+  const mtu = Number(device?.mtu) || 23
+  const chunkSize = Math.max(20, Math.min(400, mtu - 8))
+  for (let i = 0; i < payload.length; i += chunkSize) {
+    const chunk = payload.slice(i, i + chunkSize)
+    await device.writeCharacteristicWithResponseForService(
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID,
+      Base64.encode(chunk)
+    )
+  }
 }
 
 export async function disconnect(device) {

@@ -48,6 +48,8 @@ export default function ProvisioningScreen() {
   const [models, setModels] = useState([])
   const [statuses, setStatuses] = useState([])
   const [environments, setEnvironments] = useState([])
+  const [environmentsLoading, setEnvironmentsLoading] = useState(true)
+  const [environmentsError, setEnvironmentsError] = useState(false)
   const [modelId, setModelId] = useState('')
   const [statusId, setStatusId] = useState('')
   const [envId, setEnvId] = useState(environmentId || '')
@@ -55,32 +57,64 @@ export default function ProvisioningScreen() {
   useEffect(() => {
     let cancelled = false
     Promise.all([
-      sensorService.listModels().catch(() => []),
-      sensorService.listStatuses().catch(() => []),
-      environmentService.getAll().catch(() => []),
+      sensorService.listModels().then((list) => ({ list, failed: false }))
+        .catch(() => ({ list: [], failed: true })),
+      sensorService.listStatuses().then((list) => ({ list, failed: false }))
+        .catch(() => ({ list: [], failed: true })),
+      environmentService.getAll().then((list) => ({ list, failed: false }))
+        .catch(() => ({ list: [], failed: true })),
     ])
-      .then(([modelList, statusList, envList]) => {
+      .then(([modelResult, statusResult, environmentResult]) => {
         if (cancelled) return
+        const modelList = modelResult.list
+        const statusList = statusResult.list
+        const envList = environmentResult.list
         setModels(modelList)
         setStatuses(statusList)
         setEnvironments(envList)
+        setEnvironmentsError(environmentResult.failed || modelResult.failed || statusResult.failed)
+        setEnvironmentsLoading(false)
         // El modelo completo es el que lleva los tres modulos.
         const full = modelList.find((m) => m.code === 'ESP32_FULL') || modelList[0]
         if (full) setModelId(full.sensorModelId || full.id)
         const active = statusList.find((s) => s.code === 'ACTIVE') || statusList[0]
         if (active) setStatusId(active.sensorStatusId || active.id)
-        if (!envId && envList.length === 1) setEnvId(envList[0].id)
+        setEnvId((current) => {
+          if (current && envList.some((env) => String(env.id) === String(current))) return String(current)
+          if (environmentId && envList.some((env) => String(env.id) === String(environmentId))) return String(environmentId)
+          return envList.length === 1 ? String(envList[0].id) : ''
+        })
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) {
+          setEnvironmentsLoading(false)
+          setEnvironmentsError(true)
+          toast.error(t('sensors.catalogError', 'No se pudieron cargar los catálogos'))
+        }
+      })
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /**
+   * El alta (sensor + instalación + token) solo vale para la combinación de
+   * modelo, estado, ambiente y dispositivo con la que se hizo. La firma permite
+   * detectar tanto los cambios normales como el caso de carrera en el que el
+   * usuario cambia el ambiente mientras el registro sigue en vuelo: reutilizar
+   * un `deviceConfig` desfasado mandaría al ESP32 un installationId del
+   * ambiente que ya no está elegido.
+   */
+  const registrationKey = `${envId}|${modelId}|${statusId}|${mac}`
+
+  useEffect(() => {
+    setDeviceConfig(null)
+  }, [registrationKey])
+
   const handleScan = async () => {
     const device = await vm.startScan()
-    if (device) setMac((prev) => prev || device.id?.toUpperCase() || null)
+    if (device) setMac((prev) => device.id?.toUpperCase() || prev)
   }
 
   /**
@@ -101,22 +135,60 @@ export default function ProvisioningScreen() {
       toast.error(t('provisioning.errors.environment'))
       return null
     }
+    const selectedEnvironment = environments.find((env) => String(env.id) === String(envId))
+    if (!selectedEnvironment?.id) {
+      toast.error(t('provisioning.errors.environment', 'Selecciona un ambiente válido antes de continuar.'))
+      return null
+    }
 
     setSaving(true)
     try {
-      const sensor = await sensorService.create({
-        sensorId: mac.toUpperCase(),
-        sensorModelId: modelId,
-        sensorStatusId: statusId,
-      })
-      const installation = await sensorService.install(sensor.id, envId)
+      const serial = mac.toUpperCase()
+      const sensorIdOf = (sensor) => sensor.sensorId ?? sensor.id
+
+      // Alta del sensor. Si el serial ya existe (reintento tras un fallo de BLE
+      // o tras cambiar de ambiente), el 409 no aborta el flujo: se recupera el
+      // sensor y se sigue con la instalación.
+      let sensor = null
+      try {
+        sensor = await sensorService.create({
+          sensorId: serial,
+          sensorModelId: modelId,
+          sensorStatusId: statusId,
+        })
+      } catch (e) {
+        if (e.status !== 409) throw e
+        sensor = await sensorService.findBySerial(serial)
+        if (!sensor) throw e
+      }
+
+      // Instalación abierta del sensor: si apunta al ambiente elegido se
+      // reutiliza; si apunta a otro (el usuario cambió el chip), se cierra y se
+      // reinstala en el ambiente seleccionado.
+      const openInstallations = await sensorService.listInstallations(sensorIdOf(sensor), { active: true })
+      const open = openInstallations.find((row) => !row.removedAt)
+      let installation = null
+      if (open) {
+        if (String(open.educationalEnvironmentId) === String(selectedEnvironment.id)) {
+          installation = open
+        } else {
+          await sensorService.removeInstallation(open.sensorInstallationId ?? open.id)
+        }
+      }
+      if (!installation) {
+        installation = await sensorService.install(sensorIdOf(sensor), selectedEnvironment.id)
+      }
+
       const installationId = installation?.sensorInstallationId || installation?.id
-      const tokenResponse = await sensorService.requestDeviceToken(sensor.id)
+      const tokenResponse = await sensorService.requestDeviceToken(sensorIdOf(sensor))
 
       const config = {
-        sensorId: sensor.id,
+        sensorId: sensorIdOf(sensor),
         installationId,
         token: tokenResponse?.accessToken,
+        environmentId: String(selectedEnvironment.id),
+        environmentName: selectedEnvironment.name,
+        signature: registrationKey,
       }
       setDeviceConfig(config)
       toast.success(t('provisioning.toasts.saved'))
@@ -130,7 +202,7 @@ export default function ProvisioningScreen() {
   }
 
   const handleSend = async () => {
-    const config = deviceConfig || (await registerDevice())
+    const config = deviceConfig?.signature === registrationKey ? deviceConfig : await registerDevice()
     if (!config) return
     const result = await vm.submit(config)
     if (result === 'connected') toast.success(t('provisioning.toasts.connected'))
@@ -143,10 +215,10 @@ export default function ProvisioningScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bgBody }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={c.bgBody} />
+      <StatusBar barStyle={c.dark ? 'light-content' : 'dark-content'} backgroundColor={c.bgBody} />
 
       <View style={[styles.header, { borderBottomColor: c.borderColor }]}>
-        <TouchableOpacity onPress={() => { vm.cleanup(); navigation.goBack() }} hitSlop={8}>
+        <TouchableOpacity onPress={() => { vm.cleanup(); navigation.goBack() }} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Volver')}>
           <Ionicons name="arrow-back" size={22} color={c.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.textPrimary }]}>{t('provisioning.title')}</Text>
@@ -186,10 +258,13 @@ export default function ProvisioningScreen() {
               return (
                 <TouchableOpacity
                   key={id}
-                  style={[styles.profileBtn, active && styles.profileBtnActive]}
+                  style={[styles.profileBtn, { borderColor: c.borderColor, backgroundColor: c.bgCard }, active && { borderColor: c.accent, backgroundColor: c.accentDim }]}
                   onPress={() => setModelId(id)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={m.name}
+                  accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.profileBtnTxt, active && styles.profileBtnTxtActive]}>
+                  <Text style={[styles.profileBtnTxt, { color: active ? c.accent : c.textSecondary }, active && styles.profileBtnTxtActive]}>
                     {m.name}
                   </Text>
                 </TouchableOpacity>
@@ -205,10 +280,13 @@ export default function ProvisioningScreen() {
               return (
                 <TouchableOpacity
                   key={id}
-                  style={[styles.profileBtn, active && styles.profileBtnActive]}
+                  style={[styles.profileBtn, { borderColor: c.borderColor, backgroundColor: c.bgCard }, active && { borderColor: c.accent, backgroundColor: c.accentDim }]}
                   onPress={() => setStatusId(id)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={s.name}
+                  accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.profileBtnTxt, active && styles.profileBtnTxtActive]}>
+                  <Text style={[styles.profileBtnTxt, { color: active ? c.accent : c.textSecondary }, active && styles.profileBtnTxtActive]}>
                     {s.name}
                   </Text>
                 </TouchableOpacity>
@@ -219,27 +297,39 @@ export default function ProvisioningScreen() {
           <Text style={[styles.hint, { color: c.textMuted }]}>{t('provisioning.environmentLabel')}</Text>
           <View style={styles.profilesRow}>
             {environments.map((env) => {
-              const active = env.id === envId
+              const active = String(env.id) === String(envId)
               return (
                 <TouchableOpacity
                   key={env.id}
-                  style={[styles.profileBtn, active && styles.profileBtnActive]}
-                  onPress={() => setEnvId(env.id)}
+                  style={[styles.profileBtn, { borderColor: c.borderColor, backgroundColor: c.bgCard }, active && { borderColor: c.accent, backgroundColor: c.accentDim }]}
+                  onPress={() => setEnvId(String(env.id))}
+                  accessibilityRole="radio"
+                  accessibilityLabel={env.name}
+                  accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.profileBtnTxt, active && styles.profileBtnTxtActive]}>
+                  <Text style={[styles.profileBtnTxt, { color: active ? c.accent : c.textSecondary }, active && styles.profileBtnTxtActive]}>
                     {env.name}
                   </Text>
                 </TouchableOpacity>
               )
             })}
-            {environments.length === 0 && (
-              <Text style={[styles.hint, { color: c.textMuted }]}>{t('provisioning.noEnvironments')}</Text>
+            {environmentsLoading && <ActivityIndicator size="small" color={c.accent} />}
+            {!environmentsLoading && environments.length === 0 && (
+              <Text style={[styles.hint, { color: environmentsError ? c.error : c.textMuted }]}>
+                {environmentsError
+                  ? t('provisioning.errors.environmentsLoad', 'No se pudieron cargar los ambientes. Revisa la conexión e inténtalo de nuevo.')
+                  : t('provisioning.noEnvironments')}
+              </Text>
             )}
           </View>
 
           <Text style={[styles.hint, { color: c.textMuted }]}>
             {deviceConfig
-              ? t('provisioning.registered', { id: deviceConfig.sensorId })
+              ? `${t('provisioning.registered', { id: deviceConfig.sensorId })}${
+                  deviceConfig.environmentName
+                    ? ` · ${t('provisioning.environmentLabel')}: ${deviceConfig.environmentName}`
+                    : ''
+                }`
               : t('provisioning.notRegistered')}
           </Text>
         </View>
@@ -249,7 +339,7 @@ export default function ProvisioningScreen() {
             <View
               style={[
                 styles.statusDot,
-                { backgroundColor: success ? c.success : vm.phase === 'error' ? c.error : c.accent },
+                { backgroundColor: success ? c.success : vm.phase === 'error' ? c.error : c.accentButton || c.accent },
               ]}
             />
             <Text
@@ -324,6 +414,11 @@ export default function ProvisioningScreen() {
               </Text>
             </View>
             <Text style={[styles.successText, { color: c.textSecondary }]}>{t('provisioning.successBody')}</Text>
+            {deviceConfig?.environmentName && (
+              <Text style={[styles.successText, { color: c.textSecondary }]}>
+                {t('provisioning.environmentLabel')}: {deviceConfig.environmentName}
+              </Text>
+            )}
             <TouchableOpacity style={styles.linkBtn} onPress={() => navigation.navigate('ManagementHome')}>
               <Text style={[styles.linkTxt, { color: c.accent }]}>{t('provisioning.backToDevices')}</Text>
               <Ionicons name="chevron-forward" size={14} color={c.accent} />

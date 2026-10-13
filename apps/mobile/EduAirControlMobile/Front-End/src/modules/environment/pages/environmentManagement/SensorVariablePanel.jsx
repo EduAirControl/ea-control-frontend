@@ -12,8 +12,8 @@ import { styles } from './SensorVariablePanel.styles'
 
 const STATUS_META = {
   active: { key: 'sensors.statusActive', color: 'success' },
-  warning: { key: 'sensors.statusWarning', color: 'warning' },
   offline: { key: 'sensors.statusOffline', color: 'error' },
+  uninstalled: { key: 'sensors.statusUninstalled', color: 'warning' },
 }
 
 function Chip({ label, active, color, onPress, currentColors }) {
@@ -45,6 +45,13 @@ function SummaryCell({ label, value, color, currentColors }) {
   )
 }
 
+function formatInstant(iso, fallback) {
+  if (!iso) return fallback
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return fallback
+  return date.toLocaleString()
+}
+
 export default function SensorVariablePanel() {
   const { currentColors: c } = useTheme()
   const { t } = useTranslation()
@@ -53,22 +60,21 @@ export default function SensorVariablePanel() {
 
   const openAdd = () => {
     vm.setForm({
-      sensorId: '',
+      serial: '',
+      modelId: vm.defaultModelId(),
+      statusId: vm.defaultStatusId(),
       environmentId: vm.environments[0]?.id ?? '',
-      type: 'temperature',
-      min: '',
-      max: '',
     })
     vm.setShowAdd(true)
   }
 
   const submitAdd = async () => {
-    if (!String(vm.form.sensorId).trim()) {
+    if (!String(vm.form.serial).trim()) {
       toast.error(t('sensors.requiredId'))
       return
     }
-    if (!vm.form.environmentId) {
-      toast.error(t('sensors.requiredEnvironment'))
+    if (!vm.form.modelId || !vm.form.statusId) {
+      toast.error(t('sensors.requiredModel', 'Elige un modelo y un estado del catálogo'))
       return
     }
     try {
@@ -80,8 +86,8 @@ export default function SensorVariablePanel() {
   }
 
   const submitEdit = async () => {
-    if (!String(vm.editing.min).toString().trim() || !String(vm.editing.max).toString().trim()) {
-      toast.error(t('sensors.requiredId'))
+    if (!vm.editing?.modelId || !vm.editing?.statusId) {
+      toast.error(t('sensors.requiredModel', 'Elige un modelo y un estado del catálogo'))
       return
     }
     try {
@@ -101,25 +107,31 @@ export default function SensorVariablePanel() {
     }
   }
 
+  const doUninstall = async (sensor) => {
+    try {
+      await vm.uninstallSensor(sensor)
+      toast.success(t('sensors.uninstallDone', 'Dispositivo desvinculado del ambiente'))
+    } catch (e) {
+      toast.error(e.message)
+    }
+  }
+
   const renderSensorCard = (sensor) => {
-    const meta = VARIABLE_META[sensor.type] || {}
-    const toneColor = TONE_COLORS[meta.tone] || c.accent
-    const status = STATUS_META[sensor.status] || STATUS_META.active
+    const status = STATUS_META[sensor.uiStatus] || STATUS_META.active
     const statusColor = c[status.color]
-    const reading = vm.getReading(sensor)
-    // `installed` (backend) define la acción; `status` es solo la píldora.
-    const installed = sensor.installed !== false
 
     return (
       <View key={sensor.id} style={[styles.sensorCard, { backgroundColor: c.bgCard, borderColor: c.borderColor, borderLeftColor: statusColor }]}>
         <View style={styles.sensorTop}>
-          <View style={[styles.sensorIcon, { backgroundColor: `${toneColor}1F` }]}>
-            <Ionicons name={meta.icon || 'hardware-chip-outline'} size={18} color={toneColor} />
+          <View style={[styles.sensorIcon, { backgroundColor: `${c.accent}1F` }]}>
+            <Ionicons name="hardware-chip-outline" size={18} color={c.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.sensorId, { color: c.textPrimary }]} numberOfLines={1}>{sensor.sensorId}</Text>
+            <Text style={[styles.sensorId, { color: c.textPrimary }]} numberOfLines={1}>{sensor.serialNumber || sensor.sensorId}</Text>
             <Text style={[styles.sensorSync, { color: c.textMuted }]}>
-              {sensor.lastSync ? t('sensors.synced', { time: sensor.lastSync }) : t('sensors.syncNow')}
+              {sensor.lastSeenAt
+                ? t('sensors.synced', { time: formatInstant(sensor.lastSeenAt, '') })
+                : t('sensors.neverSeen', 'Nunca ha reportado')}
             </Text>
           </View>
           <View style={[styles.statusPill, { backgroundColor: `${statusColor}1F`, borderColor: statusColor }]}>
@@ -130,9 +142,9 @@ export default function SensorVariablePanel() {
 
         <View style={styles.sensorGrid}>
           <View style={styles.sensorCell}>
-            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colVariable')}</Text>
-            <Text style={[styles.cellValue, { color: c.textPrimary }]}>
-              {t(meta.labelKey)} <Text style={{ color: c.textMuted, fontSize: 11 }}>· {meta.unit}</Text>
+            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colModel')}</Text>
+            <Text style={[styles.cellValue, { color: c.textPrimary }]} numberOfLines={1}>
+              {sensor.modelName}
             </Text>
           </View>
           <View style={styles.sensorCell}>
@@ -142,36 +154,53 @@ export default function SensorVariablePanel() {
             </Text>
           </View>
           <View style={styles.sensorCell}>
-            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colReading')}</Text>
-            <Text style={[styles.cellValue, { color: toneColor }]}>
-              {reading ?? '—'} {meta.unit}
+            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colInstalled')}</Text>
+            <Text style={[styles.cellValue, { color: c.textPrimary }]}>
+              {sensor.installedAt ? formatInstant(sensor.installedAt, '—') : '—'}
             </Text>
           </View>
           <View style={styles.sensorCell}>
-            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colRange')}</Text>
-            <Text style={[styles.cellValue, { color: c.textPrimary }]}>
-              {sensor.min} – {sensor.max} {meta.unit}
+            <Text style={[styles.cellLabel, { color: c.textMuted }]}>{t('sensors.colStatus')}</Text>
+            <Text style={[styles.cellValue, { color: statusColor }]}>
+              {t(status.key)}
             </Text>
           </View>
         </View>
 
         <View style={[styles.sensorActions, { borderTopColor: c.borderColor }]}>
-          <TouchableOpacity style={styles.sensorActionBtn} onPress={() => vm.setEditing({ ...sensor })}>
+          <TouchableOpacity
+            style={styles.sensorActionBtn}
+            onPress={() =>
+              vm.setEditing({
+                id: sensor.id,
+                serialNumber: sensor.serialNumber,
+                modelId: sensor.modelId,
+                statusId: sensor.statusId,
+                environmentId: sensor.environmentId ? String(sensor.environmentId) : '',
+              })
+            }
+          >
             <Ionicons name="create-outline" size={15} color={c.accent} />
             <Text style={[styles.sensorActionTxt, { color: c.accent }]}>{t('sensors.edit')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sensorActionBtn} onPress={() => doToggle(sensor)}>
-            <Ionicons name="power-outline" size={15} color={installed ? c.error : c.success} />
-            <Text style={[styles.sensorActionTxt, { color: installed ? c.error : c.success }]}>
-              {installed ? t('sensors.toggleOff') : t('sensors.toggleOn')}
+            <Ionicons name="power-outline" size={15} color={sensor.statusCode === 'ACTIVE' ? c.error : c.success} />
+            <Text style={[styles.sensorActionTxt, { color: sensor.statusCode === 'ACTIVE' ? c.error : c.success }]}>
+              {sensor.statusCode === 'ACTIVE' ? t('sensors.toggleOff') : t('sensors.toggleOn')}
             </Text>
           </TouchableOpacity>
+          {sensor.installed && (
+            <TouchableOpacity style={styles.sensorActionBtn} onPress={() => doUninstall(sensor)}>
+              <Ionicons name="unlink-outline" size={15} color={c.warning} />
+              <Text style={[styles.sensorActionTxt, { color: c.warning }]}>{t('sensors.uninstall', 'Desvincular')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     )
   }
 
-  const hasFilters = vm.search.length > 0 || vm.statusFilter !== 'all' || vm.variableFilter !== 'all'
+  const hasFilters = vm.search.length > 0 || vm.statusFilter !== 'all'
 
   return (
     <View style={styles.container}>
@@ -190,15 +219,15 @@ export default function SensorVariablePanel() {
       <View style={styles.summaryRow}>
         <SummaryCell label={t('sensors.summaryTotal')} value={vm.summary.total} color={c.textPrimary} currentColors={c} />
         <SummaryCell label={t('sensors.summaryActive')} value={vm.summary.active} color={c.success} currentColors={c} />
-        <SummaryCell label={t('sensors.summaryWarning')} value={vm.summary.warning} color={c.warning} currentColors={c} />
         <SummaryCell label={t('sensors.summaryOffline')} value={vm.summary.offline} color={c.error} currentColors={c} />
+        <SummaryCell label={t('sensors.summaryUninstalled', 'Sin instalar')} value={vm.summary.uninstalled} color={c.warning} currentColors={c} />
       </View>
 
       <View style={[styles.searchBar, { backgroundColor: c.bgCard, borderColor: c.borderColor }]}>
         <Ionicons name="search-outline" size={16} color={c.textMuted} />
         <TextInput
           style={[styles.searchInput, { color: c.textPrimary }]}
-          placeholder={t('sensors.searchPlaceholder')}
+          placeholder={t('sensors.searchPlaceholderDevice', 'Buscar serial, modelo o ambiente…')}
           placeholderTextColor={c.textMuted}
           value={vm.search}
           onChangeText={vm.setSearch}
@@ -208,21 +237,6 @@ export default function SensorVariablePanel() {
             <Ionicons name="close-circle" size={16} color={c.textMuted} />
           </TouchableOpacity>
         )}
-      </View>
-
-      <Text style={[styles.filterLabel, { color: c.textMuted }]}>{t('sensors.variableLabel')}</Text>
-      <View style={styles.chipRow}>
-        <Chip label={t('sensors.filterAllVariables')} active={vm.variableFilter === 'all'} color={c.accent} onPress={() => vm.setVariableFilter('all')} currentColors={c} />
-        {Object.entries(VARIABLE_META).map(([key, meta]) => (
-          <Chip
-            key={key}
-            label={t(meta.labelKey)}
-            active={vm.variableFilter === key}
-            color={TONE_COLORS[meta.tone]}
-            onPress={() => vm.setVariableFilter(key)}
-            currentColors={c}
-          />
-        ))}
       </View>
 
       <View style={styles.chipRow}>
@@ -246,7 +260,7 @@ export default function SensorVariablePanel() {
           <Ionicons name="cloud-offline-outline" size={26} color={c.error} />
           <Text style={[styles.emptyTitle, { color: c.textPrimary }]}>{vm.error}</Text>
           <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: c.accent }]} onPress={vm.reload}>
-            <Text style={styles.emptyBtnTxt}>{t('management.clearSearch')}</Text>
+            <Text style={styles.emptyBtnTxt}>{t('common.retry', 'Reintentar')}</Text>
           </TouchableOpacity>
         </View>
       ) : vm.filtered.length === 0 ? (
@@ -286,33 +300,33 @@ export default function SensorVariablePanel() {
         <Text style={[styles.modalHint, { color: c.textMuted }]}>{t('sensors.newDevice')}</Text>
         <Input
           label={t('sensors.idLabel')}
-          value={vm.form.sensorId}
-          onChangeText={(v) => vm.setForm((p) => ({ ...p, sensorId: v }))}
+          value={vm.form.serial}
+          onChangeText={(v) => vm.setForm((p) => ({ ...p, serial: v }))}
           placeholder={t('sensors.idPlaceholder')}
           autoCapitalize="characters"
         />
+        <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{t('sensors.modelLabel', 'Modelo')}</Text>
+        <View style={styles.chipRow}>
+          {vm.models.map((model) => (
+            <Chip
+              key={model.sensorModelId ?? model.id}
+              label={model.name || model.code}
+              active={vm.form.modelId === (model.sensorModelId ?? model.id)}
+              color={c.accent}
+              onPress={() => vm.setForm((p) => ({ ...p, modelId: model.sensorModelId ?? model.id }))}
+              currentColors={c}
+            />
+          ))}
+        </View>
         <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{t('sensors.envLabel')}</Text>
         <View style={styles.chipRow}>
           {vm.environments.map((env) => (
             <Chip
               key={env.id}
               label={env.nameKey ? t(env.nameKey) : env.name}
-              active={Number(vm.form.environmentId) === Number(env.id)}
+              active={String(vm.form.environmentId) === String(env.id)}
               color={c.accent}
-              onPress={() => vm.setForm((p) => ({ ...p, environmentId: env.id }))}
-              currentColors={c}
-            />
-          ))}
-        </View>
-        <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{t('sensors.variableLabel')}</Text>
-        <View style={styles.chipRow}>
-          {Object.entries(VARIABLE_META).map(([key, meta]) => (
-            <Chip
-              key={key}
-              label={`${t(meta.labelKey)} (${meta.unit})`}
-              active={vm.form.type === key}
-              color={TONE_COLORS[meta.tone]}
-              onPress={() => vm.setForm((p) => ({ ...p, type: key }))}
+              onPress={() => vm.setForm((p) => ({ ...p, environmentId: p.environmentId === env.id ? '' : env.id }))}
               currentColors={c}
             />
           ))}
@@ -326,38 +340,51 @@ export default function SensorVariablePanel() {
       <Modal isOpen={Boolean(vm.editing)} onClose={() => vm.setEditing(null)} title={t('sensors.editTitle')} size="sm">
         {vm.editing && (
           <>
-            <Text style={[styles.modalHint, { color: c.textPrimary, fontWeight: '800' }]}>{vm.editing.sensorId}</Text>
-            <Text style={[styles.modalHint, { color: c.textMuted, marginTop: 4 }]}>{t('sensors.editSubtitle')}</Text>
-            <Text style={[styles.fieldLabel, { color: c.textMuted, marginTop: 14 }]}>{t('sensors.variableLabel')}</Text>
+            <Text style={[styles.modalHint, { color: c.textPrimary, fontWeight: '800' }]}>{vm.editing.serialNumber}</Text>
+            <Text style={[styles.modalHint, { color: c.textMuted, marginTop: 4 }]}>{t('sensors.editSubtitleDevice', 'Cambia el modelo, el estado o el ambiente del dispositivo.')}</Text>
+            <Text style={[styles.fieldLabel, { color: c.textMuted, marginTop: 14 }]}>{t('sensors.modelLabel', 'Modelo')}</Text>
             <View style={styles.chipRow}>
-              {Object.entries(VARIABLE_META).map(([key, meta]) => (
+              {vm.models.map((model) => (
                 <Chip
-                  key={key}
-                  label={`${t(meta.labelKey)} (${meta.unit})`}
-                  active={vm.editing.type === key}
-                  color={TONE_COLORS[meta.tone]}
-                  onPress={() => vm.setEditing((p) => ({ ...p, type: key }))}
+                  key={model.sensorModelId ?? model.id}
+                  label={model.name || model.code}
+                  active={vm.editing.modelId === (model.sensorModelId ?? model.id)}
+                  color={c.accent}
+                  onPress={() => vm.setEditing((p) => ({ ...p, modelId: model.sensorModelId ?? model.id }))}
                   currentColors={c}
                 />
               ))}
             </View>
-            <View style={styles.rangeRow}>
-              <View style={{ flex: 1 }}>
-                <Input
-                  label={t('sensors.minLabel')}
-                  value={String(vm.editing.min ?? '')}
-                  onChangeText={(v) => vm.setEditing((p) => ({ ...p, min: v }))}
-                  keyboardType="numeric"
+            <Text style={[styles.fieldLabel, { color: c.textMuted, marginTop: 10 }]}>{t('sensors.colStatus')}</Text>
+            <View style={styles.chipRow}>
+              {vm.statuses.map((status) => (
+                <Chip
+                  key={status.sensorStatusId ?? status.id}
+                  label={status.name || status.code}
+                  active={vm.editing.statusId === (status.sensorStatusId ?? status.id)}
+                  color={status.code === 'ACTIVE' ? c.success : c.error}
+                  onPress={() => vm.setEditing((p) => ({ ...p, statusId: status.sensorStatusId ?? status.id }))}
+                  currentColors={c}
                 />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Input
-                  label={t('sensors.maxLabel')}
-                  value={String(vm.editing.max ?? '')}
-                  onChangeText={(v) => vm.setEditing((p) => ({ ...p, max: v }))}
-                  keyboardType="numeric"
+              ))}
+            </View>
+            <Text style={[styles.fieldLabel, { color: c.textMuted, marginTop: 10 }]}>{t('sensors.envLabel')}</Text>
+            <View style={styles.chipRow}>
+              {vm.environments.map((env) => (
+                <Chip
+                  key={env.id}
+                  label={env.nameKey ? t(env.nameKey) : env.name}
+                  active={String(vm.editing.environmentId) === String(env.id)}
+                  color={c.accent}
+                  onPress={() =>
+                    vm.setEditing((p) => ({
+                      ...p,
+                      environmentId: p.environmentId === env.id ? '' : env.id,
+                    }))
+                  }
+                  currentColors={c}
                 />
-              </View>
+              ))}
             </View>
             <View style={styles.modalActions}>
               <Button variant="outline" onPress={() => vm.setEditing(null)}>{t('sensors.cancelBtn')}</Button>

@@ -17,9 +17,11 @@ import { useAllEnvironmentsVM } from '../../viewmodels/useAllEnvironmentsVM.js'
 import calculateEnvironmentScore from '../../utils/calculateEnvironmentScore.js'
 import { getEnvironmentStatus } from '../../utils/getEnvironmentStatus.js'
 import { styles } from './AllEnvironmentsScreen.styles'
+import { useEnvironments } from '../../../../context/EnvironmentContext.jsx'
+import { usePolling } from '../../../../shared/hooks/usePolling.js'
 
 function EnvironmentRow({ env, onPress, currentColors, t }) {
-  const status = getEnvironmentStatus(env.statusKey, t)
+  const status = getEnvironmentStatus(env.statusKey, t, currentColors)
   const score = calculateEnvironmentScore(env)
 
   return (
@@ -57,7 +59,10 @@ function EnvironmentRow({ env, onPress, currentColors, t }) {
         <View style={[styles.scorePill, { borderColor: status.color }]}>
           <Text style={[styles.scoreText, { color: status.color }]}>{score}</Text>
         </View>
-        <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          <Ionicons name={status.icon} size={11} color={status.color} accessibilityElementsHidden />
+          <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   )
@@ -66,7 +71,10 @@ function EnvironmentRow({ env, onPress, currentColors, t }) {
 export default function AllEnvironmentsScreen({ navigation }) {
   const { darkMode, currentColors } = useTheme()
   const { t } = useTranslation()
+  const { refreshEnvironments } = useEnvironments()
   const { filtered, filters, setFilter, clearFilters, counts, activeCount } = useAllEnvironmentsVM()
+
+  usePolling(refreshEnvironments, 30000)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filterSection, setFilterSection] = useState('status')
@@ -147,7 +155,7 @@ export default function AllEnvironmentsScreen({ navigation }) {
             <Ionicons name="options-outline" size={18} color={currentColors.accent} />
             <Text style={[styles.filterButtonText, { color: currentColors.textPrimary }]}>{t('filters.label', 'Filtros')}</Text>
             {activeCount > 0 && (
-              <View style={[styles.filterBadge, { backgroundColor: currentColors.accent }]}>
+              <View style={[styles.filterBadge, { backgroundColor: currentColors.accentButton || currentColors.accent }]}>
                 <Text style={[styles.filterBadgeText, { color: '#fff' }]}>{activeCount}</Text>
               </View>
             )}
@@ -173,7 +181,7 @@ export default function AllEnvironmentsScreen({ navigation }) {
             <Ionicons name="search-outline" size={56} color={currentColors.borderColor} />
             <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>{t('allEnvironments.noResults')}</Text>
             <TouchableOpacity
-              style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]}
+              style={[styles.emptyBtn, { backgroundColor: currentColors.accentButton || currentColors.accent }]}
               onPress={clearFilters}
             >
               <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('filters.clear', 'Limpiar filtros')}</Text>
@@ -245,7 +253,7 @@ export default function AllEnvironmentsScreen({ navigation }) {
                 <Text style={[styles.clearButtonText, { color: currentColors.accent }]}>{t('filters.clear', 'Limpiar filtros')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.resultsButton, { backgroundColor: currentColors.accent }]}
+                style={[styles.resultsButton, { backgroundColor: currentColors.accentButton || currentColors.accent }]}
                 onPress={() => setFiltersOpen(false)}
               >
                 <Text style={[styles.resultsButtonText, { color: '#fff' }]}>

@@ -11,13 +11,16 @@ function Checkbox({ label, checked, onChange, disabled }) {
       style={[styles.row, disabled && styles.disabled]}
       onPress={() => onChange?.(!checked)}
       disabled={disabled}
+      accessibilityRole="checkbox"
+      accessibilityLabel={typeof label === 'string' ? label : undefined}
+      accessibilityState={{ checked, disabled: Boolean(disabled) }}
     >
       <View
         style={[
           styles.box,
           {
-            borderColor: checked ? c.accent : c.borderColor,
-            backgroundColor: checked ? c.accent : 'transparent',
+            borderColor: checked ? (c.accentButton || c.accent) : c.borderColor,
+            backgroundColor: checked ? (c.accentButton || c.accent) : 'transparent',
           },
         ]}
       >

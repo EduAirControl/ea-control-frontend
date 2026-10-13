@@ -1,19 +1,23 @@
 import apiClient from '../../../shared/services/apiClient'
+import { deriveStatusKey, mapMetricsByEnvironment } from '../utils/environmentMetrics.js'
 
 /**
- * Ambientes educativos (ms-classroom-management) y favoritos
- * (ms-user-experience).
+ * Ambientes educativos (ms-classroom-management), métricas actuales
+ * (ms-environment-monitoring) y favoritos (ms-user-experience).
  *
- * <p>Antes apuntaba a `/api/v1/environments`, que no existe: la lista entera era
- * un 404. El backend sirve `/api/v1/educational-environments` y los favoritos en
- * `/api/v1/favorites`.
+ * <p>`getAll` mergea la lista de ambientes con la última medición por ambiente
+ * (`/api/v1/environments/current`) y el nombre del campus (`/api/v1/campuses`)
+ * para que el dashboard, el detalle y la gestión muestren datos reales.
  */
 const BASE = '/api/v1/educational-environments'
 
-function toUi(env) {
+function toUi(env, metrics, campusNameById) {
   if (!env) return env
+  const id = env.educationalEnvironmentId ?? env.id
   return {
-    id: env.id,
+    // ms-classroom-management expone `educationalEnvironmentId`; varias
+    // pantallas usan `id` como clave interna y para crear instalaciones BLE.
+    id,
     code: env.code,
     name: env.name,
     floor: env.floor,
@@ -22,12 +26,19 @@ function toUi(env) {
     campusId: env.campusId,
     status: env.status,
     isFavorite: Boolean(env.favorite),
+    location: campusNameById?.[env.campusId] ?? env.location ?? '',
+    temp: metrics?.temp,
+    humidity: metrics?.humidity,
+    co2: metrics?.co2,
+    noise: metrics?.noise,
+    measuredAt: metrics?.measuredAt,
+    statusKey: deriveStatusKey(metrics),
   }
 }
 
 function toList(data) {
   if (Array.isArray(data)) return data
-  return data?.data || data?.items || []
+  return data?.data || data?.items || data?.content || []
 }
 
 function toPayload(environment) {
@@ -35,18 +46,33 @@ function toPayload(environment) {
   if (environment.campusId) payload.campusId = environment.campusId
   if (environment.code) payload.code = environment.code
   if (environment.name) payload.name = environment.name
-  if (environment.environmentTypeId) payload.environmentTypeId = environment.environmentTypeId
-  if (environment.floor !== undefined && environment.floor !== null) {
+  if (environment.environmentTypeId || environment.envType) {
+    payload.environmentTypeId = environment.environmentTypeId || environment.envType
+  }
+  if (environment.floor !== undefined && environment.floor !== null && environment.floor !== '') {
     payload.floor = Number(environment.floor)
   }
-  if (environment.capacity !== undefined) payload.occupancyCapacity = Number(environment.capacity)
+  if (environment.capacity !== undefined && environment.capacity !== null && environment.capacity !== '') {
+    payload.occupancyCapacity = Number(environment.capacity)
+  }
   if (environment.status) payload.status = environment.status
   return payload
 }
 
 const environmentService = {
+  /** Lista de ambientes mergeada con métricas actuales y nombre de campus. */
   async getAll() {
-    return toList(await apiClient.get(BASE, { params: { limit: 100 } })).map(toUi)
+    const [rows, metricRows, campuses] = await Promise.all([
+      apiClient.get(BASE, { params: { page: 1, limit: 100 } }),
+      apiClient.get('/api/v1/environments/current').catch(() => []),
+      apiClient.get('/api/v1/campuses', { params: { limit: 100 } }).catch(() => ({ data: [] })),
+    ])
+    const metricsByEnv = mapMetricsByEnvironment(metricRows)
+    const campusNameById = {}
+    toList(campuses).forEach((campus) => {
+      campusNameById[campus.campusId ?? campus.id] = campus.name
+    })
+    return toList(rows).map((env) => toUi(env, metricsByEnv[env.educationalEnvironmentId ?? env.id], campusNameById))
   },
 
   async getById(id) {
@@ -59,9 +85,18 @@ const environmentService = {
     return Array.isArray(rows) ? rows : []
   },
 
+  /** Ids de ambientes marcados como favoritos (ms-user-experience). */
   async getFavoriteIds() {
     const ids = await apiClient.get('/api/v1/favorites')
     return Array.isArray(ids) ? ids : []
+  },
+
+  async getCampuses() {
+    return toList(await apiClient.get('/api/v1/campuses', { params: { limit: 100 } }))
+  },
+
+  async getEnvironmentTypes() {
+    return toList(await apiClient.get('/api/v1/environment-types', { params: { limit: 100 } }))
   },
 
   async create(environment) {

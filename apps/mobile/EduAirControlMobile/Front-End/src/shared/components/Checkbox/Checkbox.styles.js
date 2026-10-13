@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native'
 
 export const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  row: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 10 },
   disabled: { opacity: 0.6 },
   box: {
     width: 22,

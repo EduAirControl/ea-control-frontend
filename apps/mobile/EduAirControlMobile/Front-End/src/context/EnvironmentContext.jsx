@@ -8,13 +8,26 @@ export function EnvironmentProvider({ children }) {
   const toast = useToast()
   const [environments, setEnvironments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const refreshEnvironments = useCallback(() => {
-    return environmentService
-      .getAll()
-      .then(setEnvironments)
-      .catch((e) => toast.error(e.message))
-      .finally(() => setLoading(false))
+  const refreshEnvironments = useCallback(async () => {
+    try {
+      const items = await environmentService.getAll()
+      let favoriteIds = []
+      try {
+        favoriteIds = await environmentService.getFavoriteIds()
+      } catch {
+        // favoritos son best-effort: la lista de ambientes sigue siendo válida
+      }
+      const favoriteSet = new Set(favoriteIds)
+      setEnvironments(items.map((env) => ({ ...env, isFavorite: favoriteSet.has(env.id) })))
+      setError(null)
+    } catch (e) {
+      setError(e.message)
+      toast.error(e.message)
+    } finally {
+      setLoading(false)
+    }
   }, [toast])
 
   useEffect(() => {
@@ -34,31 +47,40 @@ export function EnvironmentProvider({ children }) {
       })
   }, [toast])
 
-  const addEnvironment = useCallback((data) => {
-    environmentService
-      .create(data)
-      .then((newEnv) => {
-        setEnvironments((prev) => [...prev, newEnv])
-      })
-      .catch((e) => toast.error(e.message))
-  }, [toast])
+  // Tras cada mutación se recarga la lista completa para que los ambientes
+  // nuevos/editados traigan métricas, campus y statusKey reales (antes el
+  // `toUi` del POST/PATCH devolvía el objeto sin métricas y la UI perdía datos).
+  const addEnvironment = useCallback(async (data) => {
+    try {
+      await environmentService.create(data)
+      await refreshEnvironments()
+      return true
+    } catch (e) {
+      toast.error(e.message)
+      return false
+    }
+  }, [refreshEnvironments, toast])
 
-  const editEnvironment = useCallback((id, data) => {
-    environmentService
-      .update(id, data)
-      .then((updated) => {
-        setEnvironments((prev) => prev.map((env) => (env.id === id ? updated : env)))
-      })
-      .catch((e) => toast.error(e.message))
-  }, [toast])
+  const editEnvironment = useCallback(async (id, data) => {
+    try {
+      await environmentService.update(id, data)
+      await refreshEnvironments()
+      return true
+    } catch (e) {
+      toast.error(e.message)
+      return false
+    }
+  }, [refreshEnvironments, toast])
 
-  const deleteEnvironment = useCallback((id) => {
-    environmentService
-      .delete(id)
-      .then(() => {
-        setEnvironments((prev) => prev.filter((env) => env.id !== id))
-      })
-      .catch((e) => toast.error(e.message))
+  const deleteEnvironment = useCallback(async (id) => {
+    try {
+      await environmentService.delete(id)
+      setEnvironments((prev) => prev.filter((env) => env.id !== id))
+      return true
+    } catch (e) {
+      toast.error(e.message)
+      return false
+    }
   }, [toast])
 
   return (
@@ -66,6 +88,7 @@ export function EnvironmentProvider({ children }) {
       value={{
         environments,
         loading,
+        error,
         toggleFavorite,
         addEnvironment,
         editEnvironment,

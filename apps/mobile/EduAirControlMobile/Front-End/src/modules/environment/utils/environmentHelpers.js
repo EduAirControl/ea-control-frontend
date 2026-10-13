@@ -7,12 +7,16 @@ import calculateEnvironmentScore from './calculateEnvironmentScore'
 
 export const calcScore = calculateEnvironmentScore
 
-export function getMetricColor(key, value) {
-  if (key === 'temp') return value > 25 ? '#f85149' : value > 23 ? '#d29922' : '#3fb950'
-  if (key === 'humidity') return value > 65 ? '#f85149' : value < 35 ? '#d29922' : '#3fb950'
-  if (key === 'co2') return value > 1200 ? '#f85149' : value > 1000 ? '#d29922' : '#3fb950'
-  if (key === 'noise') return value > 60 ? '#d29922' : '#3fb950'
-  return '#3fb950'
+export function getMetricColor(key, value, colors) {
+  const success = colors?.success || '#3fb950'
+  const warning = colors?.warning || '#d29922'
+  const error = colors?.error || '#f85149'
+  if (!Number.isFinite(Number(value))) return colors?.textMuted || '#94a3b8'
+  if (key === 'temp') return value > 25 ? error : value > 23 ? warning : success
+  if (key === 'humidity') return value > 65 ? error : value < 35 ? warning : success
+  if (key === 'co2') return value > 1200 ? error : value > 1000 ? warning : success
+  if (key === 'noise') return value > 60 ? warning : success
+  return success
 }
 
 export function getDisplayName(env, t) {

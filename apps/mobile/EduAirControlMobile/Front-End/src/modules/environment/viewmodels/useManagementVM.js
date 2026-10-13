@@ -80,24 +80,27 @@ export function useManagementVM() {
     [environments]
   )
 
-  const handleAdd = (data) => {
-    addEnvironment(data)
-    setShowAdd(false)
+  const handleAdd = async (data) => {
+    const ok = await addEnvironment(data)
+    if (ok) setShowAdd(false)
+    return ok
   }
 
-  const handleEdit = (id, data) => {
+  const handleEdit = async (id, data) => {
     const current = environments.find((e) => e.id === id)
-    editEnvironment(id, {
+    const ok = await editEnvironment(id, {
       envType: current?.envType,
       floor: current?.floor != null ? String(current.floor) : undefined,
       ...data,
     })
-    setEditEnv(null)
+    if (ok) setEditEnv(null)
+    return ok
   }
 
-  const handleDelete = (id) => {
-    deleteEnvironment(id)
-    setDeleteEnv(null)
+  const handleDelete = async (id) => {
+    const ok = await deleteEnvironment(id)
+    if (ok) setDeleteEnv(null)
+    return ok
   }
 
   const openDelete = (id) => {

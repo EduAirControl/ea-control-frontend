@@ -2,7 +2,7 @@
  * ViewModel: useProvisioningVM
  * Aprovisionamiento Wi-Fi del ESP32 por Bluetooth LE (ver
  * guia_configuracion_esp32_react_native_ble.md): escaneo filtrado por
- * SERVICE_UUID, escritura de {ssid, pass} en Base64 y escucha de
+ * SERVICE_UUID, escritura de {ssid, pass, token, installationId} y escucha de
  * STATUS:CONNECTED | STATUS:FAIL | STATUS:ERR_JSON.
  */
 
@@ -143,11 +143,12 @@ export function useProvisioningVM() {
         deviceConfig.token,
         deviceConfig.installationId
       )
-    } catch {
+    } catch (e) {
+      // Sin el codigo real (message/name) un fallo de BLE es indiagnostico.
       statusResolverRef.current = null
       setPhase('error')
       setErrorKey('devices.errors.generic')
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', `${e?.name || 'Error'}: ${e?.message || e}`)
       return null
     }
 
