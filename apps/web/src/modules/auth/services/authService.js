@@ -96,8 +96,17 @@ const authService = {
     window.location.assign(`${API_BASE}/oauth2/authorization/web`);
   },
 
-  async completeSocialOnboarding(userId, companyCode) {
-    return apiClient.post('/api/v1/auth/oauth2/onboarding', { userId, institutionId: companyCode });
+  async exchangeSocialCode(code) {
+    const data = await apiClient.post('/api/v1/auth/oauth2/social/exchange', { code });
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+    setSession(data.accessToken, data.user);
+    return { needsOnboarding: Boolean(data.needsOnboarding) };
+  },
+
+  async completeSocialOnboarding(companyCode) {
+    return apiClient.post('/api/v1/auth/oauth2/onboarding', { companyCode });
   },
 
   async refreshToken() {

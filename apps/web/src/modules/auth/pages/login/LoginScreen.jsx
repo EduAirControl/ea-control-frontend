@@ -12,31 +12,30 @@ function LoginScreen() {
   const initialRegister = searchParams.get('panel') === 'register';
   const passwordReset = location.state?.passwordReset;
   const processedRef = useRef(false);
-  const [onboardingUserId, setOnboardingUserId] = useState(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [companyCode, setCompanyCode] = useState('');
   const [onboardingError, setOnboardingError] = useState('');
   const [onboardingLoading, setOnboardingLoading] = useState(false);
 
   useEffect(() => {
     if (processedRef.current) return;
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('access_token')) return;
+    const code = new URLSearchParams(window.location.search).get('social_code');
+    if (!code) return;
 
     processedRef.current = true;
-    const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
-    const userId = params.get('userId');
-    const needsOnboarding = params.get('needsOnboarding');
-
-    if (accessToken) {
-      localStorage.setItem('token', accessToken);
-      window.history.replaceState(null, '', window.location.pathname);
-      if (needsOnboarding === 'true' && userId) {
-        setOnboardingUserId(userId);
-      } else {
-        window.location.href = '/dashboard';
+    (async () => {
+      try {
+        const { needsOnboarding: onboarding } = await authService.exchangeSocialCode(code);
+        window.history.replaceState(null, '', window.location.pathname);
+        if (onboarding) {
+          setNeedsOnboarding(true);
+        } else {
+          window.location.href = '/dashboard';
+        }
+      } catch {
+        window.history.replaceState(null, '', window.location.pathname);
       }
-    }
+    })();
   }, []);
 
   useEffect(() => {
@@ -52,7 +51,7 @@ function LoginScreen() {
     setOnboardingError('');
     setOnboardingLoading(true);
     try {
-      await authService.completeSocialOnboarding(onboardingUserId, companyCode);
+      await authService.completeSocialOnboarding(companyCode);
       window.location.href = '/dashboard';
     } catch (err) {
       setOnboardingError(err.message || 'Error al completar el registro');
@@ -61,7 +60,7 @@ function LoginScreen() {
     }
   };
 
-  if (onboardingUserId) {
+  if (needsOnboarding) {
     return (
       <AuthLayout className="auth-login-background">
         <form className="login-form-modern" onSubmit={handleOnboardingSubmit}>

@@ -33,10 +33,6 @@ function LoginForm() {
     }
   };
 
-  const handleOAuth2Login = () => {
-    authService.loginWithOAuth2();
-  };
-
   return (
     <form className="login-form-modern" onSubmit={handleSubmit(onSubmit)}>
       <div className="input-group-modern">
@@ -90,14 +86,6 @@ function LoginForm() {
       <div className="social-divider">
         <span>{t('login.socialDivider', 'o continúa con')}</span>
       </div>
-
-      <button
-        type="button"
-        className="btn-oauth2"
-        onClick={handleOAuth2Login}
-      >
-        Continuar con OAuth2
-      </button>
 
       <SocialLoginButtons showDivider={false} />
     </form>
