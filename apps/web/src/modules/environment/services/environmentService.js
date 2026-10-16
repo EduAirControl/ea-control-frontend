@@ -20,22 +20,26 @@ const BASE = '/api/v1/educational-environments';
  * campus, que es lo que el filtro de {@code EnvironmentFilters} y el dashboard
  * esperan en {@code building}.
  */
-function toUi(env, metrics, campusNameById) {
+function toUi(env, metrics, campusNameById, favoriteIds) {
   if (!env) return env;
-  const m = metrics?.[env.id];
+  // El backend expone `educationalEnvironmentId`; los mocks usaban `id`.
+  const envId = env.educationalEnvironmentId ?? env.id;
+  const m = metrics?.[envId];
+  const campusName = campusNameById?.[env.campusId] || '';
   return {
-    id: env.id,
+    id: envId,
     code: env.code,
     name: env.name,
-    location: env.location || '',
+    location: env.location || campusName,
     floor: env.floor,
+    areaM2: env.areaM2,
     capacity: env.occupancyCapacity,
     envType: env.environmentTypeId,
     campusId: env.campusId,
-    campusName: campusNameById?.[env.campusId] || '',
-    building: campusNameById?.[env.campusId] || '',
+    campusName,
+    building: campusName,
     status: env.status,
-    isFavorite: false,
+    isFavorite: Boolean(favoriteIds && favoriteIds.has && favoriteIds.has(envId)),
     tempMin: undefined,
     tempMax: undefined,
     // Métricas del backend (ms-environment-monitoring)
@@ -72,30 +76,34 @@ const environmentService = {
   },
 
   async getAll() {
-    const [data, metrics, campuses] = await Promise.all([
+    const [data, metrics, campuses, favoriteIds] = await Promise.all([
       apiClient.get(`${BASE}`, { params: { limit: 100 } }),
       // Si el servicio de métricas no responde, el listado se pinta igual
       // (sin métricas) en vez de quedarse en blanco.
       environmentService.getMetrics().catch(() => ({})),
       catalogService.getCampuses().catch(() => []),
+      // Favoritos (ms-user-experience): best-effort, la lista sigue siendo válida.
+      environmentService.getFavorites().catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
+    const favoriteSet = new Set(favoriteIds);
     const items = data?.data || (Array.isArray(data) ? data : []);
-    return items.map((env) => toUi(env, metrics, campusNameById));
+    return items.map((env) => toUi(env, metrics, campusNameById, favoriteSet));
   },
 
   async getById(id) {
-    const [env, metrics, campuses] = await Promise.all([
+    const [env, metrics, campuses, favoriteIds] = await Promise.all([
       apiClient.get(`${BASE}/${id}`),
       environmentService.getMetrics().catch(() => ({})),
       catalogService.getCampuses().catch(() => []),
+      environmentService.getFavorites().catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
-    return toUi(env, metrics, campusNameById);
+    return toUi(env, metrics, campusNameById, new Set(favoriteIds));
   },
 
   async getFavorites() {
@@ -104,11 +112,11 @@ const environmentService = {
   },
 
   async create(environment) {
-    return toUi(await apiClient.post(BASE, toPayload(environment)), {});
+    return toUi(await apiClient.post(BASE, toPayload(environment)), {}, {}, new Set());
   },
 
   async update(id, updates) {
-    return toUi(await apiClient.patch(`${BASE}/${id}`, toPayload(updates)), {});
+    return toUi(await apiClient.patch(`${BASE}/${id}`, toPayload(updates)), {}, {}, new Set());
   },
 
   async delete(id) {

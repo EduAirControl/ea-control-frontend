@@ -12,6 +12,7 @@ export function useProfileVM() {
   const [isEditing, setIsEditing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     profileService.get().then((data) => {
@@ -41,13 +42,26 @@ export function useProfileVM() {
     setAvatarError(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const fullName = (form.fullName || '').trim();
+    // El backend exige fullName (@NotBlank) al crear el perfil.
+    if (!fullName) {
+      setSaveError('El nombre es obligatorio');
+      return;
+    }
+    setSaveError(null);
     const trimmedUrl = (avatarUrl || '').trim();
-    const updated = { ...form, avatarUrl: trimmedUrl };
-    setProfile(updated);
-    setAvatarUrl(trimmedUrl);
-    profileService.save(updated);
-    setIsEditing(false);
+    const updated = { ...form, fullName, avatarUrl: trimmedUrl };
+    try {
+      const saved = await profileService.save(updated);
+      const next = { ...updated, ...(saved || {}) };
+      setProfile(next);
+      setForm(next);
+      setAvatarUrl(next.avatarUrl || '');
+      setIsEditing(false);
+    } catch (e) {
+      setSaveError(e?.message || 'No se pudo guardar el perfil');
+    }
   };
 
   const handleCancel = () => {
@@ -70,6 +84,7 @@ export function useProfileVM() {
     isEditing,
     logoutModal,
     avatarError,
+    saveError,
     setIsEditing,
     setLogoutModal,
     handleChange,

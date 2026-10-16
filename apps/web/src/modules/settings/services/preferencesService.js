@@ -17,7 +17,16 @@ export const DEFAULT_REMINDERS = {
 const preferencesService = {
   async get() {
     try {
-      return await apiClient.get(BASE);
+      const remote = await apiClient.get(BASE);
+      if (!remote) return null;
+      // El GET serializa la entidad UserPreference (`timeZone`/`autoTimeZone`)
+      // pero el PUT y la UI usan `manualTimezone`/`autoTimezone`: se normaliza
+      // aquí para que los ajustes sí se hidraten al reabrir la pantalla.
+      return {
+        ...remote,
+        manualTimezone: remote.manualTimezone ?? remote.timeZone ?? '',
+        autoTimezone: remote.autoTimezone ?? remote.autoTimeZone ?? false,
+      };
     } catch {
       return null;
     }

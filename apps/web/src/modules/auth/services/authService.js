@@ -141,8 +141,8 @@ const authService = {
   },
 
   async register(name, email, password, companyCode) {
+    // `RegisterRequest` no tiene campo `name`: el nombre visible es `username`.
     return apiClient.post('/api/v1/auth/register', {
-      name,
       email,
       password,
       username: (name || email.split('@')[0]).trim().slice(0, 100),
