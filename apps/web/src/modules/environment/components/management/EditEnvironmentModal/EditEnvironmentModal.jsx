@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../../../../shared/hooks/useToast';
+import environmentService from '../../../services/environmentService';
 
 const LOCATION_OPTIONS = [
   { value: 'Área Administrativa', label: 'Área Administrativa' },
@@ -34,6 +36,7 @@ const TEMP_PROFILES = {
 
 function EditEnvironmentModal({ environment, onClose, onSave }) {
   const { t } = useTranslation();
+  const toast = useToast();
 
   const defaultName = environment.nameKey ? t(environment.nameKey) : environment.name || '';
   const defaultLocation = environment.locationKey
@@ -49,6 +52,36 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
   const [tempMax, setTempMax] = useState(environment.tempMax ?? 28);
   const [tempProfile, setTempProfile] = useState('Personalizar');
 
+  // Carga el umbral WARNING efectivo del ambiente (override propio o el del
+  // tipo). Si es un override, se muestra como «Personalizar».
+  useEffect(() => {
+    let cancelled = false;
+    environmentService
+      .getThresholds(environment.id)
+      .then((thresholds) => {
+        if (cancelled) return;
+        const temperature = (thresholds || []).find((x) => x.variableCode === 'temperature');
+        if (!temperature) return;
+        if (temperature.minValue != null) setTempMin(temperature.minValue);
+        if (temperature.maxValue != null) setTempMax(temperature.maxValue);
+        if (temperature.source !== 'ENVIRONMENT') {
+          const match = Object.keys(TEMP_PROFILES).find(
+            (p) =>
+              TEMP_PROFILES[p] &&
+              TEMP_PROFILES[p].min === Number(temperature.minValue) &&
+              TEMP_PROFILES[p].max === Number(temperature.maxValue)
+          );
+          setTempProfile(match || 'Personalizar');
+        }
+      })
+      .catch(() => {
+        // El servicio de umbrales no respondió: quedan los defaults del modal.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [environment.id]);
+
   const statusKey = environment.statusKey || 'dashboard.statusNormal';
 
   const handleProfileChange = (profile) => {
@@ -59,20 +92,32 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
     }
   };
 
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-    onSave(environment.id, {
-      name,
-      capacity: Number(capacity),
-      location,
-      floor,
-      envType,
-      tempMin: Number(tempMin),
-      tempMax: Number(tempMax),
-    });
+  const handleTempChange = (setter) => (e) => {
+    setTempProfile('Personalizar');
+    setter(e.target.value);
   };
 
-  const isCustom = tempProfile === 'Personalizar';
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
+    try {
+      await onSave(environment.id, {
+        name,
+        capacity: Number(capacity),
+        location,
+        floor,
+        envType,
+      });
+    } catch {
+      return; // el viewmodel ya muestra el toast de error
+    }
+    try {
+      await environmentService.updateTemperatureThreshold(environment.id, tempMin, tempMax);
+    } catch (err) {
+      toast.error(err?.message || 'No se pudieron guardar los umbrales');
+      return;
+    }
+    onClose();
+  };
 
   return (
     <div className="add-env-overlay" onClick={onClose}>
@@ -190,8 +235,7 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
                 className="add-env-modal__input"
                 type="number"
                 value={tempMin}
-                disabled={!isCustom}
-                onChange={(e) => setTempMin(e.target.value)}
+                onChange={handleTempChange(setTempMin)}
               />
             </div>
             <div className="add-env-modal__field">
@@ -200,8 +244,7 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
                 className="add-env-modal__input"
                 type="number"
                 value={tempMax}
-                disabled={!isCustom}
-                onChange={(e) => setTempMax(e.target.value)}
+                onChange={handleTempChange(setTempMax)}
               />
             </div>
           </div>

@@ -40,8 +40,6 @@ function toUi(env, metrics, campusNameById, favoriteIds) {
     building: campusName,
     status: env.status,
     isFavorite: Boolean(favoriteIds && favoriteIds.has && favoriteIds.has(envId)),
-    tempMin: undefined,
-    tempMax: undefined,
     // Métricas del backend (ms-environment-monitoring)
     temp: m?.temp,
     humidity: m?.humidity,
@@ -126,6 +124,26 @@ const environmentService = {
   async toggleFavorite(id) {
     const result = await apiClient.post(`/api/v1/favorites/${id}/toggle`);
     return result?.favorite ?? false;
+  },
+
+  /**
+   * Umbrales WARNING efectivos del ambiente (ms-environment-monitoring).
+   * El backend devuelve los del ambiente si se configuraron, si no los del
+   * tipo; el campo `source` indica cuál aplica ('ENVIRONMENT' | 'TYPE').
+   */
+  async getThresholds(environmentId) {
+    return apiClient.get(`/api/v1/environments/${environmentId}/thresholds`);
+  },
+
+  /**
+   * Guarda el rango de temperatura (WARNING) de este ambiente como override.
+   * El resto de variables conserva el umbral del tipo.
+   */
+  async updateTemperatureThreshold(environmentId, minValue, maxValue) {
+    return apiClient.put(`/api/v1/environments/${environmentId}/thresholds/temperature`, {
+      minValue: Number(minValue),
+      maxValue: Number(maxValue),
+    });
   },
 };
 
