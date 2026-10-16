@@ -78,7 +78,7 @@ export default function ChangePasswordScreen() {
         </Pressable>
       </View>
       <Text style={[styles.hint, { color: c.textMuted }]}>
-        {t('changePassword.minHint', 'Mínimo 6 caracteres')}
+        {t('changePassword.minHint', 'Mínimo 8 caracteres')}
       </Text>
     </View>
   )
