@@ -311,9 +311,21 @@ function DashboardScreen() {
       : visibleEnvironments[0]?.name || 'Sin ambiente seleccionado';
 
   const chartData = useMemo(() => {
-    if (series?.length) {
+    // Se exige al menos dos puntos: con un único bucket el <Area> no dibuja
+    // linea ni area, y antes de que hubiera mediciones reales la serie venia
+    // vacia. En esos casos se usa el fallback sintetico.
+    if (series?.length >= 2) {
       return series.map((point) => ({
-        label: new Date(point.bucket).toLocaleString(undefined, { day: '2-digit', month: 'short' }),
+        label:
+          period === 'day'
+            ? new Date(point.bucket).toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : new Date(point.bucket).toLocaleString(undefined, {
+                day: '2-digit',
+                month: 'short',
+              }),
         [metric]: Number(point.value),
       }));
     }
@@ -331,7 +343,7 @@ function DashboardScreen() {
     });
   }, [metric, period, series, visibleEnvironments, PERIOD_LABELS]);
 
-  const hasSeries = Boolean(series?.length);
+  const hasSeries = Boolean(series?.length >= 2);
 
   const comparisonData = useMemo(
     () =>
