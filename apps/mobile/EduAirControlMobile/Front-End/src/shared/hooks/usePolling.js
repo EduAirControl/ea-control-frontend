@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { useFocusEffect } from '@react-navigation/native'
 
 /**
@@ -11,7 +11,7 @@ export function usePolling(callback, intervalMs = 30000) {
   saved.current = callback
 
   useFocusEffect(
-    useEffect(() => {
+    useCallback(() => {
       saved.current()
       const id = setInterval(() => saved.current(), intervalMs)
       return () => clearInterval(id)
