@@ -978,7 +978,8 @@
       "referenceRange": "Rango de referencia",
       "co2Range": "Menor a 800 ppm",
       "throughTime": "a través del tiempo",
-      "syncedData": "Datos sincronizados"
+      "syncedData": "Datos sincronizados",
+      "noData": "Aún no hay datos suficientes para este periodo. El gráfico se mostrará cuando se acumulen mediciones."
     },
     "kpi": {
       "averagePrefix": "Promedio ",

@@ -38,13 +38,6 @@ import Navbar from '../components/Navbar/Navbar';
 
 import './DashboardScreen.css';
 
-const CURVES = {
-  day: [0.94, 0.9, 0.82, 1.03, 1.2, 1.09, 0.98, 0.86],
-  week: [1.02, 0.96, 1.07, 0.91, 1.12, 0.82, 0.88],
-  month: [1.08, 1.03, 0.98, 0.93, 0.88],
-  year: [1.16, 1.09, 1.04, 1.02, 0.98, 0.93, 0.9, 0.86],
-};
-
 const METRICS = {
   co2: {
     label: 'CO₂',
@@ -110,25 +103,6 @@ function getBaseValue(environment, metric) {
     humidity: Number(environment.humidity) || 0,
     noise: Number(environment.noise) || 0,
   }[metric];
-}
-
-function getHistoricalValue(environment, metric, curveValue, index) {
-  const base = getBaseValue(environment, metric);
-  const variation =
-    Math.sin((index + String(environment.id).length) * 1.37) *
-    (metric === 'co2' ? 58 : metric === 'humidity' ? 3.8 : metric === 'noise' ? 4.5 : 0.55);
-  const factor =
-    metric === 'co2'
-      ? curveValue
-      : metric === 'temperature'
-        ? 0.68 + curveValue * 0.25
-        : metric === 'humidity'
-          ? 0.76 + curveValue * 0.18
-          : 0.8 + curveValue * 0.16;
-
-  return metric === 'temperature'
-    ? Number((base + variation * factor).toFixed(1))
-    : Math.round(base * factor + variation);
 }
 
 function ChartTooltip({ active, payload, label, metric }) {
@@ -271,13 +245,6 @@ function DashboardScreen() {
     { id: 'year', label: t('dashboardAnalysis.periods.year'), context: t('dashboardAnalysis.periods.yearContext') },
   ], [t]);
 
-  const PERIOD_LABELS = useMemo(() => ({
-    day: t('dashboardAnalysis.chart.hours', { returnObjects: true }),
-    week: t('dashboardAnalysis.chart.weekdays', { returnObjects: true }),
-    month: t('dashboardAnalysis.chart.weeks', { returnObjects: true }),
-    year: t('dashboardAnalysis.chart.months', { returnObjects: true }),
-  }), [t]);
-
   const metricLabels = useMemo(() => ({
     co2: 'CO₂',
     temperature: t('dashboardAnalysis.labels.temperature'),
@@ -310,40 +277,27 @@ function DashboardScreen() {
       ? t('dashboardAnalysis.context.allEnvironments')
       : visibleEnvironments[0]?.name || 'Sin ambiente seleccionado';
 
-  const chartData = useMemo(() => {
-    // Se exige al menos dos puntos: con un único bucket el <Area> no dibuja
-    // linea ni area, y antes de que hubiera mediciones reales la serie venia
-    // vacia. En esos casos se usa el fallback sintetico.
-    if (series?.length >= 2) {
-      return series.map((point) => ({
-        label:
-          period === 'day'
-            ? new Date(point.bucket).toLocaleTimeString(undefined, {
-                hour: '2-digit',
-                minute: '2-digit',
-              })
-            : new Date(point.bucket).toLocaleString(undefined, {
-                day: '2-digit',
-                month: 'short',
-              }),
-        [metric]: Number(point.value),
-      }));
-    }
-    return PERIOD_LABELS[period].map((label, index) => {
-      const row = { label };
-      visibleEnvironments.forEach((environment, environmentIndex) => {
-        row[`environment-${environment.id}`] = getHistoricalValue(
-          environment,
-          metric,
-          CURVES[period][index],
-          index + environmentIndex
-        );
-      });
-      return row;
-    });
-  }, [metric, period, series, visibleEnvironments, PERIOD_LABELS]);
-
+  // Solo se dibuja la serie real del backend. Sin suficientes puntos no hay
+  // gráfico: nunca se muestran curvas inventadas "como si" hubiera datos de
+  // periodos que aún no han ocurrido.
   const hasSeries = Boolean(series?.length >= 2);
+
+  const chartData = useMemo(() => {
+    if (!hasSeries) return [];
+    return series.map((point) => ({
+      label:
+        period === 'day'
+          ? new Date(point.bucket).toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : new Date(point.bucket).toLocaleString(undefined, {
+              day: '2-digit',
+              month: 'short',
+            }),
+      [metric]: Number(point.value),
+    }));
+  }, [metric, period, series, hasSeries]);
 
   const comparisonData = useMemo(
     () =>
@@ -626,65 +580,36 @@ function DashboardScreen() {
                 </span>
               </div>
               <div className="analysis-chart-legend">
-                {hasSeries ? (
-                  <span>
-                    <i style={{ background: metricInfo.color }} />
-                    {metricLabels[metric]}
-                  </span>
-                ) : (
-                  visibleEnvironments.map((environment, index) => (
-                    <span key={environment.id}>
-                      <i
-                        style={{ background: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length] }}
-                      />
-                      {environment.name}
-                    </span>
-                  ))
-                )}
+                <span>
+                  <i style={{ background: metricInfo.color }} />
+                  {metricLabels[metric]}
+                </span>
                 <span className="comfort-legend">
                   <i /> {t('dashboardAnalysis.chart.comfortThreshold')}
                 </span>
               </div>
               <div className="analysis-main-chart-wrap">
+                {!hasSeries ? (
+                  <div className="analysis-chart-empty">
+                    <FaChartBar size={28} />
+                    <p>{t('dashboardAnalysis.chart.noData')}</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 15, right: 8, left: -17, bottom: 0 }}>
                     <defs>
-                      {hasSeries ? (
-                        <linearGradient id="analysis-fill-series" x1="0" y1="0" x2="0" y2="1">
-                          <stop
-                            offset="0%"
-                            stopColor={metricInfo.color}
-                            stopOpacity={0.2}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor={metricInfo.color}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      ) : (
-                        visibleEnvironments.map((environment, index) => (
-                          <linearGradient
-                            key={environment.id}
-                            id={`analysis-fill-${environment.id}`}
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                              stopOpacity={0.2}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        ))
-                      )}
+                      <linearGradient id="analysis-fill-series" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="0%"
+                          stopColor={metricInfo.color}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={metricInfo.color}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid
                       stroke="rgba(167,188,208,.11)"
@@ -711,34 +636,19 @@ function DashboardScreen() {
                       stroke="rgba(185,203,197,.5)"
                       strokeDasharray="5 5"
                     />
-                    {hasSeries ? (
-                      <Area
-                        type="monotone"
-                        dataKey={metric}
-                        name={metricLabels[metric]}
-                        stroke={metricInfo.color}
-                        fill="url(#analysis-fill-series)"
-                        strokeWidth={2.5}
-                        activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
-                        isAnimationActive={false}
-                      />
-                    ) : (
-                      visibleEnvironments.map((environment, index) => (
-                        <Area
-                          key={environment.id}
-                          type="monotone"
-                          dataKey={`environment-${environment.id}`}
-                          name={environment.name}
-                          stroke={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                          fill={`url(#analysis-fill-${environment.id})`}
-                          strokeWidth={2.5}
-                          activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
-                          isAnimationActive={false}
-                        />
-                      ))
-                    )}
+                    <Area
+                      type="monotone"
+                      dataKey={metric}
+                      name={metricLabels[metric]}
+                      stroke={metricInfo.color}
+                      fill="url(#analysis-fill-series)"
+                      strokeWidth={2.5}
+                      activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
+                      isAnimationActive={false}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
+                )}
               </div>
               <div className="analysis-chart-caption">
                 <span>

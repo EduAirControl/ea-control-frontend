@@ -988,7 +988,8 @@
       "referenceRange": "Plage de référence",
       "co2Range": "Inférieur à 800 ppm",
       "throughTime": "au fil du temps",
-      "syncedData": "Données synchronisées"
+      "syncedData": "Données synchronisées",
+      "noData": "Pas encore assez de données pour cette période. Le graphique apparaîtra une fois les mesures accumulées."
     },
     "kpi": {
       "averagePrefix": "Moyenne ",
