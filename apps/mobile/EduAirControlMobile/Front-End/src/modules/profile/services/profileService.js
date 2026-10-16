@@ -4,9 +4,10 @@ import authService from '../../auth/services/authService'
 /**
  * Perfil de usuario (ms-user-management).
  *
- * <p>Antes apuntaba a `/api/v1/profile`, que ni existe ni está routado por el
- * gateway. El backend sirve `/api/v1/users/by-user/{userId}` para leer (el id
- * sale del token) y `/api/v1/users/{id}` para actualizar.
+ * <p>El backend expone `/api/v1/users/by-user/{userId}` para leer y
+ * `/api/v1/users/{id}` para actualizar. La UI usa `title`/`location`, que se
+ * mapean a `position`/`department` (igual que la web): el port móvil perdió ese
+ * mapeo y los campos no se guardaban.
  */
 const BASE = '/api/v1/users'
 
@@ -14,24 +15,22 @@ const EMPTY = {
   id: null,
   fullName: '',
   email: '',
+  title: '',
   phone: '',
-  department: '',
-  position: '',
-  locale: '',
-  avatarUrl: null,
+  location: '',
+  avatarUrl: '',
 }
 
-function toUi(profile, fallbackEmail) {
-  if (!profile) return { ...EMPTY, email: fallbackEmail || '' }
+function toUi(remote, fallbackEmail) {
+  if (!remote) return { ...EMPTY, email: fallbackEmail || '' }
   return {
-    id: profile.id,
-    fullName: profile.fullName || '',
+    id: remote.id ?? null,
+    fullName: remote.fullName || '',
     email: fallbackEmail || '',
-    phone: profile.phone || '',
-    department: profile.department || '',
-    position: profile.position || '',
-    locale: profile.locale || '',
-    avatarUrl: profile.avatarUrl || null,
+    title: remote.position || '',
+    phone: remote.phone || '',
+    location: remote.department || '',
+    avatarUrl: remote.avatarUrl || '',
   }
 }
 
@@ -45,25 +44,43 @@ const profileService = {
       const remote = await apiClient.get(`${BASE}/by-user/${encodeURIComponent(userId)}`)
       return toUi(remote, email)
     } catch {
-      // Sin perfil creado todavía: se devuelve el hueco y la UI lo permite editar.
+      // Sin perfil todavía: se devuelve el hueco y la UI lo permite editar.
       return { ...EMPTY, email }
     }
   },
 
   async save(profile) {
     const user = authService.getUser()
-    const body = {
+    const email = user?.email || ''
+    const payload = {
       fullName: profile.fullName,
+      position: profile.title,
       phone: profile.phone,
-      department: profile.department,
-      position: profile.position,
-      locale: profile.locale,
-      avatarUrl: profile.avatarUrl,
+      department: profile.location,
+      avatarUrl: profile.avatarUrl || '',
     }
-    if (profile.id) {
-      return apiClient.put(`${BASE}/${encodeURIComponent(profile.id)}`, body)
+    if (!user?.id) throw new Error('Sesión inválida: usuario sin id')
+
+    // Si el perfil ya existe se actualiza (PUT). Solo se crea (POST) si
+    // realmente no hay perfil: un POST repetido responde 409 y el guardado
+    // se perdía silenciosamente.
+    let profileId = profile.id || null
+    if (!profileId) {
+      try {
+        const existing = await apiClient.get(`${BASE}/by-user/${encodeURIComponent(user.id)}`)
+        profileId = existing?.id || null
+      } catch {
+        profileId = null
+      }
     }
-    return apiClient.post(BASE, { ...body, userId: user?.id, fullName: profile.fullName })
+
+    if (profileId) {
+      const saved = await apiClient.put(`${BASE}/${encodeURIComponent(profileId)}`, payload)
+      return toUi(saved, email)
+    }
+
+    const created = await apiClient.post(BASE, { ...payload, userId: user.id })
+    return toUi(created, email)
   },
 }
 

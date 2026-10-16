@@ -32,10 +32,17 @@ function getToken() {
 /**
  * Renueva el access token con el refresh token.
  *
+ * <p>Las peticiones 401 concurrentes comparten una única renovación: el
+ * backend rota el refresh token en cada uso, así que renovar N veces en
+ * paralelo quema el token y deja la sesión a medias (peticiones que fallan,
+ * guardados que se pierden).
+ *
  * <p>Antes no existía: un 401 borraba la sesión y mandaba al login aunque el
  * usuario tuviera un refresh token válido.
  */
-async function tryRefreshToken() {
+let refreshInFlight = null
+
+async function doRefresh() {
   const refreshToken = storage.getItem('refreshToken')
   if (!refreshToken) return false
   try {
@@ -53,6 +60,15 @@ async function tryRefreshToken() {
   } catch {
     return false
   }
+}
+
+async function tryRefreshToken() {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
 }
 
 async function clearSession() {
@@ -121,7 +137,8 @@ async function request(endpoint, options = {}, baseUrl = API_BASE) {
   }
 
   if (response.status === 204) return null
-  return response.json()
+  // Un 2xx sin body (no 204) no debe romper el flujo del llamador.
+  return response.json().catch(() => null)
 }
 
 const apiClient = {

@@ -36,7 +36,7 @@ async function storeSession(data) {
     : (Array.isArray(claims.roles) ? claims.roles : (claims.role ? [claims.role] : []))
 
   const user = {
-    id: summary.id || claims.userId || claims.sub || null,
+    id: summary.id || claims.sub || null,
     email: summary.email || claims.email || null,
     username: summary.username || claims.username || null,
     roles,
@@ -106,8 +106,9 @@ const authService = {
     return apiClient.post(`${BASE}/change-password`, { currentPassword, newPassword })
   },
 
-  async deleteAccount() {
-    await apiClient.delete(`${BASE}/account`)
+  /** `DeleteAccountRequest` exige `{password}` como confirmación. */
+  async deleteAccount(password) {
+    await apiClient.delete(`${BASE}/account`, { body: JSON.stringify({ password }) })
     await clearSession()
   },
 
@@ -132,11 +133,13 @@ return null
     if (!token) return false
     const claims = decodeJWT(token)
     if (!claims) {
-      this.logout()
+      // Solo limpieza local: un logout remoto con token inválido solo provoca
+      // un refresh en camino y carrera con clearSession.
+      clearSession()
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      this.logout()
+      clearSession()
       return false
     }
     return true

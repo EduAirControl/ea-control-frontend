@@ -15,6 +15,7 @@ import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { setAppLanguage } from '../../../../shared/i18n/i18n.js'
 import storage from '../../../../shared/storage/storage.js'
+import authService from '../../../auth/services/authService.js'
 import {
   getAccessibilitySettings,
   saveAccessibilitySettings,
@@ -177,7 +178,7 @@ export default function SettingsScreen({ navigation }) {
     setShowDateFormatModal(false)
   }
 
-  const handleSavePassword = () => {
+  const handleSavePassword = async () => {
     const pm = t('settings.passwordModal', { returnObjects: true })
     if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
       return Alert.alert('', pm.errorEmpty)
@@ -185,27 +186,47 @@ export default function SettingsScreen({ navigation }) {
     if (passwordData.new !== passwordData.confirm) {
       return Alert.alert('', pm.errorMatch)
     }
-    if (passwordData.new.length < 6) {
+    if (passwordData.new.length < 8) {
       return Alert.alert('', pm.errorLength)
+    }
+    try {
+      await authService.changePassword(passwordData.current, passwordData.new)
+    } catch (e) {
+      return Alert.alert('', e?.message || pm.errorLength)
     }
     Alert.alert('', pm.success)
     setShowPasswordModal(false)
     setPasswordData({ current: '', new: '', confirm: '' })
   }
 
-  const handleDeleteAccountConfirm = () => {
-    if (!deletePassword.trim()) {
+  const handleDeleteAccountConfirm = async () => {
+    const password = deletePassword.trim()
+    if (!password) {
       return Alert.alert('', 'Ingresa tu contraseña para confirmar la eliminación de la cuenta.')
     }
-
-    setDeleteSent(true)
-    setDeletePassword('')
+    try {
+      await authService.deleteAccount(password)
+      setDeleteSent(true)
+      setDeletePassword('')
+    } catch (e) {
+      Alert.alert('', e?.message || 'No se pudo eliminar la cuenta')
+    }
   }
 
-  const handleCloseDeleteModal = () => {
+  const handleCloseDeleteModal = async () => {
+    const wasDeleted = deleteSent
     setDeleteSent(false)
     setDeletePassword('')
     setShowDeleteModal(false)
+    if (wasDeleted) {
+      // La cuenta ya no existe: se cierra la sesión y se vuelve al login.
+      try {
+        await authService.logout()
+      } catch {
+        // la sesión local ya quedó limpia en deleteAccount
+      }
+      navigation.replace('Login')
+    }
   }
 
   const themeLabel = (key) => {
@@ -683,9 +704,9 @@ export default function SettingsScreen({ navigation }) {
         {deleteSent ? (
           <View style={[styles.deleteSuccessCard, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
             <Ionicons name="checkmark-circle-outline" size={32} color={currentColors.accent} />
-            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Solicitud enviada</Text>
+            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Cuenta eliminada</Text>
             <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>
-              Tu cuenta queda pendiente de eliminación segura. Verificaremos la confirmación y te avisaremos si necesitamos más información.
+              Tu cuenta y los datos de tu perfil han sido eliminados. Se cerrará la sesión en este dispositivo.
             </Text>
             <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteSuccessButton}>
               Cerrar

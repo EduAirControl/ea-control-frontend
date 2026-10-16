@@ -193,7 +193,7 @@ const EMPTY_FORM = {
   environmentTypeId: '',
 }
 
-function ChipPicker({ label, options, value, onChange, currentColors, required }) {
+function ChipPicker({ label, options, value, onChange, currentColors, required, loading, error, onRetry }) {
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={{ fontSize: 12, fontWeight: '600', color: currentColors.textSecondary, marginBottom: 6 }}>
@@ -222,8 +222,18 @@ function ChipPicker({ label, options, value, onChange, currentColors, required }
             </TouchableOpacity>
           )
         })}
-        {options.length === 0 && (
+        {loading && (
           <Text style={{ fontSize: 12, color: currentColors.textMuted }}>Cargando…</Text>
+        )}
+        {!loading && error && (
+          <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
+            <Text style={{ fontSize: 12, color: currentColors.error }}>
+              {error} · Reintentar
+            </Text>
+          </TouchableOpacity>
+        )}
+        {!loading && !error && options.length === 0 && (
+          <Text style={{ fontSize: 12, color: currentColors.textMuted }}>Sin opciones disponibles</Text>
         )}
       </View>
     </View>
@@ -246,21 +256,29 @@ export default function EnvironmentManagementScreen({ navigation }) {
   const [tab, setTab] = useState('environments')
   const [campuses, setCampuses] = useState([])
   const [envTypes, setEnvTypes] = useState([])
+  const [catalogLoading, setCatalogLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState(null)
 
-  useEffect(() => {
-    let mounted = true
-    Promise.all([
-      environmentService.getCampuses().catch(() => []),
-      environmentService.getEnvironmentTypes().catch(() => []),
-    ]).then(([campusRows, typeRows]) => {
-      if (!mounted) return
+  const loadCatalogs = useCallback(async () => {
+    setCatalogLoading(true)
+    setCatalogError(null)
+    try {
+      const [campusRows, typeRows] = await Promise.all([
+        environmentService.getCampuses(),
+        environmentService.getEnvironmentTypes(),
+      ])
       setCampuses(campusRows.map((c) => ({ id: c.campusId ?? c.id, label: c.name })))
       setEnvTypes(typeRows.map((ty) => ({ id: ty.environmentTypeId ?? ty.id, label: ty.name })))
-    })
-    return () => {
-      mounted = false
+    } catch (e) {
+      setCatalogError(e?.message || 'No se pudieron cargar las opciones')
+    } finally {
+      setCatalogLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    loadCatalogs()
+  }, [loadCatalogs])
 
   useEffect(() => {
     if (!authService.isAdmin()) {
@@ -538,6 +556,9 @@ export default function EnvironmentManagementScreen({ navigation }) {
           value={form.campusId}
           onChange={(v) => setForm((p) => ({ ...p, campusId: v }))}
           currentColors={currentColors}
+          loading={catalogLoading}
+          error={catalogError}
+          onRetry={loadCatalogs}
         />
         <ChipPicker
           label={t('management.typeLabel', 'Tipo de ambiente')}
@@ -546,6 +567,9 @@ export default function EnvironmentManagementScreen({ navigation }) {
           value={form.environmentTypeId}
           onChange={(v) => setForm((p) => ({ ...p, environmentTypeId: v }))}
           currentColors={currentColors}
+          loading={catalogLoading}
+          error={catalogError}
+          onRetry={loadCatalogs}
         />
         <View style={styles.modalActions}>
           <Button variant="outline" onPress={() => { vm.setShowAdd(false); vm.setEditEnv(null) }}>

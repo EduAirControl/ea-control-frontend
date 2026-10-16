@@ -25,6 +25,7 @@ function ProfileScreen() {
     isEditing,
     logoutModal,
     avatarError,
+    saveError,
     setIsEditing,
     setLogoutModal,
     handleChange,
@@ -86,6 +87,7 @@ function ProfileScreen() {
           )}
 
           {avatarError && <p className="hero-avatar-error">{avatarError}</p>}
+          {saveError && <p className="hero-avatar-error">{saveError}</p>}
 
           <div className="hero-info-final">
             <h1>{profile.fullName}</h1>

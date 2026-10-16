@@ -20,9 +20,9 @@ export function useProfileVM({ onLogout } = {}) {
     title: '',
     phone: '',
     location: '',
-    avatar: null,
+    avatarUrl: '',
   })
-  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatar: null })
+  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' })
   const [avatar, setAvatar] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [logoutModal, setLogoutModal] = useState(false)
@@ -33,7 +33,7 @@ export function useProfileVM({ onLogout } = {}) {
     profileService.get().then((data) => {
       setProfile(data)
       setForm(data)
-      setAvatar(data.avatar || null)
+      setAvatar(data.avatarUrl || null)
     })
   }, [])
 
@@ -90,12 +90,13 @@ export function useProfileVM({ onLogout } = {}) {
   }
 
   const handleSave = async () => {
-    const updated = { ...form, avatar }
+    const updated = { ...form, avatarUrl: avatar || form.avatarUrl || '' }
     try {
       const saved = await profileService.save(updated)
       const next = { ...updated, ...saved }
       setProfile(next)
       setForm(next)
+      setAvatar(next.avatarUrl || null)
       setIsEditing(false)
       toast.success(t('profile.saved', 'Perfil actualizado'))
     } catch (e) {
@@ -105,7 +106,7 @@ export function useProfileVM({ onLogout } = {}) {
 
   const handleCancel = () => {
     setForm(profile)
-    setAvatar(profile.avatar || null)
+    setAvatar(profile.avatarUrl || null)
     setIsEditing(false)
     setAvatarError(null)
   }
