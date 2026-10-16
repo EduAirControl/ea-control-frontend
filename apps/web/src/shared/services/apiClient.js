@@ -28,7 +28,17 @@ function handleUnauthorized() {
   window.location.assign('/login');
 }
 
-async function tryRefreshToken() {
+/**
+ * Renueva el access token con el refresh token.
+ *
+ * <p>Las peticiones 401 concurrentes comparten una única renovación: el backend
+ * rota el refresh token en cada uso, así que renovar N veces en paralelo quema
+ * el token y deja la sesión a medias (peticiones que fallan y datos que
+ * desaparecen de la UI hasta recargar).
+ */
+let refreshInFlight = null;
+
+async function doRefresh() {
   const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) return false;
 
@@ -46,6 +56,15 @@ async function tryRefreshToken() {
   } catch {
     return false;
   }
+}
+
+async function tryRefreshToken() {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 function messageFor(status, body) {
