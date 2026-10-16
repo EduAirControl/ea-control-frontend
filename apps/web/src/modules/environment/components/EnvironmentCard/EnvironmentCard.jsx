@@ -15,13 +15,16 @@ import './EnvironmentCard.css';
 // Configuración reutilizable: cada métrica sabe cómo leer su propio
 // valor desde los datos del ambiente (los datos "de la API"/contexto)
 
+const metricValue = (value, unit) =>
+  value === undefined || value === null || Number.isNaN(value) ? '—' : `${value} ${unit}`;
+
 const METRIC_DEFINITIONS = [
   {
     key: 'temp',
     statusType: 'temp',
     icon: <WiThermometer className="summary-icon temp" />,
     labelKey: 'dashboard.temperature',
-    getValue: (env) => `${env.temp} °C`,
+    getValue: (env) => metricValue(env.temp, '°C'),
     getRaw: (env) => env.temp,
   },
   {
@@ -29,7 +32,7 @@ const METRIC_DEFINITIONS = [
     statusType: 'humidity',
     icon: <WiHumidity className="summary-icon humidity" />,
     labelKey: 'dashboard.humidity',
-    getValue: (env) => `${env.humidity}%`,
+    getValue: (env) => metricValue(env.humidity, '%'),
     getRaw: (env) => env.humidity,
   },
   {
@@ -37,7 +40,7 @@ const METRIC_DEFINITIONS = [
     statusType: 'co2',
     icon: <MdCo2 className="summary-icon co2" />,
     labelKey: 'allEnvironments.co2',
-    getValue: (env) => `${env.co2} ppm`,
+    getValue: (env) => metricValue(env.co2, 'ppm'),
     getRaw: (env) => env.co2,
   },
   {
@@ -45,7 +48,7 @@ const METRIC_DEFINITIONS = [
     statusType: 'noise',
     icon: <HiSpeakerWave className="summary-icon noise" />,
     labelKey: 'dashboard.noise',
-    getValue: (env) => `${env.noise} dB`,
+    getValue: (env) => metricValue(env.noise, 'dB'),
     getRaw: (env) => env.noise,
   },
 ];

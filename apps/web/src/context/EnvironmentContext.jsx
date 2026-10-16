@@ -11,24 +11,30 @@ export function EnvironmentProvider({ children }) {
   const toast = useToast();
 
   const loadEnvironments = useCallback(async () => {
+    // Un access token vencido no debe vaciar la lista: se intenta renovar con el
+    // refresh token y solo se limpia si ya no hay sesión real. Antes el chequeo
+    // síncrono de expiración vaciaba los ambientes "al volver a la pestaña" y
+    // solo se veían de nuevo tras recargar la página.
     if (!authService.isAuthenticated()) {
-      setEnvironments([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-    const user = authService.getUser();
-    if (user?.role === 'SUPER_ADMIN' && !user?.institutionId) {
-      setEnvironments([]);
-      setError(null);
-      setLoading(false);
-      return;
+      let renewed = false;
+      try {
+        renewed = Boolean(await authService.refreshToken());
+      } catch {
+        renewed = false;
+      }
+      if (!renewed) {
+        setEnvironments([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
     }
     try {
       const data = await environmentService.getAll();
       setEnvironments(data);
       setError(null);
     } catch (err) {
+      // Solo se registra el error: los datos ya cargados se conservan.
       setError(err.message);
     } finally {
       setLoading(false);

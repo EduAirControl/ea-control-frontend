@@ -14,6 +14,7 @@
   width: min(900px, 92vw);
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--lb-glass-bg);
   -webkit-backdrop-filter: var(--lb-glass-blur);
   backdrop-filter: var(--lb-glass-blur);
@@ -25,6 +26,12 @@
   box-shadow: var(--shadow-xl);
 }
 
+.environment-modal h2,
+.environment-modal h3,
+.environment-modal p {
+  overflow-wrap: anywhere;
+}
+
 .env-modal__close {
   position: absolute;
   top: 20px;
@@ -34,6 +41,15 @@
   font-size: 24px;
   cursor: pointer;
   color: var(--accent);
+  z-index: 5;
+}
+
+/* Área de toque generosa: el icono se ve pequeño pero el botón responde en
+   toda la esquina superior derecha del modal. */
+.env-modal__close::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
 }
 
 .modal-header {
@@ -69,7 +85,7 @@
 
 .modal-sensors {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
 }
 
@@ -191,6 +207,11 @@ SCORE
   align-items: center;
   gap: 28px;
   margin: 30px 0;
+  min-width: 0;
+}
+
+.environment-score > * {
+  min-width: 0;
 }
 
 .environment-score-circle {
@@ -250,7 +271,7 @@ EXPLICACIÓN
 
 .environment-explanation-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
