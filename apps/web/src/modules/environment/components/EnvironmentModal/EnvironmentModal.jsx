@@ -14,6 +14,10 @@ import { getRecommendations } from '../../utils/getRecommendations';
 
 import './EnvironmentModal.css';
 
+function formatValue(value, unit) {
+  return value === undefined || value === null || Number.isNaN(value) ? '—' : `${value} ${unit}`;
+}
+
 function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation();
 
@@ -29,8 +33,8 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
         : 'danger';
 
   return (
-    <div className="environment-modal-overlay">
-      <div className="environment-modal">
+    <div className="environment-modal-overlay" onClick={onClose}>
+      <div className="environment-modal" onClick={(e) => e.stopPropagation()}>
         <button className="env-modal__close" onClick={onClose} aria-label="Cerrar">
           <FaTimes />
         </button>
@@ -59,7 +63,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             <SensorInfo
               icon={<FaTemperatureHigh />}
               title={t('dashboard.temperature')}
-              value={`${environment.temp} °C`}
+              value={formatValue(environment.temp, '°C')}
               description={t('allEnvironments.tempDescription')}
             />
           </div>
@@ -69,7 +73,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             <SensorInfo
               icon={<WiHumidity />}
               title={t('dashboard.humidity')}
-              value={`${environment.humidity}%`}
+              value={formatValue(environment.humidity, '%')}
               description={t('allEnvironments.humidityDescription')}
             />
           </div>
@@ -79,7 +83,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             <SensorInfo
               icon={<MdCo2 />}
               title={t('allEnvironments.co2')}
-              value={`${environment.co2} ppm`}
+              value={formatValue(environment.co2, 'ppm')}
               description={t('allEnvironments.co2Description')}
             />
           </div>
@@ -89,7 +93,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             <SensorInfo
               icon={<HiSpeakerWave />}
               title={t('dashboard.noise')}
-              value={`${environment.noise} dB`}
+              value={formatValue(environment.noise, 'dB')}
               description={t('allEnvironments.noiseDescription')}
             />
           </div>
