@@ -211,7 +211,7 @@ function formatUpdatedAt(lastUpdatedIso) {
 
 function DashboardScreen() {
   const { t } = useTranslation();
-  const { environments = [] } = useEnvironment();
+  const { environments = [], refreshEnvironments } = useEnvironment();
   const {
     dashboardData,
     series,
@@ -237,6 +237,30 @@ function DashboardScreen() {
   useEffect(() => {
     fetchSeries(period, metric, environmentId);
   }, [fetchSeries, period, metric, environmentId]);
+
+  // Auto-refresh: el ESP32 publica mediciones cada 10 s; con el mismo
+  // intervalo el dashboard se ve "tiempo real" en la propia página (sin
+  // recargar). Cada tick son ~7 peticiones repartidas en rutas distintas
+  // (~6 req/min por ruta) frente al rate limit del gateway de 100/60s.
+  // Si la pestaña está oculta no se peta: al volver se refresca una vez.
+  useEffect(() => {
+    const REFRESH_MS = 10000;
+    const tick = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetchDashboardData();
+      fetchSeries(period, metric, environmentId);
+      refreshEnvironments();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    const interval = setInterval(tick, REFRESH_MS);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchDashboardData, fetchSeries, refreshEnvironments, period, metric, environmentId]);
 
   const PERIODS = useMemo(() => [
     { id: 'day', label: t('dashboardAnalysis.periods.day'), context: t('dashboardAnalysis.periods.dayContext') },
