@@ -989,7 +989,8 @@
       "referenceRange": "Reference range",
       "co2Range": "Below 800 ppm",
       "throughTime": "over time",
-      "syncedData": "Synced data"
+      "syncedData": "Synced data",
+      "noData": "Not enough data for this period yet. The chart will appear once measurements accumulate."
     },
     "kpi": {
       "averagePrefix": "Average ",

@@ -1022,6 +1022,22 @@ body:not(.dark-mode) .analysis-filter-option.selected {
   height: 315px;
   margin: 9px -9px 0 -12px;
 }
+.analysis-chart-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--analysis-muted);
+  text-align: center;
+  padding: 0 24px;
+}
+.analysis-chart-empty p {
+  max-width: 380px;
+  font-size: calc(var(--a11y-font-size) * 0.75);
+  line-height: 1.5;
+}
 .analysis-chart-caption {
   display: flex;
   align-items: center;
