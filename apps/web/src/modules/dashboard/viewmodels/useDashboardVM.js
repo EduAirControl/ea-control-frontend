@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { calcScore } from '../../environment/utils/environmentHelpers';
 import { useEnvironments } from '../../../context/useEnvironment';
 import apiClient from '../../../shared/services/apiClient';
@@ -39,7 +39,11 @@ export function useDashboardVM() {
   const top3 = filtered.slice(0, 3);
   const rest = filtered.slice(3);
 
-  const fetchDashboardData = async () => {
+  // Las funciones de carga van con useCallback: si se recrean en cada render,
+  // los useEffect de la pantalla se disparan en bucle y agotan el rate limit
+  // del gateway (100 req/min): el dashboard deja de responder y los datos
+  // desaparecen hasta recargar la página.
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [summary, seriesData] = await Promise.all([
@@ -55,9 +59,9 @@ export function useDashboardVM() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchSeries = async (period, variable, environmentId) => {
+  const fetchSeries = useCallback(async (period, variable, environmentId) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ period, variable });
@@ -71,7 +75,7 @@ export function useDashboardVM() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     filter,
