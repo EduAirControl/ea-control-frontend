@@ -4,7 +4,7 @@
  * Incluye filtrado por estado, búsqueda y ordenamiento.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useEnvironments } from '../../../context/useEnvironment';
@@ -13,7 +13,30 @@ import { useToast } from '../../../shared/hooks/useToast';
 export function useManagementVM() {
   const { t } = useTranslation();
   const toast = useToast();
-  const { environments, addEnvironment, editEnvironment, deleteEnvironment } = useEnvironments();
+  const { environments, addEnvironment, editEnvironment, deleteEnvironment, refreshEnvironments } =
+    useEnvironments();
+
+  // Auto-refresh (igual que el dashboard): las metricas de los ambientes
+  // (temperatura, estado, ...) llegan del ESP32 cada pocos segundos; sin
+  // polling la lista quedaba congelada en la carga inicial. 10 s mantiene
+  // el consumo del rate limit del gateway muy por debajo del limite.
+  // Si la pestaña está oculta no se peta: al volver se refresca una vez.
+  useEffect(() => {
+    const REFRESH_MS = 10000;
+    const tick = () => {
+      if (document.visibilityState !== 'visible') return;
+      refreshEnvironments();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    const interval = setInterval(tick, REFRESH_MS);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [refreshEnvironments]);
 
   const [search, setSearch] = useState('');
   const [minCapacity, setMinCapacity] = useState('');

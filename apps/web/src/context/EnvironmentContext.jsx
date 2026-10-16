@@ -118,7 +118,10 @@ export function EnvironmentProvider({ children }) {
     }
   };
 
-  const refreshEnvironments = () => loadEnvironments();
+  // Memoizado: los consumers (dashboard, gestión) montan un setInterval con
+  // esta función como dependencia; sin useCallback el intervalo se recrearía
+  // en cada render del provider y el polling no tendría cadencia estable.
+  const refreshEnvironments = useCallback(() => loadEnvironments(), [loadEnvironments]);
 
   return (
     <EnvironmentContext.Provider
