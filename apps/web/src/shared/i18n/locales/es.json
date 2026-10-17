@@ -1059,6 +1059,7 @@
     "searchUser": "Buscar por correo electrónico",
     "colEmail": "Correo",
     "colUsername": "Usuario",
+    "colCampus": "Sede",
     "colRoles": "Roles",
     "colActions": "Acciones"
   }
