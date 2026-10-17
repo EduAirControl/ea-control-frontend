@@ -1069,7 +1069,7 @@
     "searchUser": "Rechercher par e-mail",
     "colEmail": "E-mail",
     "colUsername": "Nom d'utilisateur",
-    "colCampus": "Campus",
+    "colCompanyCode": "Code de l'entreprise",
     "colRoles": "Rôles",
     "colActions": "Actions"
   }
