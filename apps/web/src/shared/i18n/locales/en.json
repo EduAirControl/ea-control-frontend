@@ -1070,6 +1070,7 @@
     "searchUser": "Search by email",
     "colEmail": "Email",
     "colUsername": "Username",
+    "colCampus": "Campus",
     "colRoles": "Roles",
     "colActions": "Actions"
   }

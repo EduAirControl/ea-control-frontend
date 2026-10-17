@@ -10,6 +10,7 @@ import {
 import Navbar from '../../dashboard/components/Navbar/Navbar';
 import institutionService from '../services/institutionService';
 import adminService from '../services/adminService';
+import catalogService from '../../environment/services/catalogService';
 import './SuperAdminScreen.css';
 
 const EMPTY_FORM = { code: '', name: '', type: '' };
@@ -25,18 +26,24 @@ function SuperAdminScreen() {
   const [saving, setSaving] = useState(false);
   const [savingRoles, setSavingRoles] = useState(null);
   const [userQuery, setUserQuery] = useState('');
+  const [campuses, setCampuses] = useState([]);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [institutionData, userData, roleData] = await Promise.all([
+      // El catalogo de sedes vive en ms-classroom-management, no en ms-security:
+      // si ese servicio cae no debe tumbar la tabla de usuarios, asi que se
+      // degrada a lista vacia y la columna Sede sale sin resolver.
+      const [institutionData, userData, roleData, campusData] = await Promise.all([
         institutionService.getAll(),
         adminService.listUsers(),
         adminService.listRoles(),
+        catalogService.getCampuses().catch(() => []),
       ]);
       setInstitutions(institutionData);
       setUsers(userData);
       setRoleCatalog(roleData);
+      setCampuses(campusData);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -58,6 +65,12 @@ function SuperAdminScreen() {
     if (!query) return users;
     return users.filter((user) => (user.email || '').toLowerCase().includes(query));
   }, [users, userQuery]);
+
+  /** `admin/users` devuelve campusId (UUID), no el nombre: se resuelve con el catalogo. */
+  const campusNameById = useMemo(
+    () => new Map(campuses.map((campus) => [campus.id, campus])),
+    [campuses]
+  );
 
   const handleChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -243,6 +256,7 @@ function SuperAdminScreen() {
                 <tr>
                   <th>{t('superadmin.colEmail', 'Correo')}</th>
                   <th>{t('superadmin.colUsername', 'Usuario')}</th>
+                  <th>{t('superadmin.colCampus', 'Sede')}</th>
                   <th>{t('superadmin.colRoles', 'Roles')}</th>
                   <th>{t('superadmin.colActions', 'Acciones')}</th>
                 </tr>
@@ -252,6 +266,17 @@ function SuperAdminScreen() {
                   <tr key={user.id}>
                     <td>{user.email}</td>
                     <td>{user.username}</td>
+                    <td>
+                      {(() => {
+                        const campus = user.campusId ? campusNameById.get(user.campusId) : null;
+                        if (!campus) return <span className="superadmin-muted">—</span>;
+                        return (
+                          <span title={campus.city ? `${campus.name} · ${campus.city}` : campus.name}>
+                            {campus.name}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td>
                       <div className="superadmin-badges">
                         {(user.roles || []).map((role) => (
