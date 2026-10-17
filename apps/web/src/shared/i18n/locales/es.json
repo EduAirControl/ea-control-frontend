@@ -1059,7 +1059,7 @@
     "searchUser": "Buscar por correo electrónico",
     "colEmail": "Correo",
     "colUsername": "Usuario",
-    "colCampus": "Sede",
+    "colCompanyCode": "Código de empresa",
     "colRoles": "Roles",
     "colActions": "Acciones"
   }
