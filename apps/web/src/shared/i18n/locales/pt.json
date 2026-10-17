@@ -1065,6 +1065,8 @@
     "usersTitle": "Usuários e funções",
     "usersHint": "Atribua a função de Administrador aos usuários que administrarão suas empresas",
     "noUsers": "Ainda não há usuários.",
+    "noUsersMatch": "Nenhum usuário corresponde à busca.",
+    "searchUser": "Buscar por e-mail",
     "colEmail": "E-mail",
     "colUsername": "Usuário",
     "colRoles": "Funções",

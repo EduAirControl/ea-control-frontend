@@ -1055,6 +1055,8 @@
     "usersTitle": "Usuarios y roles",
     "usersHint": "Asigna el rol de Administrador a los usuarios que administrarán sus compañías",
     "noUsers": "Aún no hay usuarios.",
+    "noUsersMatch": "Ningún usuario coincide con la búsqueda.",
+    "searchUser": "Buscar por correo electrónico",
     "colEmail": "Correo",
     "colUsername": "Usuario",
     "colRoles": "Roles",
