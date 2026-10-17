@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   IoBusinessOutline,
   IoAddOutline,
   IoRefreshOutline,
   IoPeopleOutline,
+  IoSearchOutline,
 } from 'react-icons/io5';
 import Navbar from '../../dashboard/components/Navbar/Navbar';
 import institutionService from '../services/institutionService';
@@ -23,6 +24,7 @@ function SuperAdminScreen() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [savingRoles, setSavingRoles] = useState(null);
+  const [userQuery, setUserQuery] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -46,6 +48,16 @@ function SuperAdminScreen() {
   useEffect(() => {
     load();
   }, []);
+
+  /**
+   * El super-admin no tiene paginacion aqui: `listUsers` devuelve la lista entera y
+   * se filtra en memoria. Con el termino vacio se muestra todo.
+   */
+  const visibleUsers = useMemo(() => {
+    const query = userQuery.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter((user) => (user.email || '').toLowerCase().includes(query));
+  }, [users, userQuery]);
 
   const handleChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -201,10 +213,30 @@ function SuperAdminScreen() {
           </h2>
           <p className="superadmin-muted">{t('superadmin.usersHint', 'Asigna el rol de Administrador a los usuarios que administrarán sus compañías')}</p>
 
+          <div className="superadmin-search">
+            <IoSearchOutline size={18} aria-hidden="true" />
+            <input
+              type="search"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder={t('superadmin.searchUser', 'Buscar por correo electrónico')}
+              aria-label={t('superadmin.searchUser', 'Buscar por correo electrónico')}
+            />
+            {userQuery && (
+              <span className="superadmin-search__count">
+                {visibleUsers.length}/{users.length}
+              </span>
+            )}
+          </div>
+
           {loading ? (
             <p className="superadmin-muted">{t('common.loading', 'Cargando...')}</p>
           ) : users.length === 0 ? (
             <p className="superadmin-muted">{t('superadmin.noUsers', 'Aún no hay usuarios.')}</p>
+          ) : visibleUsers.length === 0 ? (
+            <p className="superadmin-muted">
+              {t('superadmin.noUsersMatch', 'Ningún usuario coincide con la búsqueda.')}
+            </p>
           ) : (
             <table className="superadmin-table">
               <thead>
@@ -216,7 +248,7 @@ function SuperAdminScreen() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {visibleUsers.map((user) => (
                   <tr key={user.id}>
                     <td>{user.email}</td>
                     <td>{user.username}</td>

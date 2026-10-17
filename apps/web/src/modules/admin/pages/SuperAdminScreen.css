@@ -202,6 +202,55 @@
   gap: 6px;
 }
 
+/* Filtro de usuarios por correo. */
+.superadmin-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 0 12px;
+  max-width: 420px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.superadmin-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--lb-surface);
+}
+
+.superadmin-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: calc(var(--a11y-font-size) * 0.95);
+}
+
+.superadmin-search input:focus {
+  outline: none;
+}
+
+.superadmin-search input::placeholder {
+  color: var(--text-muted);
+}
+
+/* El input type=search pinta su propia X en algunos navegadores. */
+.superadmin-search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.superadmin-search__count {
+  flex: none;
+  font-size: calc(var(--a11y-font-size) * 0.8);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 /* Rol ya concedido: se marca en positivo para distinguirlo de un boton suelto. */
 .superadmin-btn.small.active {
   background: color-mix(in srgb, var(--accent) 16%, transparent);

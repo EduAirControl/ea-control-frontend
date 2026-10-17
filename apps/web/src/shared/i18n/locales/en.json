@@ -1066,6 +1066,8 @@
     "usersTitle": "Users and roles",
     "usersHint": "Grant the Administrator role to users who will administer their companies",
     "noUsers": "There are no users yet.",
+    "noUsersMatch": "No user matches the search.",
+    "searchUser": "Search by email",
     "colEmail": "Email",
     "colUsername": "Username",
     "colRoles": "Roles",
