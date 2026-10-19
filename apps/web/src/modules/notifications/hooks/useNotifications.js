@@ -21,6 +21,8 @@ const SEVERITY_TO_LABEL = {
  * que nunca se cargaban: el panel solo mostraba el resumen diario y estaba vacío.
  * Ahora se leen de {@code GET /api/v1/alerts} y el reconocimiento es
  * {@code POST /api/v1/alerts/{id}/acknowledge}, que es lo que el servicio guarda.
+ * <p>Las alertas pueden eliminarse (soft delete) con {@code DELETE /api/v1/alerts/{id}}
+ * tras ser reconocidas.
  */
 export const useNotifications = () => {
   const { environments } = useEnvironments();
@@ -50,6 +52,8 @@ export const useNotifications = () => {
             variable: a.variableCode || "",
             value: a.triggeringValue ?? "",
             severity: SEVERITY_TO_LABEL[a.severityCode] || "notifications.thresholdInfo",
+            thresholdMin: a.thresholdMinValue,
+            thresholdMax: a.thresholdMaxValue,
           },
           time: a.raisedAt ? new Date(a.raisedAt) : new Date(),
           read: Boolean(a.acknowledgedAt),
@@ -85,13 +89,47 @@ export const useNotifications = () => {
     alertService.acknowledge(id).catch(() => setNotifications(snapshot));
   };
 
-  /** Reconoce todas. No hay bulk en el backend: se hace una por una. */
-  const markAllRead = () => {
+  /**
+   * Elimina una alerta (soft delete). Solo funciona si ya fue reconocida.
+   */
+  const deleteAlert = async (id) => {
+    const snapshot = notifications;
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await alertService.delete(id);
+    } catch {
+      setNotifications(snapshot);
+    }
+  };
+
+  /**
+   * Reconoce todas. Usa Promise.allSettled para no fallar si alguna ya está reconocida.
+   */
+  const markAllRead = async () => {
     const snapshot = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    Promise.all(
-      snapshot.filter((n) => !n.read).map((n) => alertService.acknowledge(n.id))
-    ).catch(() => setNotifications(snapshot));
+    const unread = snapshot.filter((n) => !n.read);
+    const results = await Promise.allSettled(
+      unread.map((n) => alertService.acknowledge(n.id))
+    );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      setNotifications(snapshot);
+    }
+  };
+
+  const deleteAllRead = async () => {
+    const snapshot = notifications;
+    const toDelete = notifications.filter((n) => n.read);
+    if (toDelete.length === 0) return;
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    const results = await Promise.allSettled(
+      toDelete.map((n) => alertService.delete(n.id))
+    );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      setNotifications(snapshot);
+    }
   };
 
   return {
@@ -101,5 +139,7 @@ export const useNotifications = () => {
     refresh: load,
     markAsRead,
     markAllRead,
+    deleteAlert,
+    deleteAllRead,
   };
 };

@@ -642,6 +642,9 @@
     "title": "Notifications",
     "empty": "Aucune notification",
     "markAllRead": "Tout marquer comme lu",
+    "deleteAllRead": "Supprimer toutes les lues",
+    "deleteAllReadCount": "Supprimer {{count}} lues",
+    "delete": "Supprimer",
     "co2High": "CO₂ élevé",
     "co2Message": "L'environnement {{name}} a {{value}} ppm de CO₂",
     "tempHigh": "Température élevée",
@@ -655,8 +658,11 @@
     "thresholdAlert": "Alerte",
     "thresholdWarning": "Avertissement",
     "thresholdInfo": "Information",
+    "thresholdInfoTemplate": "Seuil : {{min}} – {{max}}",
     "environmentId": "Environnement {{id}}",
-    "acknowledge": "Accuser réception"
+    "acknowledge": "Accuser réception",
+    "delete": "Supprimer",
+    "deleteAllRead": "Supprimer toutes les lues ({{count}})"
   },
   "leaderboard": {
     "title": "Classement des Environnements",

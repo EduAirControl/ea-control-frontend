@@ -22,8 +22,12 @@ const alertService = {
     return alertService.list({ status: 'ACTIVE', limit });
   },
 
-  acknowledge(id) {
+  async acknowledge(id) {
     return apiClient.post(`${BASE}/${id}/acknowledge`);
+  },
+
+  async delete(id) {
+    return apiClient.delete(`${BASE}/${id}`);
   },
 };
 

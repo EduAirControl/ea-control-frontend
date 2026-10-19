@@ -2,9 +2,17 @@ import './NotificationPanel.css';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
+import { FaTrashAlt } from 'react-icons/fa';
 
 function NotificationPanel({ isOpen, onClose }) {
-  const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllRead,
+    deleteAlert,
+    deleteAllRead,
+  } = useNotifications();
 
   const { t } = useTranslation();
   const panelRef = useRef(null);
@@ -33,6 +41,8 @@ function NotificationPanel({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const readCount = notifications.filter((n) => n.read).length;
+
   return (
     <div className="notif-overlay">
       <div className="notification-panel" ref={panelRef}>
@@ -49,6 +59,12 @@ function NotificationPanel({ isOpen, onClose }) {
             {unreadCount > 0 && (
               <button className="mark-read-link" onClick={markAllRead} aria-label="Marcar todas como leídas">
                 ✓ {t('notifications.markAllRead')}
+              </button>
+            )}
+
+            {readCount > 0 && (
+              <button className="delete-read-link" onClick={deleteAllRead} aria-label="Eliminar todas las leídas">
+                🗑 {t('notifications.deleteAllRead')}
               </button>
             )}
           </div>
@@ -74,7 +90,11 @@ function NotificationPanel({ isOpen, onClose }) {
                 className={`notification-card ${notification.type} ${
                   !notification.read ? 'unread' : ''
                 }`}
-                onClick={() => markAsRead(notification.id)}
+                onClick={(e) => {
+                  if (!e.target.closest('.notification-delete')) {
+                    markAsRead(notification.id);
+                  }
+                }}
               >
                 {/* ICONO */}
 
@@ -97,6 +117,16 @@ function NotificationPanel({ isOpen, onClose }) {
 
                   <p>{t(notification.message, notification.data)}</p>
 
+                  {notification.data.thresholdMin !== undefined &&
+                    notification.data.thresholdMax !== undefined && (
+                      <span className="notification-threshold">
+                        {t('notifications.thresholdInfo', {
+                          min: notification.data.thresholdMin,
+                          max: notification.data.thresholdMax,
+                        })}
+                      </span>
+                    )}
+
                   <span className="time">
                     {notification.time
                       ? new Date(notification.time).toLocaleTimeString([], {
@@ -106,8 +136,31 @@ function NotificationPanel({ isOpen, onClose }) {
                       : ''}
                   </span>
                 </div>
+
+                {/* BOTÓN ELIMINAR (solo para alertas leídas) */}
+                {notification.read && (
+                  <button
+                    className="notification-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteAlert(notification.id);
+                    }}
+                    aria-label="Eliminar notificación"
+                    title={t('notifications.delete')}
+                  >
+                    <FaTrashAlt size={14} />
+                  </button>
+                )}
               </div>
             ))
+          )}
+        </div>
+
+        <div className="notification-footer">
+          {readCount > 0 && (
+            <button className="delete-all-read-btn" onClick={deleteAllRead}>
+              <FaTrashAlt size={14} /> {t('notifications.deleteAllRead', { count: readCount })}
+            </button>
           )}
         </div>
       </div>

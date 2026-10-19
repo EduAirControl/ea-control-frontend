@@ -638,10 +638,13 @@
     "uppercaseRequired:_password": "Deve conter pelo menos uma letra maiúscula.",
     "password_min_8": "A senha deve ter pelo menos 8 caracteres"
   },
-  "notifications": {
+"notifications": {
     "title": "Notificações",
     "empty": "Sem notificações",
     "markAllRead": "Marcar todas como lidas",
+    "deleteAllRead": "Excluir todas as lidas",
+    "deleteAllReadCount": "Excluir {{count}} lidas",
+    "delete": "Excluir",
     "co2High": "CO₂ alto",
     "co2Message": "O ambiente {{name}} tem {{value}} ppm de CO₂",
     "tempHigh": "Temperatura alta",
@@ -655,8 +658,11 @@
     "thresholdAlert": "Alerta",
     "thresholdWarning": "Aviso",
     "thresholdInfo": "Informativo",
+    "thresholdInfoTemplate": "Limite: {{min}} – {{max}}",
     "environmentId": "Ambiente {{id}}",
-    "acknowledge": "Reconhecer"
+    "acknowledge": "Reconhecer",
+    "delete": "Excluir",
+    "deleteAllRead": "Excluir todas as lidas ({{count}})"
   },
   "leaderboard": {
     "title": "Ranking de Ambientes",
