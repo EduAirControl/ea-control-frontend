@@ -13,13 +13,20 @@ import { HiSpeakerWave } from "react-icons/hi2";
  * sin repetir el mismo JSX.
  */
 
+/**
+ * Un ambiente sin mediciones tiene las cuatro métricas en `undefined`.
+ * Sin este guarda, la tarjeta pintaba literalmente "undefined °C".
+ */
+const formatMetric = (value, unit) =>
+  value === undefined || value === null || Number.isNaN(value) ? "—" : `${value} ${unit}`;
+
 export const METRIC_DEFINITIONS = [
   {
     key: "temp",
     statusType: "temp",
     icon: <WiThermometer className="summary-icon temp" />,
     labelKey: "dashboard.temperature",
-    getValue: (env) => `${env.temp} °C`,
+    getValue: (env) => formatMetric(env.temp, "°C"),
     getRaw: (env) => env.temp,
   },
   {
@@ -27,7 +34,7 @@ export const METRIC_DEFINITIONS = [
     statusType: "humidity",
     icon: <WiHumidity className="summary-icon humidity" />,
     labelKey: "dashboard.humidity",
-    getValue: (env) => `${env.humidity}%`,
+    getValue: (env) => formatMetric(env.humidity, "%"),
     getRaw: (env) => env.humidity,
   },
   {
@@ -35,7 +42,7 @@ export const METRIC_DEFINITIONS = [
     statusType: "co2",
     icon: <MdCo2 className="summary-icon co2" />,
     labelKey: "allEnvironments.co2",
-    getValue: (env) => `${env.co2} ppm`,
+    getValue: (env) => formatMetric(env.co2, "ppm"),
     getRaw: (env) => env.co2,
   },
   {
@@ -43,7 +50,7 @@ export const METRIC_DEFINITIONS = [
     statusType: "noise",
     icon: <HiSpeakerWave className="summary-icon noise" />,
     labelKey: "dashboard.noise",
-    getValue: (env) => `${env.noise} dB`,
+    getValue: (env) => formatMetric(env.noise, "dB"),
     getRaw: (env) => env.noise,
   },
 ];

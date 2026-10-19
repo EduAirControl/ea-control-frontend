@@ -59,6 +59,21 @@ function severityOf(field, value) {
 }
 
 /**
+ * ¿El ambiente tiene alguna medición?
+ *
+ * <p>Un ambiente recién creado (o cuyo sensor nunca ha reportado) llega con las
+ * cuatro métricas en `undefined`. Distinguir ese caso del "todo en 0" importa:
+ * sin datos no se debe pintar un estado normal ni un score perfecto.
+ */
+export function hasAnyMetric(environment) {
+  if (!environment) return false;
+  return Object.values(CODE_TO_FIELD).some((field) => {
+    const value = environment[field];
+    return value !== undefined && value !== null && !Number.isNaN(value);
+  });
+}
+
+/**
  * Estado global de un ambiente: la peor severidad entre sus métricas.
  *
  * <p>Sin métricas el estado queda sin definir y la UI muestra «desconocido»: es

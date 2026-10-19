@@ -45,6 +45,11 @@
   background: #e53e3e;
 }
 
+/* Ambiente sin mediciones: la franja lateral no debe sugerir un estado. */
+.mgmt-card[data-status='unknown']::before {
+  background: var(--text-muted, #94a3b8);
+}
+
 /* Ambient glow on status hover */
 .mgmt-card[data-status='alert']:hover {
   border-color: rgba(229, 62, 62, 0.4);
@@ -163,7 +168,10 @@
 /* ─── Metrics grid ───────────────────────────────────────────── */
 .mgmt-card__metrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr) y no 1fr: el mínimo "auto" de un 1fr es el min-content, así
+     una etiqueta larga ("Nivel de Ruido") ensanchaba su columna y las cuatro
+     tarjetas quedaban de dos medidas distintas. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -208,6 +216,11 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+  /* La etiqueta larga no debe partirse: el alto de la tarjeta depende de las
+     líneas que ocupe. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mgmt-card__metric-value {
@@ -215,6 +228,9 @@
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────── */

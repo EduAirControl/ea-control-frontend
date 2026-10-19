@@ -84,6 +84,14 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
 
   const statusKey = environment.statusKey || 'dashboard.statusNormal';
 
+  // occupancyCapacity tiene @Min(1) en el backend. Number('') daba 0 y el PATCH
+  // devolvía 400, así que se valida antes de guardar.
+  const capacityValue = Number(capacity);
+  const capacityValid =
+    String(capacity).trim() !== '' &&
+    Number.isInteger(capacityValue) &&
+    capacityValue >= 1;
+
   const handleProfileChange = (profile) => {
     setTempProfile(profile);
     if (profile !== 'Personalizar') {
@@ -98,11 +106,11 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || !capacityValid) return;
     try {
       await onSave(environment.id, {
         name,
-        capacity: Number(capacity),
+        capacity: capacityValue,
         location,
         floor,
         envType,
@@ -135,14 +143,21 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
             />
           </div>
           <div className="add-env-modal__field">
-            <label className="add-env-modal__label">Capacidad</label>
+            <label className="add-env-modal__label">
+              Capacidad <span className="add-env-modal__required">*</span>
+            </label>
             <input
               className="add-env-modal__input"
               type="number"
-              min={0}
+              min={1}
               value={capacity}
               onChange={(e) => setCapacity(e.target.value)}
             />
+            {String(capacity).trim() !== '' && !capacityValid && (
+              <span className="add-env-modal__hint">
+                La capacidad debe ser un número mayor o igual a 1.
+              </span>
+            )}
           </div>
         </div>
 
@@ -257,7 +272,7 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
           <button
             className="add-env-modal__btn-save"
             onClick={handleSubmit}
-            disabled={!name.trim()}
+            disabled={!name.trim() || !capacityValid}
           >
             Guardar Cambios
           </button>

@@ -14,6 +14,13 @@ import sensorService from '../services/sensorService';
 import { STATUS_COLORS, QUALITY_COLORS, IDEAL_RANGES } from '../constants/environments';
 import './EnvironmentDetail.css';
 
+/**
+ * Un ambiente sin mediciones tiene las métricas en `undefined`. Sin esta guarda
+ * la pantalla pintaba literalmente "undefined°C".
+ */
+const formatMetric = (value, unit) =>
+  value === undefined || value === null || Number.isNaN(value) ? '—' : `${value}${unit}`;
+
 function MetricBar({ value, min, max }) {
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
   const color = pct < 60 ? '#4CAF50' : pct < 80 ? '#FFC107' : '#F44336';
@@ -122,7 +129,7 @@ function EnvironmentDetailScreen() {
     {
       icon: <WiThermometer className="detail-metric-icon temp" />,
       label: t('dashboard.temperature'),
-      value: `${env.temp}°C`,
+      value: formatMetric(env.temp, '°C'),
       rawValue: env.temp,
       ideal: IDEAL_RANGES.temp,
       min: 0,
@@ -132,7 +139,7 @@ function EnvironmentDetailScreen() {
     {
       icon: <WiHumidity className="detail-metric-icon humidity" />,
       label: t('dashboard.humidity'),
-      value: `${env.humidity}%`,
+      value: formatMetric(env.humidity, '%'),
       rawValue: env.humidity,
       ideal: IDEAL_RANGES.humidity,
       min: 0,
@@ -142,7 +149,7 @@ function EnvironmentDetailScreen() {
     {
       icon: <MdCo2 className="detail-metric-icon co2" />,
       label: 'CO₂',
-      value: `${env.co2} ppm`,
+      value: formatMetric(env.co2, ' ppm'),
       rawValue: env.co2,
       ideal: IDEAL_RANGES.co2,
       min: 0,
@@ -152,7 +159,7 @@ function EnvironmentDetailScreen() {
     {
       icon: <HiSpeakerWave className="detail-metric-icon noise" />,
       label: t('dashboard.noise'),
-      value: `${env.noise} dB`,
+      value: formatMetric(env.noise, ' dB'),
       rawValue: env.noise,
       ideal: IDEAL_RANGES.noise,
       min: 0,

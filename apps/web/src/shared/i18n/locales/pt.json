@@ -81,7 +81,8 @@
   },
   "common": {
     "close": "Fechar",
-    "unknown": "um estranho",
+    "unknown": "desconhecido",
+    "noData": "Sem dados",
     "noName": "sem nome"
   },
   "forgotPassword": {

@@ -11,6 +11,7 @@ import EnvironmentExplanation from '../EnvironmentExplanation/EnvironmentExplana
 import InfoTooltip from '../InfoTooltip/InfoTooltip';
 
 import { getRecommendations } from '../../utils/getRecommendations';
+import { hasAnyMetric } from '../../utils/environmentMetrics';
 
 import './EnvironmentModal.css';
 
@@ -23,14 +24,22 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
 
   if (!isOpen || !environment) return null;
 
-  const statusText = environment.statusKey ? t(environment.statusKey) : environment.status;
+  // Sin mediciones no hay estado que derivar: `environment.status` es el enum del
+  // backend ("ACTIVE"), que no es un estado ambiental y además salía sin
+  // traducir. Antes caía en la rama `danger` y pintaba un ambiente vacío en rojo.
+  const hasMetrics = hasAnyMetric(environment);
 
-  const statusClass =
-    environment.statusKey === 'dashboard.statusNormal'
+  const statusClass = !hasMetrics
+    ? 'unknown'
+    : environment.statusKey === 'dashboard.statusNormal'
       ? 'normal'
       : environment.statusKey === 'dashboard.statusWarning'
         ? 'warning'
         : 'danger';
+
+  const statusText = hasMetrics
+    ? t(environment.statusKey || 'common.unknown')
+    : t('common.noData');
 
   return (
     <div className="environment-modal-overlay" onClick={onClose}>
@@ -58,7 +67,11 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
         </div>
 
         <div className="modal-sensors">
-          <div style={{ position: 'relative' }}>
+          {/* className, no style inline: el wrapper necesita ser flex para que la
+              sensor-card se estire a la altura de la fila. Con position:relative
+              a secas la fila se igualaba pero las cards dentro seguian tomando
+              solo su alto de contenido. */}
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.temperature')} />
             <SensorInfo
               icon={<FaTemperatureHigh />}
@@ -68,7 +81,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.humidity')} />
             <SensorInfo
               icon={<WiHumidity />}
@@ -78,7 +91,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.co2')} />
             <SensorInfo
               icon={<MdCo2 />}
@@ -88,7 +101,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.noise')} />
             <SensorInfo
               icon={<HiSpeakerWave />}
