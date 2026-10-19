@@ -2,6 +2,7 @@
     background:var(--bg-card);
     border-radius:18px;
     padding:22px;
+    margin-top: 5%;
     border:1px solid var(--border-card);
     display:flex;
     flex-direction:column;
