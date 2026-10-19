@@ -1,4 +1,13 @@
 export default function getMetricStatus(type, value, t) {
+    // Sin medición no se puede afirmar que esté alta ni ideal: `undefined >= 20`
+    // es false, así que antes caía en "Alta" (naranja) una métrica inexistente.
+    if (value === undefined || value === null || Number.isNaN(value)) {
+        return {
+            text: t("common.noData"),
+            color: "#999",
+        };
+    }
+
     switch (type) {
         case "temp":
             return value >= 20 && value <= 26

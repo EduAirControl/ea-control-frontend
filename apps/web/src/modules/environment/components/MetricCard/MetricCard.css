@@ -31,11 +31,19 @@
     display:flex;
     flex-direction:column;
     flex:1;
+    /* Sin min-width:0 un hijo flex no puede encogerse por debajo de su contenido,
+       asi que la etiqueta larga desbordaba en vez de truncarse. */
+    min-width:0;
 }
 
 .metric-label{
     font-size:13px;
     color:var(--text-muted);
+    /* Truncar en vez de partir en dos lineas: el alto de la tarjeta depende de
+       cuantas lineas ocupe la etiqueta. */
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .metric-value{
@@ -43,9 +51,15 @@
     font-weight:700;
     color:var(--text-primary);
     margin:2px 0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .metric-status{
     font-size:12px;
     font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }

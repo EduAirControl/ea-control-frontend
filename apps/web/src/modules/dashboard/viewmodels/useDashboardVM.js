@@ -19,8 +19,11 @@ export function useDashboardVM() {
   const ranked = useMemo(
     () =>
       environments
+        // Sin mediciones `calcScore` devuelve null. Ordenar con null daría NaN y
+        // dejaría la lista en un orden arbitrario, así que esos ambientes van al
+        // final: los que sí tienen datos son los que interesa ordenar.
         .map((env) => ({ env, score: calcScore(env) }))
-        .sort((a, b) => b.score - a.score),
+        .sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
     [environments]
   );
 

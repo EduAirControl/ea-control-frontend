@@ -86,6 +86,9 @@
 .modal-sensors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Iguala las dos filas: sin esto cada una se dimensionaba a su contenido y las
+     descripciones de distinta longitud dejaban una fila de 138px y otra de 161px. */
+  grid-auto-rows: 1fr;
   gap: 22px;
 }
 
@@ -196,6 +199,13 @@ RECOMENDACIONES
 .modal-status.danger {
   background: var(--color-danger);
   color: #fff;
+}
+
+/* Ambiente sin mediciones: neutro. Antes caía en .danger y un ambiente vacío
+   aparecía en rojo. */
+.modal-status.unknown {
+  background: var(--bg-subtle, #94a3b8);
+  color: var(--text-secondary, #fff);
 }
 
 /*======================================
@@ -378,10 +388,15 @@ BOTÓN DE INFORMACIÓN (InfoTooltip)
 
 .sensor-card-wrap {
   position: relative;
+  /* Flex para que la sensor-card se estire a la altura de la fila del grid: la
+     grid ya iguala las filas, pero sin esto la cardTomaba solo su alto de
+     contenido y quedaban 138px frente a 161px. */
+  display: flex;
 }
 
 .sensor-card-wrap .sensor-card {
   padding-right: 44px;
+  flex: 1;
 }
 
 .environment-score.info-section {

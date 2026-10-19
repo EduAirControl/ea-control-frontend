@@ -82,6 +82,7 @@
   "common": {
     "close": "Close",
     "unknown": "Unknown",
+    "noData": "No data",
     "noName": "No Name"
   },
   "forgotPassword": {

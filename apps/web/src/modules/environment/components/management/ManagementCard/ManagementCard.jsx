@@ -14,6 +14,7 @@ import {
   getDisplayName,
   getDisplayLocation,
 } from '../../../utils/environmentHelpers';
+import { hasAnyMetric } from '../../../utils/environmentMetrics';
 import './ManagementCard.css';
 
 const STATUS_DATA_ATTR = {
@@ -22,7 +23,17 @@ const STATUS_DATA_ATTR = {
   'dashboard.statusAlert': 'alert',
 };
 
-const getBadgeLabel = (qualityKey, statusKey, t) => {
+/**
+ * Un ambiente sin mediciones tiene las métricas en `undefined`. Sin esta guarda
+ * la tarjeta pintaba literalmente "undefined°C".
+ */
+const formatMetric = (value, unit) =>
+  value === undefined || value === null || Number.isNaN(value) ? '—' : `${value} ${unit}`;
+
+const getBadgeLabel = (qualityKey, statusKey, hasMetrics, t) => {
+  // Sin datos no hay estado que affirmar: se muestra "desconocido" en vez del
+  // "Normal" en verde que devolvía la rama de abajo.
+  if (!hasMetrics) return t('common.unknown', 'Desconocido');
   const key = qualityKey || statusKey;
   if (key === 'dashboard.qualityGood' || key === 'dashboard.statusNormal')
     return t('dashboard.qualityGood', 'Good');
@@ -30,7 +41,7 @@ const getBadgeLabel = (qualityKey, statusKey, t) => {
     return t('dashboard.statusAlert', 'Alert');
   if (key === 'dashboard.qualityRegular' || key === 'dashboard.statusWarning')
     return t('dashboard.qualityRegular', 'Regular');
-  return 'Normal';
+  return t('dashboard.statusNormal', 'Normal');
 };
 
 /* ── component ──────────────────────────────────────────────── */
@@ -40,35 +51,36 @@ function ManagementCard({ environment, onEdit, onDelete }) {
 
   const name = getDisplayName(environment, t);
   const location = getDisplayLocation(environment, t);
-  const statusAttr = STATUS_DATA_ATTR[environment.statusKey] || 'normal';
+  const hasMetrics = hasAnyMetric(environment);
+  const statusAttr = STATUS_DATA_ATTR[environment.statusKey] || 'unknown';
 
   const metrics = [
     {
       key: 'temp',
       icon: <WiThermometer size={18} />,
       label: t('dashboard.temp', 'Temp'),
-      value: `${environment.temp}°C`,
+      value: formatMetric(environment.temp, '°C'),
       raw: environment.temp,
     },
     {
       key: 'humidity',
       icon: <WiHumidity size={18} />,
       label: t('dashboard.humidity', 'Humedad'),
-      value: `${environment.humidity}%`,
+      value: formatMetric(environment.humidity, '%'),
       raw: environment.humidity,
     },
     {
       key: 'co2',
       icon: <MdCo2 size={16} />,
       label: 'CO₂',
-      value: `${environment.co2} ppm`,
+      value: formatMetric(environment.co2, ' ppm'),
       raw: environment.co2,
     },
     {
       key: 'noise',
       icon: <HiSpeakerWave size={14} />,
       label: t('dashboard.noise', 'Ruido'),
-      value: `${environment.noise} dB`,
+      value: formatMetric(environment.noise, ' dB'),
       raw: environment.noise,
     },
   ];
@@ -97,9 +109,9 @@ function ManagementCard({ environment, onEdit, onDelete }) {
 
         <div className="mgmt-card__header-right">
           <span
-            className={`mgmt-card__badge ${getBadgeClass(environment.statusKey, environment.qualityKey)}`}
+            className={`mgmt-card__badge ${hasMetrics ? getBadgeClass(environment.statusKey, environment.qualityKey) : ''}`}
           >
-            {getBadgeLabel(environment.qualityKey, environment.statusKey, t)}
+            {getBadgeLabel(environment.qualityKey, environment.statusKey, hasMetrics, t)}
           </span>
 
           <button
