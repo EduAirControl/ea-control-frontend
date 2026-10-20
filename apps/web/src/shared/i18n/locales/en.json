@@ -596,6 +596,10 @@
       "deleted": "Environment removed"
     },
     "title": "Environment Management",
+    "titlePrefix": "Management of",
+    "viewsAria": "Management section",
+    "environmentsTab": "Environments",
+    "campusesTab": "Campuses",
     "addBtn": "Add Environment",
     "editBtn": "Edit",
     "editTitle": "Edit Environment",

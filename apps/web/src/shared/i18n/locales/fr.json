@@ -595,6 +595,10 @@
       "deleted": "Environnement supprimé"
     },
     "title": "Gestion des Environnements",
+    "titlePrefix": "Gestion des",
+    "viewsAria": "Section de gestion",
+    "environmentsTab": "Environnements",
+    "campusesTab": "Campus",
     "addBtn": "Ajouter un environnement",
     "editBtn": "Modifier",
     "editTitle": "Modifier l'environnement",

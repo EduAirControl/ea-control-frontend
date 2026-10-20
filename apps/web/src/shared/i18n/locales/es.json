@@ -621,6 +621,10 @@
       "deleted": "Ambiente eliminado"
     },
     "title": "Gestión de Ambientes",
+    "titlePrefix": "Gestión de",
+    "viewsAria": "Sección de gestión",
+    "environmentsTab": "Ambientes",
+    "campusesTab": "Sedes",
     "addBtn": "Agregar Ambiente",
     "editTitle": "Editar Ambiente",
     "editBtn": "Editar",
