@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -25,18 +26,49 @@ function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const dropdownRef = useRef(null);
+  const dropdownMenuRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      const clickedProfile = dropdownRef.current?.contains(e.target);
+      const clickedDropdown = dropdownMenuRef.current?.contains(e.target);
+      if (!clickedProfile && !clickedDropdown) {
         setDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!dropdownOpen) return undefined;
+
+    const updateDropdownPosition = () => {
+      if (!dropdownRef.current) return;
+
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const position = {
+        top: rect.top + 62,
+        left: Math.max(8, Math.min(rect.right - 240, window.innerWidth - 248)),
+      };
+
+      setDropdownPosition((current) =>
+        current.top === position.top && current.left === position.left ? current : position
+      );
+    };
+
+    updateDropdownPosition();
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+    };
+  }, [dropdownOpen]);
 
   const userRole = (user?.role || 'USER').toLowerCase();
   const isAdmin = isAdminUser;
@@ -140,29 +172,6 @@ function Navbar() {
               />
             </div>
 
-            {dropdownOpen && (
-              <div className="dashboard-profile-dropdown">
-                <div className="dashboard-profile-dropdown-item" onClick={() => go('/profile')}>
-                  <FaUser />
-                  <span>{t('nav.profile')}</span>
-                </div>
-
-                <div className="dashboard-profile-dropdown-item" onClick={() => go('/settings')}>
-                  <IoSettings />
-                  <span>{t('nav.settings')}</span>
-                </div>
-
-                <div className="dashboard-profile-dropdown-divider" />
-
-                <div
-                  className="dashboard-profile-dropdown-item logout"
-                  onClick={handleLogout}
-                >
-                  <IoLogOut />
-                  <span>{t('nav.logout')}</span>
-                </div>
-              </div>
-            )}
           </div>{' '}
           {/* CORREGIDO: Cierre correcto del perfil */}
           {/* 3. BOTÓN HAMBURGUESA */}
@@ -176,6 +185,33 @@ function Navbar() {
           </button>
         </div>
       </nav>
+
+      {dropdownOpen &&
+        createPortal(
+          <div
+            ref={dropdownMenuRef}
+            className="dashboard-profile-dropdown"
+            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+          >
+            <div className="dashboard-profile-dropdown-item" onClick={() => go('/profile')}>
+              <FaUser />
+              <span>{t('nav.profile')}</span>
+            </div>
+
+            <div className="dashboard-profile-dropdown-item" onClick={() => go('/settings')}>
+              <IoSettings />
+              <span>{t('nav.settings')}</span>
+            </div>
+
+            <div className="dashboard-profile-dropdown-divider" />
+
+            <div className="dashboard-profile-dropdown-item logout" onClick={handleLogout}>
+              <IoLogOut />
+              <span>{t('nav.logout')}</span>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* MENÚ MÓVIL (SIDEBAR LATERAL) */}
       <div className={`dashboard-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>

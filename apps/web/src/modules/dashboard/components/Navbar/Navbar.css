@@ -227,17 +227,11 @@ body.dark-mode .dashboard-navbar-item{
 =========================================================== */
 
 .dashboard-profile-dropdown {
-  position: absolute;
-
-  top: 62px;
-
-  right: 0;
+  position: fixed;
 
   width: 240px;
 
-  background: var(--lb-glass-bg);
-  -webkit-backdrop-filter: var(--lb-glass-blur);
-  backdrop-filter: var(--lb-glass-blur);
+  background: #ffffff !important;
   border: 1px solid var(--lb-glass-border);
   border-radius: 18px;
   overflow: hidden;
@@ -245,17 +239,19 @@ body.dark-mode .dashboard-navbar-item{
 
   animation: dashboardDropdown 0.25s ease;
 
-  z-index: 1200;
+  z-index: 2147483647;
+}
+
+body.dark-mode .dashboard-profile-dropdown {
+  background: #060c1a !important;
 }
 
 @keyframes dashboardDropdown {
   from {
-    opacity: 0;
     transform: translateY(-12px);
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
