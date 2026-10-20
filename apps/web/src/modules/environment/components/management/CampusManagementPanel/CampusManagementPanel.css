@@ -35,7 +35,8 @@
 }
 
 .campus-panel__form label { display: grid; gap: .4rem; color: var(--text-secondary); font-size: .8rem; font-weight: 650; }
-.campus-panel__form label span { color: var(--color-danger); }
+.campus-panel__label-text { display: inline-flex; align-items: baseline; gap: .15rem; }
+.campus-panel__form .campus-panel__label-required { color: var(--color-danger); }
 .campus-panel__form input { width: 100%; min-width: 0; height: 2.6rem; padding: 0 .75rem; border: 1px solid var(--border-card); border-radius: .55rem; background: var(--bg-input); color: var(--text-primary); font: inherit; font-size: .88rem; }
 .campus-panel__form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .campus-panel__form button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 2.6rem; padding: 0 .95rem; border: 0; border-radius: .55rem; background: var(--accent); color: white; font: inherit; font-size: .85rem; font-weight: 700; white-space: nowrap; cursor: pointer; }

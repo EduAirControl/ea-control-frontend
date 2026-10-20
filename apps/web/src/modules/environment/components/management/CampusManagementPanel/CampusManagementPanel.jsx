@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IoAddOutline, IoBusinessOutline, IoLocationOutline } from 'react-icons/io5';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../../../context/useAuth';
 import { useToast } from '../../../../../shared/hooks/useToast';
 import catalogService from '../../../services/catalogService';
 import './CampusManagementPanel.css';
 
 function CampusManagementPanel() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const toast = useToast();
   const toastRef = useRef(toast);
@@ -21,11 +23,11 @@ function CampusManagementPanel() {
     try {
       setCampuses(await catalogService.getCampuses());
     } catch (error) {
-      toastRef.current.error(error.message || 'No fue posible cargar los campuses.');
+      toastRef.current.error(error.message || t('campusManagement.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadCampuses();
@@ -38,10 +40,10 @@ function CampusManagementPanel() {
     try {
       await catalogService.createCampus(form);
       setForm({ code: '', name: '', city: '' });
-      toast.success('Campus creado y asignado a tu institución.');
+      toast.success(t('campusManagement.created'));
       await loadCampuses();
     } catch (error) {
-      toast.error(error.message || 'No fue posible crear el campus.');
+      toast.error(error.message || t('campusManagement.createError'));
     } finally {
       setSaving(false);
     }
@@ -51,68 +53,76 @@ function CampusManagementPanel() {
     <section className="campus-panel" aria-labelledby="campus-panel-title">
       <header className="campus-panel__header">
         <div>
-          <span className="campus-panel__eyebrow">Gestión de sedes</span>
-          <h2 id="campus-panel-title">Campuses de mi institución</h2>
-          <p>Crea y consulta las sedes asociadas a la institución de tu cuenta.</p>
+          <span className="campus-panel__eyebrow">{t('campusManagement.eyebrow')}</span>
+          <h2 id="campus-panel-title">{t('campusManagement.title')}</h2>
+          <p>{t('campusManagement.description')}</p>
         </div>
-        <span className="campus-panel__count"><IoBusinessOutline /> {campuses.length} campuses</span>
+        <span className="campus-panel__count">
+          <IoBusinessOutline /> {t('campusManagement.campusCount', { count: campuses.length })}
+        </span>
       </header>
 
       {!hasInstitution && (
         <div className="campus-panel__notice" role="alert">
-          Tu cuenta no tiene una institución asignada. Solicita que la asocien antes de crear un campus.
+          {t('campusManagement.noInstitution')}
         </div>
       )}
 
       <form className="campus-panel__form" onSubmit={submit}>
         <label>
-          Código <span aria-hidden="true">*</span>
+          <span className="campus-panel__label-text">
+            {t('campusManagement.code')}
+            <span className="campus-panel__label-required" aria-hidden="true">*</span>
+          </span>
           <input
             value={form.code}
             onChange={(event) => setForm({ ...form, code: event.target.value })}
             maxLength={30}
-            placeholder="Ej. SEDE-NORTE"
+            placeholder={t('campusManagement.codePlaceholder')}
             required
             disabled={!hasInstitution || saving}
           />
         </label>
         <label>
-          Nombre <span aria-hidden="true">*</span>
+          <span className="campus-panel__label-text">
+            {t('campusManagement.name')}
+            <span className="campus-panel__label-required" aria-hidden="true">*</span>
+          </span>
           <input
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
             maxLength={150}
-            placeholder="Ej. Campus Norte"
+            placeholder={t('campusManagement.namePlaceholder')}
             required
             disabled={!hasInstitution || saving}
           />
         </label>
         <label>
-          Ciudad
+          {t('campusManagement.city')}
           <input
             value={form.city}
             onChange={(event) => setForm({ ...form, city: event.target.value })}
             maxLength={100}
-            placeholder="Ej. Bogotá"
+            placeholder={t('campusManagement.cityPlaceholder')}
             disabled={!hasInstitution || saving}
           />
         </label>
         <button type="submit" disabled={!hasInstitution || saving || !form.code.trim() || !form.name.trim()}>
-          <IoAddOutline /> {saving ? 'Guardando…' : 'Crear campus'}
+          <IoAddOutline /> {saving ? t('campusManagement.saving') : t('campusManagement.create')}
         </button>
       </form>
 
       <div className="campus-panel__list-heading">
-        <h3>Sedes registradas</h3>
+        <h3>{t('campusManagement.registeredCampuses')}</h3>
         <button type="button" onClick={loadCampuses} disabled={loading}>
-          {loading ? 'Actualizando…' : 'Actualizar'}
+          {loading ? t('campusManagement.refreshing') : t('campusManagement.refresh')}
         </button>
       </div>
 
       {loading ? (
-        <p className="campus-panel__empty">Cargando campuses…</p>
+        <p className="campus-panel__empty">{t('campusManagement.loading')}</p>
       ) : campuses.length === 0 ? (
-        <p className="campus-panel__empty">Aún no hay campuses para tu institución.</p>
+        <p className="campus-panel__empty">{t('campusManagement.empty')}</p>
       ) : (
         <div className="campus-panel__grid">
           {campuses.map((campus) => (
@@ -124,7 +134,9 @@ function CampusManagementPanel() {
               </div>
               {campus.city && <span className="campus-panel__city"><IoLocationOutline /> {campus.city}</span>}
               <span className={`campus-panel__status campus-panel__status--${campus.status?.toLowerCase()}`}>
-                {campus.status === 'ACTIVE' ? 'Activo' : campus.status || '—'}
+                {campus.status
+                  ? t(`campusManagement.status.${campus.status.toLowerCase()}`, campus.status)
+                  : '—'}
               </span>
             </article>
           ))}

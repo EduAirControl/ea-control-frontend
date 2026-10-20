@@ -618,6 +618,34 @@
     "env2": "Environnement 290-2",
     "env3": "Environnement 290-3"
   },
+  "campusManagement": {
+    "eyebrow": "Gestion des campus",
+    "title": "Les campus de mon établissement",
+    "description": "Créez et consultez les campus associés à l’établissement de votre compte.",
+    "campusCount": "{{count}} campus",
+    "noInstitution": "Votre compte n’est associé à aucun établissement. Demandez à un administrateur de vous en attribuer un avant de créer un campus.",
+    "code": "Code",
+    "codePlaceholder": "Ex. : CAMPUS-NORD",
+    "name": "Nom",
+    "namePlaceholder": "Ex. : Campus Nord",
+    "city": "Ville",
+    "cityPlaceholder": "Ex. : Bogotá",
+    "saving": "Enregistrement…",
+    "create": "Créer un campus",
+    "registeredCampuses": "Campus enregistrés",
+    "refreshing": "Actualisation…",
+    "refresh": "Actualiser",
+    "loading": "Chargement des campus…",
+    "empty": "Aucun campus pour votre établissement pour le moment.",
+    "created": "Campus créé et associé à votre établissement.",
+    "loadError": "Impossible de charger les campus.",
+    "createError": "Impossible de créer le campus.",
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "pending": "En attente"
+    }
+  },
   "editModal": {
     "dateFormatTitle": "Format de date",
     "dateFormatSubtitle": "Choisissez comment les dates s'affichent dans l'app",

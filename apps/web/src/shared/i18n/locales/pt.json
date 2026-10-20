@@ -618,6 +618,34 @@
     "env2": "Ambiente 290-2",
     "env3": "Ambiente 290-3"
   },
+  "campusManagement": {
+    "eyebrow": "Gestão de unidades",
+    "title": "Unidades da minha instituição",
+    "description": "Crie e consulte as unidades associadas à instituição da sua conta.",
+    "campusCount": "{{count}} unidades",
+    "noInstitution": "Sua conta não está vinculada a uma instituição. Peça a um administrador para vinculá-la antes de criar uma unidade.",
+    "code": "Código",
+    "codePlaceholder": "Ex.: UNIDADE-NORTE",
+    "name": "Nome",
+    "namePlaceholder": "Ex.: Unidade Norte",
+    "city": "Cidade",
+    "cityPlaceholder": "Ex.: Bogotá",
+    "saving": "Salvando…",
+    "create": "Criar unidade",
+    "registeredCampuses": "Unidades cadastradas",
+    "refreshing": "Atualizando…",
+    "refresh": "Atualizar",
+    "loading": "Carregando unidades…",
+    "empty": "Ainda não há unidades para sua instituição.",
+    "created": "Unidade criada e vinculada à sua instituição.",
+    "loadError": "Não foi possível carregar as unidades.",
+    "createError": "Não foi possível criar a unidade.",
+    "status": {
+      "active": "Ativa",
+      "inactive": "Inativa",
+      "pending": "Pendente"
+    }
+  },
   "editModal": {
     "dateFormatTitle": "Formato de data",
     "dateFormatSubtitle": "Escolha como as datas são exibidas no app",

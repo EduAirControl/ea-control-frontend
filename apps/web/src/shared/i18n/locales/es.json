@@ -644,6 +644,34 @@
     "env2": "Ambiente 290-2",
     "env3": "Ambiente 290-3"
   },
+  "campusManagement": {
+    "eyebrow": "Gestión de sedes",
+    "title": "Sedes de mi institución",
+    "description": "Crea y consulta las sedes asociadas a la institución de tu cuenta.",
+    "campusCount": "{{count}} sedes",
+    "noInstitution": "Tu cuenta no tiene una institución asignada. Solicita que la asocien antes de crear una sede.",
+    "code": "Código",
+    "codePlaceholder": "Ej.: SEDE-NORTE",
+    "name": "Nombre",
+    "namePlaceholder": "Ej.: Sede Norte",
+    "city": "Ciudad",
+    "cityPlaceholder": "Ej.: Bogotá",
+    "saving": "Guardando…",
+    "create": "Crear sede",
+    "registeredCampuses": "Sedes registradas",
+    "refreshing": "Actualizando…",
+    "refresh": "Actualizar",
+    "loading": "Cargando sedes…",
+    "empty": "Aún no hay sedes para tu institución.",
+    "created": "Sede creada y asignada a tu institución.",
+    "loadError": "No fue posible cargar las sedes.",
+    "createError": "No fue posible crear la sede.",
+    "status": {
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "pending": "Pendiente"
+    }
+  },
   "editModal": {
     "dateFormatTitle": "Formato de fecha",
     "dateFormatSubtitle": "Elige cómo se muestran las fechas en la app",

@@ -619,6 +619,34 @@
     "env2": "Environment 290-2",
     "env3": "Environment 290-3"
   },
+  "campusManagement": {
+    "eyebrow": "Campus management",
+    "title": "My institution's campuses",
+    "description": "Create and view campuses associated with your institution.",
+    "campusCount": "{{count}} campuses",
+    "noInstitution": "Your account is not assigned to an institution. Ask an administrator to assign one before creating a campus.",
+    "code": "Code",
+    "codePlaceholder": "E.g., NORTH-CAMPUS",
+    "name": "Name",
+    "namePlaceholder": "E.g., North Campus",
+    "city": "City",
+    "cityPlaceholder": "E.g., Bogotá",
+    "saving": "Saving…",
+    "create": "Create campus",
+    "registeredCampuses": "Registered campuses",
+    "refreshing": "Refreshing…",
+    "refresh": "Refresh",
+    "loading": "Loading campuses…",
+    "empty": "There are no campuses for your institution yet.",
+    "created": "Campus created and assigned to your institution.",
+    "loadError": "Could not load campuses.",
+    "createError": "Could not create the campus.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    }
+  },
   "editModal": {
     "dateFormatTitle": "Date format",
     "dateFormatSubtitle": "Choose how dates are displayed across the app",
