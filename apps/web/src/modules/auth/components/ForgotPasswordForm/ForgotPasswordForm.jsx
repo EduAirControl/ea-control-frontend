@@ -42,7 +42,6 @@ function ForgotPasswordForm() {
       <button type="submit" className="btn-login-premium" disabled={isSubmitting}>
         {isSubmitting ? '...' : t('forgotPassword.sendBtn')}
       </button>
-      <p className="try-another">{t('forgotPassword.tryAnother')}</p>
     </form>
   );
 }

@@ -90,7 +90,6 @@
     "description": "Entrez votre adresse e-mail et nous vous enverrons un code de récupération.",
     "emailLabel": "Adresse e-mail",
     "sendBtn": "Envoyer le code de récupération",
-    "tryAnother": "Essayer autrement",
     "error": "Impossible d'envoyer le code. Veuillez réessayer."
   },
   "verifyCode": {

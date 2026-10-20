@@ -90,7 +90,6 @@
     "description": "Enter your email address and we'll send you a recovery code.",
     "emailLabel": "Email Address",
     "sendBtn": "Send Recovery Code",
-    "tryAnother": "Try Another Way",
     "error": "Could not send the code. Please try again."
   },
   "verifyCode": {

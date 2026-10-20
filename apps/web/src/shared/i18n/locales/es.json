@@ -94,7 +94,6 @@
     "description": "Ingresa tu correo electrónico y te enviaremos un código de recuperación.",
     "emailLabel": "Correo electrónico",
     "sendBtn": "Enviar código de recuperación",
-    "tryAnother": "Intentar de otra forma",
     "error": "No se pudo enviar el código. Inténtalo de nuevo."
   },
   "verifyCode": {
