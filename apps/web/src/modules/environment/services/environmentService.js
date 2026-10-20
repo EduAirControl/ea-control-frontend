@@ -136,13 +136,16 @@ const environmentService = {
   },
 
   /**
-   * Guarda el rango de temperatura (WARNING) de este ambiente como override.
-   * El resto de variables conserva el umbral del tipo.
+   * Guarda los umbrales INFO y WARNING de una variable para este ambiente como override.
+   * Si no se proporciona infoMin/infoMax, se usa el umbral del tipo para INFO.
+   * Si no se proporciona warningMin/warningMax, se usa el umbral del tipo para WARNING.
    */
-  async updateTemperatureThreshold(environmentId, minValue, maxValue) {
-    return apiClient.put(`/api/v1/environments/${environmentId}/thresholds/temperature`, {
-      minValue: Number(minValue),
-      maxValue: Number(maxValue),
+  async updateThresholds(environmentId, variableCode, { infoMin, infoMax, warningMin, warningMax }) {
+    return apiClient.put(`/api/v1/environments/${environmentId}/thresholds/${variableCode}`, {
+      infoMin: infoMin != null ? Number(infoMin) : undefined,
+      infoMax: infoMax != null ? Number(infoMax) : undefined,
+      warningMin: warningMin != null ? Number(warningMin) : undefined,
+      warningMax: warningMax != null ? Number(warningMax) : undefined,
     });
   },
 };
