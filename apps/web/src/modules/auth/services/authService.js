@@ -121,23 +121,38 @@ const authService = {
 
   async logout() {
     const token = getToken();
-    if (token) {
-      try {
-        await apiClient.post('/api/v1/auth/logout', {});
-      } catch {
-        // ignore
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    try {
+      if (token) {
+        const response = await fetch(`${API_BASE}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!response.ok && response.status !== 401) {
+          console.error(`Logout request failed with status ${response.status}`);
+        }
+      } else {
+        const response = await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!response.ok && response.status !== 401) {
+          console.error(`Logout request failed with status ${response.status}`);
+        }
       }
+    } catch (error) {
+      console.error('Logout request failed', error);
+    } finally {
       clearToken();
-    } else {
-      try {
-        await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' });
-      } catch {
-        // ignore
-      }
+      localStorage.removeItem('refreshToken');
+      currentUser = null;
+      window.location.assign('/login');
     }
-    currentUser = null;
-    notifyAuthChanged();
-    window.location.assign('/login');
   },
 
   async register(name, email, password, companyCode) {
