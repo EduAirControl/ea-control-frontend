@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FaUser, FaEnvelope, FaLock, FaBuilding } from 'react-icons/fa';
 import { HiOutlineDocumentText, HiCheckCircle } from 'react-icons/hi2';
 import { ChevronDown } from 'lucide-react';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import authService from '../../services/authService';
 import SocialLoginButtons from '../SocialLoginButtons/SocialLoginButtons';
 import { registerSchema } from '../../schemas/registerSchema';
@@ -88,7 +89,9 @@ function SignUpForm() {
             />
           </div>
           {errors.companyCode && (
-            <p className="error-text">⚠ {t(errors.companyCode.message)}</p>
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.companyCode.message)}
+            </p>
           )}
         </div>
         <div className="input-group-modern">
@@ -103,7 +106,11 @@ function SignUpForm() {
               {...register('name')}
             />
           </div>
-          {errors.name && <p className="error-text">⚠ {t(errors.name.message)}</p>}
+          {errors.name && (
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.name.message)}
+            </p>
+          )}
         </div>
         <div className="input-group-modern">
           <label htmlFor="signup-email">{t('signup.email')}</label>
@@ -117,7 +124,11 @@ function SignUpForm() {
               {...register('email')}
             />
           </div>
-          {errors.email && <p className="error-text">⚠ {t(errors.email.message)}</p>}
+          {errors.email && (
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.email.message)}
+            </p>
+          )}
         </div>
         <div className="form-row-modern">
           <div className="input-group-modern">
@@ -132,7 +143,11 @@ function SignUpForm() {
                 {...register('password')}
               />
             </div>
-            {errors.password && <p className="error-text">⚠ {t(errors.password.message)}</p>}
+            {errors.password && (
+              <p className="error-text">
+                <IoAlertCircleOutline aria-hidden="true" /> {t(errors.password.message)}
+              </p>
+            )}
             {password && (
               <div className="password-strength" aria-live="polite">
                 <div className="password-strength-bar" aria-hidden="true">
@@ -162,7 +177,9 @@ function SignUpForm() {
               />
             </div>
             {errors.confirmPassword && (
-              <p className="error-text">⚠ {t(errors.confirmPassword.message)}</p>
+              <p className="error-text">
+                <IoAlertCircleOutline aria-hidden="true" /> {t(errors.confirmPassword.message)}
+              </p>
             )}
           </div>
         </div>
@@ -182,10 +199,16 @@ function SignUpForm() {
             </button>
           </p>
           {errors.acceptTerms && (
-            <p className="error-text">⚠ {t(errors.acceptTerms.message)}</p>
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.acceptTerms.message)}
+            </p>
           )}
         </div>
-        {apiError && <p className="error-text">⚠ {apiError}</p>}
+        {apiError && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+          </p>
+        )}
         <button type="submit" className="btn-signup-premium" disabled={isSubmitting}>
           {isSubmitting ? '...' : t('signup.signUpBtn')}
         </button>

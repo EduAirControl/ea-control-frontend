@@ -754,7 +754,7 @@ button:active {
 /* ============================================ */
 
 /* ============================================
-   📱 MÓVIL PEQUEÑO (<480px)
+   MÓVIL PEQUEÑO (<480px)
 ============================================ */
 @media (max-width: 480px) {
   .navbar-logo h2 {
@@ -791,7 +791,7 @@ button:active {
 }
 
 /* ============================================
-   📱 MÓVIL (<768px)
+   MÓVIL (<768px)
 ============================================ */
 @media (max-width: 768px) {
   /* Navbar */
@@ -812,7 +812,7 @@ button:active {
     font-size: 20px;
   }
 
-  /* 🔥 ocultar texto en móvil */
+  /* Ocultar texto en móvil */
   .navbar-item span {
     display: none;
   }
@@ -830,10 +830,10 @@ button:active {
 }
 
 /* ============================================
-   📲 TABLET (768px – 1199px)
+   TABLET (768px – 1199px)
 ============================================ */
 @media (min-width: 769px) and (max-width: 1199px) {
-  /* 🔥 también oculto en tablet */
+  /* Ocultar texto en tablet */
   .navbar-item span {
     display: none;
   }
@@ -852,10 +852,10 @@ button:active {
 }
 
 /* ============================================
-   💻 COMPUTADOR (≥1200px)
+   COMPUTADOR (≥1200px)
 ============================================ */
 @media (min-width: 1200px) {
-  /* 🔥 mostrar texto SOLO en PC */
+  /* Mostrar texto solo en computador */
   .navbar-item span {
     display: inline;
   }

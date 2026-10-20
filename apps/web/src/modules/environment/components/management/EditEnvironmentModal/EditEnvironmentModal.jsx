@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  IoCreateOutline,
+  IoSnowOutline,
+  IoSunnyOutline,
+  IoThermometerOutline,
+} from 'react-icons/io5';
 import { useToast } from '../../../../../shared/hooks/useToast';
 import environmentService from '../../../services/environmentService';
 
@@ -226,7 +232,7 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
         {/* Umbrales temperatura */}
         <div className="add-env-modal__section">
           <label className="add-env-modal__label add-env-modal__label--section">
-            🌡️ Umbrales de Temperatura
+            <IoThermometerOutline aria-hidden="true" /> Umbrales de Temperatura
           </label>
           <div className="add-env-modal__profiles">
             {Object.keys(TEMP_PROFILES).map((p) => (
@@ -236,9 +242,9 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
                 className={`add-env-modal__profile-btn ${tempProfile === p ? 'active' : ''}`}
                 onClick={() => handleProfileChange(p)}
               >
-                {p === 'Con A/C' && '❄️ '}
-                {p === 'Sin A/C' && '☀️ '}
-                {p === 'Personalizar' && '✏️ '}
+                {p === 'Con A/C' && <IoSnowOutline aria-hidden="true" />}
+                {p === 'Sin A/C' && <IoSunnyOutline aria-hidden="true" />}
+                {p === 'Personalizar' && <IoCreateOutline aria-hidden="true" />}
                 {p}
               </button>
             ))}

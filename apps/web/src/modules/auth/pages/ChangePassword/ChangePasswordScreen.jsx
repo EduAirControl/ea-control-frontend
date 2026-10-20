@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../components/AuthLayout/AuthLayout';
 import ChangePasswordForm from '../../components/ChangePasswordForm/ChangePasswordForm';
 import { BackButton } from '../../../../shared/components';
+import { IoKeyOutline } from 'react-icons/io5';
 import './ChangePassword.css';
 
 function ChangePasswordScreen() {
@@ -13,7 +14,9 @@ function ChangePasswordScreen() {
     <AuthLayout>
       <BackButton onClick={() => navigate('/verify-code')} />
       <div className="change-password-content">
-        <div className="change-icon">🔑</div>
+        <div className="change-icon">
+          <IoKeyOutline aria-hidden="true" />
+        </div>
         <h1>{t('changePassword.title')}</h1>
         <p className="change-description">{t('changePassword.description')}</p>
         <ChangePasswordForm />

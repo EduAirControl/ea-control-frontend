@@ -261,10 +261,18 @@
 }
 
 .error-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
   color: #ff4d4f;
   font-size: 12px;
   margin: 4px 0 0 4px;
   font-weight: 500;
+}
+
+.error-text svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .shake {

@@ -353,9 +353,9 @@
     "description": "Notifications de vos environnements favoris",
     "empty": "Vous n'avez pas d'environnements favoris",
     "emptyHint": "Cliquez sur un cœur dans le dashboard pour ajouter des favoris",
-    "notif1": "⚠️ Température élevée : 26°C",
-    "notif2": "🔴 CO₂ élevé : 1200 ppm",
-    "notif3": "⚠️ Humidité basse : 28%",
+    "notif1": "Température élevée : 26°C",
+    "notif2": "CO₂ élevé : 1200 ppm",
+    "notif3": "Humidité basse : 28%",
     "ago5": "Il y a 5 minutes",
     "ago15": "Il y a 15 minutes",
     "ago10": "Il y a 10 minutes",
@@ -738,9 +738,9 @@
     "subtitle": "Score calculé selon la température, l’humidité, le CO₂ et le bruit · Touchez un environnement pour voir les détails",
     "filters": {
       "all": "Tous",
-      "normal": "✅ Normal",
-      "warning": "⚠️ Avertissement",
-      "alert": "🔴 Alertes"
+      "normal": "Normal",
+      "warning": "Avertissement",
+      "alert": "Alertes"
     },
     "addFavorite": "Ajouter aux favoris",
     "removeFavorite": "Retirer des favoris",
@@ -790,7 +790,7 @@
       "remove": "Retirer des favoris"
     },
     "legend": {
-      "title": "💡 Comment le score est calculé",
+      "title": "Comment le score est calculé",
       "temp": "Temp idéale : 18–24 °C",
       "humidity": "Humidité idéale : 40–60 %",
       "co2": "CO₂ idéal : < 1000 ppm",

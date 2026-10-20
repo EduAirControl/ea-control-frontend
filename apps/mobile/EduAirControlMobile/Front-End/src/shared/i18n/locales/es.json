@@ -358,9 +358,9 @@
     "description": "Notificaciones de tus ambientes favoritos",
     "empty": "No tienes ambientes favoritos",
     "emptyHint": "Marca un corazón en el dashboard para agregar favoritos",
-    "notif1": "⚠️ Temperatura elevada: 26°C",
-    "notif2": "🔴 CO₂ alto: 1200 ppm",
-    "notif3": "⚠️ Humedad baja: 28%",
+    "notif1": "Temperatura elevada: 26°C",
+    "notif2": "CO₂ alto: 1200 ppm",
+    "notif3": "Humedad baja: 28%",
     "ago5": "Hace 5 min",
     "ago15": "Hace 15 min",
     "ago10": "Hace 10 min",
@@ -752,9 +752,9 @@
     "noiseIdeal": "Ruido ideal: < 50 dB",
     "filters": {
       "all": "Todos",
-      "normal": "✅ Normales",
-      "warning": "⚠️ Advertencia",
-      "alert": "🔴 Alertas"
+      "normal": "Normales",
+      "warning": "Advertencia",
+      "alert": "Alertas"
     },
     "days": "días",
     "total": "Total"

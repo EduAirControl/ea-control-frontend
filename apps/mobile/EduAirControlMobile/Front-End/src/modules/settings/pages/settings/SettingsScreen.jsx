@@ -265,9 +265,9 @@ export default function SettingsScreen({ navigation }) {
         return (
           <View style={styles.helpContactList}>
             {[
-              { icon: '✉️', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
-              { icon: '🕐', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
-              { icon: '⏱️', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
+              { icon: 'mail-outline', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
+              { icon: 'time-outline', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
+              { icon: 'hourglass-outline', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
             ].map((row, idx) => (
               <View
                 key={idx}
@@ -280,7 +280,7 @@ export default function SettingsScreen({ navigation }) {
                 ]}
               >
                 <View style={[styles.helpContactIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
-                  <Text style={styles.helpContactIconText}>{row.icon}</Text>
+                  <Ionicons name={row.icon} size={16} color={currentColors.accent} />
                 </View>
                 <View style={styles.helpContactText}>
                   <Text style={[styles.helpLabel, { color: currentColors.textPrimary }]}>{row.label}</Text>
@@ -787,4 +787,3 @@ export default function SettingsScreen({ navigation }) {
     </SafeAreaView>
   )
 }
-

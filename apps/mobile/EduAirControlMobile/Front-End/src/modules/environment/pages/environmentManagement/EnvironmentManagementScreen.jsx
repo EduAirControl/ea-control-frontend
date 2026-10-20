@@ -33,7 +33,7 @@ const TABS = [
   { id: 'provisioning', key: 'management.tabProvisioning', icon: 'wifi-outline' },
 ]
 
-function SummaryCard({ label, value, emoji, accent, active, onPress, currentColors }) {
+function SummaryCard({ label, value, iconName, accent, active, onPress, currentColors }) {
   return (
     <TouchableOpacity
       style={[
@@ -44,7 +44,12 @@ function SummaryCard({ label, value, emoji, accent, active, onPress, currentColo
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Text style={styles.summaryEmoji}>{emoji}</Text>
+      <Ionicons
+        name={iconName}
+        size={18}
+        color={active ? accent : currentColors.textMuted}
+        style={styles.summaryIcon}
+      />
       <Text style={[styles.summaryValue, { color: active ? accent : currentColors.textPrimary }]}>{value}</Text>
       <Text style={[styles.summaryLabel, { color: active ? accent : currentColors.textMuted }]}>{label}</Text>
     </TouchableOpacity>
@@ -56,10 +61,10 @@ function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
   const fmt = (value, unit) => (value === undefined || value === null ? `—${unit}` : `${value}${unit}`)
 
   const metrics = [
-    { key: 'temp', icon: '🌡️', label: t('dashboard.temperature'), value: fmt(environment.temp, '°C') },
-    { key: 'humidity', icon: '💧', label: t('dashboard.humidity'), value: fmt(environment.humidity, '%') },
-    { key: 'co2', icon: '☁️', label: t('allEnvironments.co2'), value: fmt(environment.co2, 'ppm') },
-    { key: 'noise', icon: '🔊', label: t('dashboard.noise'), value: fmt(environment.noise, 'dB') },
+    { key: 'temp', icon: 'thermometer-outline', label: t('dashboard.temperature'), value: fmt(environment.temp, '°C') },
+    { key: 'humidity', icon: 'water-outline', label: t('dashboard.humidity'), value: fmt(environment.humidity, '%') },
+    { key: 'co2', icon: 'cloud-outline', label: t('allEnvironments.co2'), value: fmt(environment.co2, 'ppm') },
+    { key: 'noise', icon: 'volume-high-outline', label: t('dashboard.noise'), value: fmt(environment.noise, 'dB') },
   ]
 
   return (
@@ -99,7 +104,7 @@ function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
       <View style={[styles.metricsRow, { borderTopColor: currentColors.borderColor }]}>
         {metrics.map((m) => (
           <View key={m.key} style={styles.metricCell}>
-            <Text style={styles.metricIcon}>{m.icon}</Text>
+            <Ionicons name={m.icon} size={18} color={currentColors.accent} style={styles.metricIcon} />
             <Text style={[styles.metricValue, { color: currentColors.textPrimary }]}>{m.value}</Text>
             <Text style={[styles.metricLabel, { color: currentColors.textMuted }]}>{m.label}</Text>
           </View>
@@ -419,19 +424,19 @@ export default function EnvironmentManagementScreen({ navigation }) {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.summaryRow}>
             <SummaryCard
-              label={t('filterBar.all')} value={vm.stats.total} emoji="🏫"
+              label={t('filterBar.all')} value={vm.stats.total} iconName="business-outline"
               accent={currentColors.accent} active={vm.activeFilter === 'all'} onPress={() => vm.setActiveFilter('all')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.normal')} value={vm.stats.normals} emoji="✅"
+              label={t('status.normal')} value={vm.stats.normals} iconName="checkmark-circle-outline"
               accent={currentColors.success} active={vm.activeFilter === 'normal'} onPress={() => vm.setActiveFilter('normal')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.warning')} value={vm.stats.warnings} emoji="🔔"
+              label={t('status.warning')} value={vm.stats.warnings} iconName="notifications-outline"
               accent={currentColors.warning} active={vm.activeFilter === 'warning'} onPress={() => vm.setActiveFilter('warning')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.alert')} value={vm.stats.alerts} emoji="⚠️"
+              label={t('status.alert')} value={vm.stats.alerts} iconName="warning-outline"
               accent={currentColors.error} active={vm.activeFilter === 'alert'} onPress={() => vm.setActiveFilter('alert')} currentColors={currentColors}
             />
           </View>
@@ -476,7 +481,12 @@ export default function EnvironmentManagementScreen({ navigation }) {
 
           {vm.filtered.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🏫</Text>
+              <Ionicons
+                name="business-outline"
+                size={48}
+                color={currentColors.textMuted}
+                style={styles.emptyIcon}
+              />
               <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>
                 {vm.stats.total === 0 ? t('management.noResults') : t('management.noResultsSearch')}
               </Text>

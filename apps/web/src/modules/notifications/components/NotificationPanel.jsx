@@ -2,7 +2,14 @@ import './NotificationPanel.css';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
-import { FaTrashAlt } from 'react-icons/fa';
+import {
+  FaBell,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaTimes,
+  FaTrashAlt,
+} from 'react-icons/fa';
+import { IoCheckmarkOutline } from 'react-icons/io5';
 
 function NotificationPanel({ isOpen, onClose }) {
   const {
@@ -58,19 +65,19 @@ function NotificationPanel({ isOpen, onClose }) {
 
             {unreadCount > 0 && (
               <button className="mark-read-link" onClick={markAllRead} aria-label="Marcar todas como leídas">
-                ✓ {t('notifications.markAllRead')}
+                <IoCheckmarkOutline aria-hidden="true" /> {t('notifications.markAllRead')}
               </button>
             )}
 
             {readCount > 0 && (
               <button className="delete-read-link" onClick={deleteAllRead} aria-label="Eliminar todas las leídas">
-                🗑 {t('notifications.deleteAllRead')}
+                <FaTrashAlt aria-hidden="true" /> {t('notifications.deleteAllRead')}
               </button>
             )}
           </div>
 
           <button className="close-btn" onClick={onClose} aria-label="Cerrar notificaciones">
-            ✕
+            <FaTimes aria-hidden="true" />
           </button>
         </div>
 
@@ -79,7 +86,9 @@ function NotificationPanel({ isOpen, onClose }) {
         <div className="notification-list">
           {notifications.length === 0 ? (
             <div className="notification-empty">
-              <div className="notification-empty-icon">🔔</div>
+              <div className="notification-empty-icon">
+                <FaBell aria-hidden="true" />
+              </div>
 
               <p>{t('notifications.empty')}</p>
             </div>
@@ -99,11 +108,9 @@ function NotificationPanel({ isOpen, onClose }) {
                 {/* ICONO */}
 
                 <div className="notification-icon">
-                  {notification.type === 'danger' && '🚨'}
-
-                  {notification.type === 'warning' && '⚠️'}
-
-                  {notification.type === 'info' && 'ℹ️'}
+                  {notification.type === 'danger' && <FaExclamationTriangle aria-hidden="true" />}
+                  {notification.type === 'warning' && <FaExclamationTriangle aria-hidden="true" />}
+                  {notification.type === 'info' && <FaInfoCircle aria-hidden="true" />}
                 </div>
 
                 {/* CONTENIDO */}

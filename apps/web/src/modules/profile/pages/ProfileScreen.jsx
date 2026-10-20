@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { FaUser, FaEnvelope, FaBriefcase, FaPhone, FaMapMarkerAlt, FaCamera } from 'react-icons/fa';
-import { IoLogOut } from 'react-icons/io5';
+import { IoCloseOutline, IoLogOut } from 'react-icons/io5';
 import { MdEdit } from 'react-icons/md';
 
 import { useProfileVM } from '../../../viewmodels';
@@ -71,7 +71,7 @@ function ProfileScreen() {
                 }}
                 title="Eliminar foto"
               >
-                ✕
+                <IoCloseOutline aria-hidden="true" />
               </button>
             )}
           </div>

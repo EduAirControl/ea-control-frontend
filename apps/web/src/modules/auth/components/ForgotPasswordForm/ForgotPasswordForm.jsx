@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../../../shared/components';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import authService from '../../services/authService';
 
 function ForgotPasswordForm() {
@@ -38,7 +39,11 @@ function ForgotPasswordForm() {
           required
         />
       </div>
-      {apiError && <p className="error-text">⚠ {apiError}</p>}
+      {apiError && (
+        <p className="error-text">
+          <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+        </p>
+      )}
       <button type="submit" className="btn-login-premium" disabled={isSubmitting}>
         {isSubmitting ? '...' : t('forgotPassword.sendBtn')}
       </button>

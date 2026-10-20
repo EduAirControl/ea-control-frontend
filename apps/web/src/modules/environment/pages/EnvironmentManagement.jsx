@@ -4,6 +4,10 @@ import {
   IoAddOutline,
   IoSwapVerticalOutline,
   IoChevronDownOutline,
+  IoCheckmarkCircleOutline,
+  IoNotificationsOutline,
+  IoWarningOutline,
+  IoSchoolOutline,
 } from 'react-icons/io5';
 import { MdOutlineGridView } from 'react-icons/md';
 import { TbBuildingCommunity } from 'react-icons/tb';
@@ -186,7 +190,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'normal',
-      icon: '✅',
+      icon: <IoCheckmarkCircleOutline size={19} />,
       labelKey: 'management.summaryNormal',
       fallback: 'Normal',
       value: stats.normals,
@@ -194,7 +198,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'warning',
-      icon: '🔔',
+      icon: <IoNotificationsOutline size={19} />,
       labelKey: 'management.summaryWarnings',
       fallback: 'Advertencias',
       value: stats.warnings,
@@ -202,7 +206,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'alert',
-      icon: '⚠️',
+      icon: <IoWarningOutline size={19} />,
       labelKey: 'management.summaryAlerts',
       fallback: 'En Alerta',
       value: stats.alerts,
@@ -321,7 +325,9 @@ function EnvironmentManagement() {
             <div className="env-management-list">
               {filtered.length === 0 ? (
                 <div className="env-management-empty">
-                  <div className="env-management-empty__icon">🏫</div>
+                  <div className="env-management-empty__icon">
+                    <IoSchoolOutline aria-hidden="true" />
+                  </div>
                   <h3 className="env-management-empty__title">
                     {search
                       ? t('management.noResultsSearch', 'Sin resultados para tu búsqueda')

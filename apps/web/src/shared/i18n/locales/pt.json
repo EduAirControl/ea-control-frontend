@@ -330,9 +330,9 @@
     "description": "Notificações dos seus ambientes favoritos",
     "empty": "Você não tem ambientes favoritos",
     "emptyHint": "Clique em um coração no dashboard para adicionar favoritos",
-    "notif1": "⚠️ Temperatura alta: 26°C",
-    "notif2": "🔴 CO₂ alto: 1200 ppm",
-    "notif3": "⚠️ Umidade baixa: 28%",
+    "notif1": "Temperatura alta: 26°C",
+    "notif2": "CO₂ alto: 1200 ppm",
+    "notif3": "Umidade baixa: 28%",
     "ago5": "Há 5 min",
     "ago15": "Há 15 min",
     "ago10": "Há 10 min"
@@ -700,9 +700,9 @@
     "subtitle": "Pontuação calculada por temperatura, umidade, CO₂ e ruído · Toque em um ambiente para ver detalhes",
     "filters": {
       "all": "Todos",
-      "normal": "✅ Normal",
-      "warning": "⚠️ Aviso",
-      "alert": "🔴 Alertas"
+      "normal": "Normal",
+      "warning": "Aviso",
+      "alert": "Alertas"
     },
     "stats": {
       "total": "Total"
@@ -743,7 +743,7 @@
       "remove": "Remover favorito"
     },
     "legend": {
-      "title": "💡 Como a pontuação é calculada",
+      "title": "Como a pontuação é calculada",
       "temp": "Temp ideal: 18–24 °C",
       "humidity": "Umidade ideal: 40–60 %",
       "co2": "CO₂ ideal: < 1000 ppm",

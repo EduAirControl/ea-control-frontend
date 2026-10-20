@@ -7,6 +7,7 @@ import { loginSchema } from '../../schemas/loginSchema';
 import authService from '../../services/authService';
 import SocialLoginButtons from '../SocialLoginButtons/SocialLoginButtons';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import '../../pages/login/Login.css';
 
 function LoginForm() {
@@ -47,7 +48,11 @@ function LoginForm() {
             className={errors.email ? 'input-error shake' : ''}
           />
         </div>
-        {errors.email && <p className="error-text">⚠ {t(errors.email.message)}</p>}
+        {errors.email && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {t(errors.email.message)}
+          </p>
+        )}
       </div>
 
       <div className="input-group-modern">
@@ -62,7 +67,11 @@ function LoginForm() {
             className={errors.password ? 'input-error shake' : ''}
           />
         </div>
-        {errors.password && <p className="error-text">⚠ {t(errors.password.message)}</p>}
+        {errors.password && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {t(errors.password.message)}
+          </p>
+        )}
       </div>
 
       <div className="login-options-modern">
@@ -75,7 +84,11 @@ function LoginForm() {
         </button>
       </div>
 
-      {apiError && <p className="error-text">⚠ {apiError}</p>}
+      {apiError && (
+        <p className="error-text">
+          <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+        </p>
+      )}
 
       <button type="submit" className="btn-login-premium" disabled={isSubmitting}>
         {isSubmitting ? '...' : t('login.title')}

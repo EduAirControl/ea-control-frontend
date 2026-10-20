@@ -5,6 +5,7 @@ import { WiThermometer, WiHumidity } from 'react-icons/wi';
 import { MdCo2 } from 'react-icons/md';
 import { HiSpeakerWave } from 'react-icons/hi2';
 import { FaHeart, FaRegHeart, FaUser, FaMapMarkerAlt } from 'react-icons/fa';
+import { IoPeopleOutline } from 'react-icons/io5';
 import { IoCheckmarkCircle, IoWarning, IoAlertCircle, IoHardwareChipOutline, IoUnlinkOutline } from 'react-icons/io5';
 import Navbar from '../../dashboard/components/Navbar/Navbar';
 import { BackButton } from '../../../shared/components';
@@ -264,17 +265,23 @@ function EnvironmentDetailScreen() {
         {/* Info Cards Row */}
         <div className="detail-info-row">
           <div className="detail-info-card">
-            <h3>📍 {t('detail.locationTitle') || 'Ubicación'}</h3>
+            <h3>
+              <FaMapMarkerAlt aria-hidden="true" /> {t('detail.locationTitle') || 'Ubicación'}
+            </h3>
             <p>{env.location || '—'}</p>
           </div>
 
           <div className="detail-info-card">
-            <h3>👥 {t('detail.capacityTitle') || 'Capacidad'}</h3>
+            <h3>
+              <IoPeopleOutline aria-hidden="true" /> {t('detail.capacityTitle') || 'Capacidad'}
+            </h3>
             <p>{env.capacity ? `${env.capacity} ${t('detail.people') || 'personas'}` : '—'}</p>
           </div>
 
           <div className="detail-info-card">
-            <h3>🌡️ {t('detail.conditionsTitle') || 'Condiciones'}</h3>
+            <h3>
+              <WiThermometer aria-hidden="true" /> {t('detail.conditionsTitle') || 'Condiciones'}
+            </h3>
             <p style={{ color: statusColor, fontWeight: 600 }}>{t(env.statusKey)}</p>
           </div>
         </div>

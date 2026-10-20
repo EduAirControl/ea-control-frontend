@@ -194,7 +194,6 @@ helpModalContent: {
     width: 36, height: 36, borderRadius: 10, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
-  helpContactIconText: { fontSize: 16 },
   helpContactText: { flex: 1 },
   helpLabel: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
   helpValue: { fontSize: 13, lineHeight: 18 },

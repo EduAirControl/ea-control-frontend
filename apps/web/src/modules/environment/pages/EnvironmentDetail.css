@@ -296,6 +296,9 @@ body.theme-tritanopia .detail-metric-icon {
 .detail-info-card h3 {
   font-size: 13px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 8px;
   font-weight: 600;
   text-transform: uppercase;

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../components/AuthLayout/AuthLayout';
 import AuthSlider from '../../components/AuthSlider/AuthSlider';
 import authService from '../../services/authService';
+import { IoAlertCircleOutline, IoCheckmarkCircleOutline } from 'react-icons/io5';
 
 function LoginScreen() {
   const [searchParams] = useSearchParams();
@@ -77,7 +78,11 @@ function LoginScreen() {
               required
             />
           </div>
-          {onboardingError && <p className="error-text">⚠ {onboardingError}</p>}
+          {onboardingError && (
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {onboardingError}
+            </p>
+          )}
           <button type="submit" className="btn-login-premium" disabled={onboardingLoading}>
             {onboardingLoading ? '...' : 'Continuar'}
           </button>
@@ -90,7 +95,8 @@ function LoginScreen() {
     <AuthLayout className="auth-login-background">
       {passwordReset && (
         <p className="error-text" role="status" style={{ textAlign: 'center', marginBottom: 12 }}>
-          ✓ {t('changePassword.success', 'Contraseña actualizada. Inicia sesión.')}
+          <IoCheckmarkCircleOutline aria-hidden="true" />{' '}
+          {t('changePassword.success', 'Contraseña actualizada. Inicia sesión.')}
         </p>
       )}
       <AuthSlider initialRegister={initialRegister} />

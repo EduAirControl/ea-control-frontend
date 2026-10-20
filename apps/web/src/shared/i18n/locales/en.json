@@ -331,9 +331,9 @@
     "description": "Notifications from your favorite environments",
     "empty": "You have no favorite environments",
     "emptyHint": "Mark a heart on the dashboard to add favorites",
-    "notif1": "⚠️ High temperature: 26°C",
-    "notif2": "🔴 High CO₂: 1200 ppm",
-    "notif3": "⚠️ Low humidity: 28%",
+    "notif1": "High temperature: 26°C",
+    "notif2": "High CO₂: 1200 ppm",
+    "notif3": "Low humidity: 28%",
     "ago5": "5 min ago",
     "ago15": "15 min ago",
     "ago10": "10 min ago"
@@ -701,9 +701,9 @@
     "subtitle": "Score calculated by temperature, humidity, CO₂ and noise · Tap an environment to view details",
     "filters": {
       "all": "All",
-      "normal": "✅ Normal",
-      "warning": "⚠️ Warning",
-      "alert": "🔴 Alerts"
+      "normal": "Normal",
+      "warning": "Warning",
+      "alert": "Alerts"
     },
     "stats": {
       "total": "Total"
@@ -744,7 +744,7 @@
       "remove": "Remove favorite"
     },
     "legend": {
-      "title": "💡 How the score is calculated",
+      "title": "How the score is calculated",
       "temp": "Ideal temp: 18–24 °C",
       "humidity": "Ideal humidity: 40–60 %",
       "co2": "Ideal CO₂: < 1000 ppm",
