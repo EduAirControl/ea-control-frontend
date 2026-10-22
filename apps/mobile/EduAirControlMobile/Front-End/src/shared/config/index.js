@@ -15,4 +15,4 @@ const DEV_HOST = getDevHost()
 // corre en modo tunnel o el host detectado no es alcanzable desde el dispositivo).
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ||
-  (__DEV__ ? `http://${DEV_HOST}:8080` : 'https://api.eduaircontrol.com')
+  (__DEV__ ? `http://${DEV_HOST}:8080` : 'https://api.eduaircontrol.tech')

@@ -959,7 +959,8 @@
     "subtitle": "también cuenta una historia.",
     "description": "Compara la evolución de tus ambientes, identifica cambios y toma decisiones antes de que una alerta interrumpa el aprendizaje.",
     "periods": {
-      "day": "Día",
+      "hour": "Hora", "hourContext": "Últimos 60 minutos",
+            "day": "Día",
       "dayContext": "Últimas 24 horas",
       "week": "Semana",
       "weekContext": "18 — 24 agosto 2026",
