@@ -136,16 +136,14 @@ const environmentService = {
   },
 
   /**
-   * Guarda los umbrales INFO y WARNING de una variable para este ambiente como override.
-   * Si no se proporciona infoMin/infoMax, se usa el umbral del tipo para INFO.
-   * Si no se proporciona warningMin/warningMax, se usa el umbral del tipo para WARNING.
+   * Guarda el umbral WARNING (minValue/maxValue) de una variable para este
+   * ambiente como override. El backend (ms-environment-monitoring) solo
+   * acepta minValue/maxValue en PUT /environments/{id}/thresholds/{code}.
    */
-  async updateThresholds(environmentId, variableCode, { infoMin, infoMax, warningMin, warningMax }) {
+  async updateThresholds(environmentId, variableCode, { minValue, maxValue }) {
     return apiClient.put(`/api/v1/environments/${environmentId}/thresholds/${variableCode}`, {
-      infoMin: infoMin != null ? Number(infoMin) : undefined,
-      infoMax: infoMax != null ? Number(infoMax) : undefined,
-      warningMin: warningMin != null ? Number(warningMin) : undefined,
-      warningMax: warningMax != null ? Number(warningMax) : undefined,
+      minValue: minValue != null ? Number(minValue) : undefined,
+      maxValue: maxValue != null ? Number(maxValue) : undefined,
     });
   },
 };

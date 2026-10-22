@@ -968,7 +968,8 @@
     "subtitle": "also tells a story.",
     "description": "Compare your environments' evolution, identify changes and make decisions before an alert interrupts learning.",
     "periods": {
-      "day": "Day",
+      "hour": "Hour", "hourContext": "Last 60 minutes",
+            "day": "Day",
       "dayContext": "Last 24 hours",
       "week": "Week",
       "weekContext": "Aug 18 — 24, 2026",

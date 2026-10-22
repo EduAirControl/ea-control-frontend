@@ -219,7 +219,7 @@ function DashboardScreen() {
     fetchDashboardData,
     fetchSeries,
   } = useDashboardVM();
-  const [period, setPeriod] = useState('day');
+  const [period, setPeriod] = useState('hour');
   const [metric, setMetric] = useState('co2');
   const [environmentId, setEnvironmentId] = useState('all');
   const [manualUpdatedText, setManualUpdatedText] = useState(null);
@@ -263,6 +263,7 @@ function DashboardScreen() {
   }, [fetchDashboardData, fetchSeries, refreshEnvironments, period, metric, environmentId]);
 
   const PERIODS = useMemo(() => [
+    { id: 'hour', label: t('dashboardAnalysis.periods.hour'), context: t('dashboardAnalysis.periods.hourContext') },
     { id: 'day', label: t('dashboardAnalysis.periods.day'), context: t('dashboardAnalysis.periods.dayContext') },
     { id: 'week', label: t('dashboardAnalysis.periods.week'), context: t('dashboardAnalysis.periods.weekContext') },
     { id: 'month', label: t('dashboardAnalysis.periods.month'), context: t('dashboardAnalysis.periods.monthContext') },
@@ -310,7 +311,7 @@ function DashboardScreen() {
     if (!hasSeries) return [];
     return series.map((point) => ({
       label:
-        period === 'day'
+        period === 'day' || period === 'hour'
           ? new Date(point.bucket).toLocaleTimeString(undefined, {
               hour: '2-digit',
               minute: '2-digit',
