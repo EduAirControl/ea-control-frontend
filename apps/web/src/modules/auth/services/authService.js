@@ -1,8 +1,17 @@
-import apiClient from '../../../shared/services/apiClient';
+import apiClient, { API_BASE, getToken, clearToken } from '../../../shared/services/apiClient';
+
+const RESET_EMAIL_KEY = 'resetEmail';
+const AUTH_EVENT = 'eduaircontrol:auth';
+
+let currentUser = null;
+
+function notifyAuthChanged() {
+  window.dispatchEvent(new Event(AUTH_EVENT));
+}
 
 function base64UrlDecode(str) {
-  const normalized = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
   return atob(padded);
 }
 
@@ -15,64 +24,169 @@ function decodeJWT(token) {
   }
 }
 
-const RESET_EMAIL_KEY = 'resetEmail';
-
-const AUTH_EVENT = 'eduaircontrol:auth';
-
-function notifyAuthChanged() {
-  window.dispatchEvent(new Event(AUTH_EVENT));
+function setSession(token, extraUser = {}) {
+  localStorage.setItem('token', token);
+  const decoded = decodeJWT(token);
+  const user = {
+    id: decoded?.sub || extraUser.id || null,
+    email: decoded?.email || extraUser.email || '',
+    username: decoded?.username || extraUser.username || '',
+    role: decoded?.roles?.[0] || extraUser.role || 'USER',
+    roles: decoded?.roles || (decoded?.roles?.[0] ? [decoded.roles[0]] : (extraUser.role ? [extraUser.role] : ['USER'])),
+    name: decoded?.username || extraUser.name || (decoded?.email || extraUser.email || '').split('@')[0],
+    institutionId: decoded?.institutionId || extraUser.institutionId || null,
+    campusId: decoded?.campusId || extraUser.campusId || null,
+    ...extraUser,
+  };
+  localStorage.setItem('user', JSON.stringify(user));
+  currentUser = user;
+  notifyAuthChanged();
+  return user;
 }
 
 const authService = {
-  setSession(token, extraUser = {}) {
-    localStorage.setItem('token', token);
-    const claims = decodeJWT(token);
-    const email = claims?.sub || extraUser.email || '';
-    const user = {
-      email,
-      role: claims?.role || 'USER',
-      name: claims?.name || (extraUser.name ? extraUser.name.split('@')[0] : (email ? email.split('@')[0] : '')),
-      companyCode: extraUser.companyCode || null,
-    };
-    localStorage.setItem('user', JSON.stringify(user));
-    notifyAuthChanged();
-    return user;
+  async getCurrentUser(force = false) {
+    if (currentUser && !force) return currentUser;
+
+    const token = getToken();
+    if (token) {
+      const decoded = decodeJWT(token);
+      if (decoded && decoded.exp * 1000 > Date.now()) {
+        currentUser = {
+          id: decoded.sub || null,
+          email: decoded.email || '',
+          username: decoded.username || '',
+          role: decoded.roles?.[0] || 'USER',
+          roles: decoded.roles || (decoded.roles?.[0] ? [decoded.roles] : ['USER']),
+          name: decoded.username || (decoded.email || '').split('@')[0],
+          institutionId: decoded.institutionId || null,
+          campusId: decoded.campusId || null,
+        };
+        return currentUser;
+      }
+      clearToken();
+    }
+
+    try {
+      const me = await apiClient.get('/api/v1/me');
+      currentUser = {
+        id: me.userId || null,
+        email: me.email || '',
+        role: me.role || 'USER',
+        roles: me.roles || (me.role ? [me.role] : []),
+        name: (me.email || '').split('@')[0],
+        institutionId: me.institutionId || null,
+        campusId: me.campusId || null,
+      };
+    } catch {
+      currentUser = null;
+    }
+    return currentUser;
   },
 
-  async login(email, password, companyCode) {
-    const data = await apiClient.post('/auth/login', { email, password, companyCode });
-    this.setSession(data.token, { name: data.name, email: data.email, role: data.role });
-    return data;
+  async loginWithCredentials(email, password) {
+    const data = await apiClient.post('/api/v1/auth/login', { email, password });
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+    return setSession(data.accessToken, data.user);
+  },
+
+  loginWithOAuth2() {
+    window.location.assign(`${API_BASE}/oauth2/authorization/web`);
+  },
+
+  async exchangeSocialCode(code) {
+    const data = await apiClient.post('/api/v1/auth/oauth2/social/exchange', { code });
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+    setSession(data.accessToken, data.user);
+    return { needsOnboarding: Boolean(data.needsOnboarding) };
+  },
+
+  async completeSocialOnboarding(companyCode) {
+    return apiClient.post('/api/v1/auth/oauth2/onboarding', { companyCode });
+  },
+
+  async refreshToken() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return null;
+    const data = await apiClient.post('/api/v1/auth/refresh', { refreshToken });
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+    return setSession(data.accessToken, data.user);
+  },
+
+  async logout() {
+    const token = getToken();
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    try {
+      if (token) {
+        const response = await fetch(`${API_BASE}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!response.ok && response.status !== 401) {
+          console.error(`Logout request failed with status ${response.status}`);
+        }
+      } else {
+        const response = await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!response.ok && response.status !== 401) {
+          console.error(`Logout request failed with status ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('Logout request failed', error);
+    } finally {
+      clearToken();
+      localStorage.removeItem('refreshToken');
+      currentUser = null;
+      window.location.assign('/login');
+    }
   },
 
   async register(name, email, password, companyCode) {
-    const data = await apiClient.post('/auth/register', { name, email, password, companyCode });
-    this.setSession(data.token, { name, email, companyCode });
-    return data;
+    // `RegisterRequest` no tiene campo `name`: el nombre visible es `username`.
+    return apiClient.post('/api/v1/auth/register', {
+      email,
+      password,
+      username: (name || email.split('@')[0]).trim().slice(0, 100),
+      companyCode,
+    });
   },
 
   async forgotPassword(email) {
-    return apiClient.post('/auth/forgot-password', { email });
+    return apiClient.post('/api/v1/auth/forgot-password', { email });
   },
 
   async verifyCode(email, code) {
-    return apiClient.post('/auth/verify-code', { email, code });
+    return apiClient.post('/api/v1/auth/verify-code', { email, code });
   },
 
   async resetPassword(email, code, newPassword) {
-    return apiClient.post('/auth/reset-password', { email, code, newPassword });
+    return apiClient.post('/api/v1/auth/reset-password', { email, code, newPassword });
   },
 
   async resendCode(email) {
-    return apiClient.post('/auth/resend-code', { email });
+    return apiClient.post('/api/v1/auth/resend-code', { email });
   },
 
   async changePassword(currentPassword, newPassword) {
-    return apiClient.post('/auth/change-password', { currentPassword, newPassword });
+    return apiClient.post('/api/v1/auth/change-password', { currentPassword, newPassword });
   },
 
   async deleteAccount(password) {
-    return apiClient.deleteWithBody('/auth/account', { password });
+    return apiClient.deleteWithBody('/api/v1/auth/account', { password });
   },
 
   setResetEmail(email) {
@@ -87,46 +201,26 @@ const authService = {
     sessionStorage.removeItem(RESET_EMAIL_KEY);
   },
 
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    notifyAuthChanged();
-  },
-
-  getToken() {
-    return localStorage.getItem('token');
-  },
-
   getUser() {
-    try {
-      return JSON.parse(localStorage.getItem('user'));
-    } catch {
-      return null;
-    }
+    return currentUser;
   },
 
   isAuthenticated() {
-    const token = this.getToken();
-    if (!token) return false;
-
-    const claims = decodeJWT(token);
-    if (!claims) {
-      this.logout();
-      return false;
+    const token = getToken();
+    if (token) {
+      const decoded = decodeJWT(token);
+      return decoded && decoded.exp * 1000 > Date.now();
     }
-
-    if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      this.logout();
-      return false;
-    }
-
-    return true;
+    return Boolean(currentUser);
   },
 
   isAdmin() {
-    if (!this.isAuthenticated()) return false;
-    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || '';
-    return String(role).toUpperCase() === 'ADMIN';
+    return String(currentUser?.role || '').toUpperCase() === 'ADMIN'
+      || String(currentUser?.role || '').toUpperCase() === 'SUPER_ADMIN';
+  },
+
+  isSuperAdmin() {
+    return String(currentUser?.role || '').toUpperCase() === 'SUPER_ADMIN';
   },
 };
 

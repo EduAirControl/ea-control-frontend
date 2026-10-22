@@ -34,7 +34,15 @@
 
 .summary-card-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr), no 1fr: un 1fr es minmax(auto, 1fr) y el mínimo "auto"
+     equivale al min-content. "Nivel de Ruido" y "Humedad" tienen min-content
+     mayor que "CO2", así que su columna se anchaba y las mini-cards quedaban
+     con dos medidas distintas (166px vs 178px). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* Las cuatro mini-cards miden lo mismo. Sin esto cada fila se dimensionaba a
+     su contenido y "Temperatura" (que parte en dos líneas) dejaba la primera
+     fila más alta que la de "CO2"/"Ruido". */
+  grid-auto-rows: 1fr;
   gap: 12px;
   margin-bottom: 4px;
 }

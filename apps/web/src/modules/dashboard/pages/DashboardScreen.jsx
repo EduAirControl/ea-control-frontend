@@ -33,16 +33,10 @@ import {
 } from 'recharts';
 
 import { useEnvironment } from '../../../context/useEnvironment';
+import { useDashboardVM } from '../viewmodels/useDashboardVM';
 import Navbar from '../components/Navbar/Navbar';
 
 import './DashboardScreen.css';
-
-const CURVES = {
-  day: [0.94, 0.9, 0.82, 1.03, 1.2, 1.09, 0.98, 0.86],
-  week: [1.02, 0.96, 1.07, 0.91, 1.12, 0.82, 0.88],
-  month: [1.08, 1.03, 0.98, 0.93, 0.88],
-  year: [1.16, 1.09, 1.04, 1.02, 0.98, 0.93, 0.9, 0.86],
-};
 
 const METRICS = {
   co2: {
@@ -109,30 +103,6 @@ function getBaseValue(environment, metric) {
     humidity: Number(environment.humidity) || 0,
     noise: Number(environment.noise) || 0,
   }[metric];
-}
-
-function getHistoricalValue(environment, metric, curveValue, index) {
-  const base = getBaseValue(environment, metric);
-  const variation =
-    Math.sin((index + String(environment.id).length) * 1.37) *
-    (metric === 'co2' ? 58 : metric === 'humidity' ? 3.8 : metric === 'noise' ? 4.5 : 0.55);
-  const factor =
-    metric === 'co2'
-      ? curveValue
-      : metric === 'temperature'
-        ? 0.68 + curveValue * 0.25
-        : metric === 'humidity'
-          ? 0.76 + curveValue * 0.18
-          : 0.8 + curveValue * 0.16;
-
-  return metric === 'temperature'
-    ? Number((base + variation * factor).toFixed(1))
-    : Math.round(base * factor + variation);
-}
-
-function getPeriodValue(environment, metric, period) {
-  const factor = period === 'day' ? 1 : period === 'week' ? 0.98 : period === 'month' ? 0.95 : 0.91;
-  return getHistoricalValue(environment, metric, factor, 4);
 }
 
 function ChartTooltip({ active, payload, label, metric }) {
@@ -230,13 +200,67 @@ function KpiCard({ className = '', icon, label, value, valueClassName, note }) {
   );
 }
 
+function formatUpdatedAt(lastUpdatedIso) {
+  return new Date(lastUpdatedIso).toLocaleString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function DashboardScreen() {
   const { t } = useTranslation();
-  const { environments = [] } = useEnvironment();
+  const { environments = [], refreshEnvironments } = useEnvironment();
+  const {
+    dashboardData,
+    series,
+    loading: dashboardLoading,
+    fetchDashboardData,
+    fetchSeries,
+  } = useDashboardVM();
   const [period, setPeriod] = useState('day');
   const [metric, setMetric] = useState('co2');
   const [environmentId, setEnvironmentId] = useState('all');
-  const [lastUpdated, setLastUpdated] = useState('hace 3 min');
+  const [manualUpdatedText, setManualUpdatedText] = useState(null);
+  const summary = dashboardData?.summary;
+  const lastUpdated = manualUpdatedText
+    ? manualUpdatedText
+    : summary?.lastUpdated
+      ? formatUpdatedAt(summary.lastUpdated)
+      : t('dashboardAnalysis.context.updatedMinutes', { minutes: 3 });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    fetchSeries(period, metric, environmentId);
+  }, [fetchSeries, period, metric, environmentId]);
+
+  // Auto-refresh: el ESP32 publica mediciones cada 10 s; con el mismo
+  // intervalo el dashboard se ve "tiempo real" en la propia página (sin
+  // recargar). Cada tick son ~7 peticiones repartidas en rutas distintas
+  // (~6 req/min por ruta) frente al rate limit del gateway de 100/60s.
+  // Si la pestaña está oculta no se peta: al volver se refresca una vez.
+  useEffect(() => {
+    const REFRESH_MS = 10000;
+    const tick = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetchDashboardData();
+      fetchSeries(period, metric, environmentId);
+      refreshEnvironments();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    const interval = setInterval(tick, REFRESH_MS);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchDashboardData, fetchSeries, refreshEnvironments, period, metric, environmentId]);
 
   const PERIODS = useMemo(() => [
     { id: 'day', label: t('dashboardAnalysis.periods.day'), context: t('dashboardAnalysis.periods.dayContext') },
@@ -244,13 +268,6 @@ function DashboardScreen() {
     { id: 'month', label: t('dashboardAnalysis.periods.month'), context: t('dashboardAnalysis.periods.monthContext') },
     { id: 'year', label: t('dashboardAnalysis.periods.year'), context: t('dashboardAnalysis.periods.yearContext') },
   ], [t]);
-
-  const PERIOD_LABELS = useMemo(() => ({
-    day: t('dashboardAnalysis.chart.hours', { returnObjects: true }),
-    week: t('dashboardAnalysis.chart.weekdays', { returnObjects: true }),
-    month: t('dashboardAnalysis.chart.weeks', { returnObjects: true }),
-    year: t('dashboardAnalysis.chart.months', { returnObjects: true }),
-  }), [t]);
 
   const metricLabels = useMemo(() => ({
     co2: 'CO₂',
@@ -284,42 +301,49 @@ function DashboardScreen() {
       ? t('dashboardAnalysis.context.allEnvironments')
       : visibleEnvironments[0]?.name || 'Sin ambiente seleccionado';
 
-  const chartData = useMemo(
-    () =>
-      PERIOD_LABELS[period].map((label, index) => {
-        const row = { label };
-        visibleEnvironments.forEach((environment, environmentIndex) => {
-          row[`environment-${environment.id}`] = getHistoricalValue(
-            environment,
-            metric,
-            CURVES[period][index],
-            index + environmentIndex
-          );
-        });
-        return row;
-      }),
-    [metric, period, visibleEnvironments, PERIOD_LABELS]
-  );
+  // Solo se dibuja la serie real del backend. Sin suficientes puntos no hay
+  // gráfico: nunca se muestran curvas inventadas "como si" hubiera datos de
+  // periodos que aún no han ocurrido.
+  const hasSeries = Boolean(series?.length >= 2);
+
+  const chartData = useMemo(() => {
+    if (!hasSeries) return [];
+    return series.map((point) => ({
+      label:
+        period === 'day'
+          ? new Date(point.bucket).toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : new Date(point.bucket).toLocaleString(undefined, {
+              day: '2-digit',
+              month: 'short',
+            }),
+      [metric]: Number(point.value),
+    }));
+  }, [metric, period, series, hasSeries]);
 
   const comparisonData = useMemo(
     () =>
       visibleEnvironments.map((environment, index) => ({
         name: environment.name.replace('Ambiente ', ''),
-        value: getPeriodValue(environment, metric, period),
+        value: getBaseValue(environment, metric),
         color: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length],
       })),
-    [metric, period, visibleEnvironments]
+    [metric, visibleEnvironments]
   );
 
   const average = useMemo(() => {
+    const real = summary?.averages?.[metric];
+    if (real != null) return Number(real);
     if (!visibleEnvironments.length) return 0;
     return (
       visibleEnvironments.reduce(
-        (total, environment) => total + getPeriodValue(environment, metric, period),
+        (total, environment) => total + getBaseValue(environment, metric),
         0
       ) / visibleEnvironments.length
     );
-  }, [metric, period, visibleEnvironments]);
+  }, [metric, summary, visibleEnvironments]);
 
   const statusCounts = useMemo(
     () =>
@@ -335,8 +359,10 @@ function DashboardScreen() {
   );
 
   const handleRefresh = () => {
-    setLastUpdated('actualizado ahora');
-    window.setTimeout(() => setLastUpdated('hace 3 min'), 2600);
+    setManualUpdatedText('actualizado ahora');
+    window.setTimeout(() => setManualUpdatedText(null), 2600);
+    fetchDashboardData();
+    fetchSeries(period, metric, environmentId);
   };
 
   const kpiDefinitions = [
@@ -574,47 +600,40 @@ function DashboardScreen() {
                   </p>
                 </div>
                 <span className="analysis-live-pill">
-                  <span /> {t('dashboardAnalysis.chart.syncedData')}
+                  <span /> {dashboardLoading ? 'Sincronizando…' : t('dashboardAnalysis.chart.syncedData')}
                 </span>
               </div>
               <div className="analysis-chart-legend">
-                {visibleEnvironments.map((environment, index) => (
-                  <span key={environment.id}>
-                    <i
-                      style={{ background: ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length] }}
-                    />
-                    {environment.name}
-                  </span>
-                ))}
+                <span>
+                  <i style={{ background: metricInfo.color }} />
+                  {metricLabels[metric]}
+                </span>
                 <span className="comfort-legend">
                   <i /> {t('dashboardAnalysis.chart.comfortThreshold')}
                 </span>
               </div>
               <div className="analysis-main-chart-wrap">
+                {!hasSeries ? (
+                  <div className="analysis-chart-empty">
+                    <FaChartBar size={28} />
+                    <p>{t('dashboardAnalysis.chart.noData')}</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 15, right: 8, left: -17, bottom: 0 }}>
                     <defs>
-                      {visibleEnvironments.map((environment, index) => (
-                        <linearGradient
-                          key={environment.id}
-                          id={`analysis-fill-${environment.id}`}
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                            stopOpacity={0.2}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      ))}
+                      <linearGradient id="analysis-fill-series" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="0%"
+                          stopColor={metricInfo.color}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={metricInfo.color}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid
                       stroke="rgba(167,188,208,.11)"
@@ -641,21 +660,19 @@ function DashboardScreen() {
                       stroke="rgba(185,203,197,.5)"
                       strokeDasharray="5 5"
                     />
-                    {visibleEnvironments.map((environment, index) => (
-                      <Area
-                        key={environment.id}
-                        type="monotone"
-                        dataKey={`environment-${environment.id}`}
-                        name={environment.name}
-                        stroke={ENVIRONMENT_COLORS[index % ENVIRONMENT_COLORS.length]}
-                        fill={`url(#analysis-fill-${environment.id})`}
-                        strokeWidth={2.5}
-                        activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
-                        isAnimationActive={false}
-                      />
-                    ))}
+                    <Area
+                      type="monotone"
+                      dataKey={metric}
+                      name={metricLabels[metric]}
+                      stroke={metricInfo.color}
+                      fill="url(#analysis-fill-series)"
+                      strokeWidth={2.5}
+                      activeDot={{ r: 4, strokeWidth: 2, fill: '#0C1528' }}
+                      isAnimationActive={false}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
+                )}
               </div>
               <div className="analysis-chart-caption">
                 <span>

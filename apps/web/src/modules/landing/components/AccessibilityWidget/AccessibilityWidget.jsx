@@ -7,6 +7,13 @@ import {
   saveAccessibilitySettings,
 } from '../../../../shared/accessibility/accessibilitySettings';
 import { useTranslation } from 'react-i18next';
+import {
+  IoCheckmarkOutline,
+  IoCloseOutline,
+  IoMoonOutline,
+  IoRefreshOutline,
+  IoSunnyOutline,
+} from 'react-icons/io5';
 
 /* ── Constantes ── */
 const FONT_SIZES = [
@@ -117,7 +124,7 @@ function AccessibilityWidget({ raised = false }) {
               onClick={() => setOpen(false)}
               aria-label={t('landing.a11y.closeLabel')}
             >
-              ✕
+              <IoCloseOutline aria-hidden="true" />
             </button>
           </div>
 
@@ -155,7 +162,9 @@ function AccessibilityWidget({ raised = false }) {
                 onClick={() => handleDarkMode(false)}
                 aria-pressed={!darkMode}
               >
-                <span className="a11y-mode-icon">☀️</span>
+                <span className="a11y-mode-icon">
+                  <IoSunnyOutline aria-hidden="true" />
+                </span>
                 <span>{t('landing.a11y.light')}</span>
               </button>
               <button
@@ -163,7 +172,9 @@ function AccessibilityWidget({ raised = false }) {
                 onClick={() => handleDarkMode(true)}
                 aria-pressed={darkMode}
               >
-                <span className="a11y-mode-icon">🌙</span>
+                <span className="a11y-mode-icon">
+                  <IoMoonOutline aria-hidden="true" />
+                </span>
                 <span>{t('landing.a11y.dark')}</span>
               </button>
             </div>
@@ -183,7 +194,11 @@ function AccessibilityWidget({ raised = false }) {
                 >
                   <span className="a11y-theme-dot" style={{ background: theme.color }} />
                   <span className="a11y-theme-name">{theme.label}</span>
-                  {colorTheme === theme.key && <span className="a11y-theme-check">✓</span>}
+                  {colorTheme === theme.key && (
+                    <span className="a11y-theme-check">
+                      <IoCheckmarkOutline aria-hidden="true" />
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -191,7 +206,7 @@ function AccessibilityWidget({ raised = false }) {
 
           {/* ── Restablecer ── */}
           <button className="a11y-reset-btn" onClick={handleReset}>
-            <span>↺</span> {t('landing.a11y.resetAll')}
+            <IoRefreshOutline aria-hidden="true" /> {t('landing.a11y.resetAll')}
           </button>
         </div>
       )}

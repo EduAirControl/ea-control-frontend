@@ -95,7 +95,8 @@
     "or": "OU",
     "noName": "sem nome",
     "loading": "Carregando…",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "retry": "Tentar novamente"
   },
   "forgotPassword": {
     "title": "Esqueci minha senha",
@@ -352,9 +353,9 @@
     "description": "Notificações dos seus ambientes favoritos",
     "empty": "Você não tem ambientes favoritos",
     "emptyHint": "Clique em um coração no dashboard para adicionar favoritos",
-    "notif1": "⚠️ Temperatura alta: 26°C",
-    "notif2": "🔴 CO₂ alto: 1200 ppm",
-    "notif3": "⚠️ Umidade baixa: 28%",
+    "notif1": "Temperatura alta: 26°C",
+    "notif2": "CO₂ alto: 1200 ppm",
+    "notif3": "Umidade baixa: 28%",
     "ago5": "Há 5 min",
     "ago15": "Há 15 min",
     "ago10": "Há 10 min",
@@ -395,6 +396,7 @@
     "autoTimezone": "Fuso horário automático",
     "updateBtn": "Atualizar",
     "accessibleThemes": "Temas acessíveis",
+    "accessibleThemesHint": "Escolha a paleta mais fácil de distinguir. Os estados também têm ícones e rótulos.",
     "themeNormal": "Normal",
     "themeProtanopia": "Protanopia",
     "themeDeuteranopia": "Deuteranopia",
@@ -672,7 +674,18 @@
     "tabEnvironments": "Ambientes",
     "tabSensors": "Sensores e variáveis",
     "tabDevices": "Dispositivos IoT",
-    "noAdmin": "Você não tem permissão para acessar esta seção"
+    "noAdmin": "Você não tem permissão para acessar esta seção",
+    "tabProvisioning": "Provisionamento",
+    "requiredCode": "O código é obrigatório",
+    "requiredCampus": "Selecione um campus",
+    "requiredType": "Selecione um tipo de ambiente",
+    "invalidCapacity": "A capacidade deve ser 1 ou mais",
+    "codeLabel": "Código",
+    "codePlaceholder": "ex. A-102",
+    "floorLabel": "Andar",
+    "floorPlaceholder": "ex. 1",
+    "campusLabel": "Campus",
+    "typeLabel": "Tipo de ambiente"
   },
   "editModal": {
     "dateFormatTitle": "Formato de data",
@@ -710,16 +723,24 @@
     "summaryMessage": "{{alerts}} ambientes em alerta e {{warnings}} com avisos hoje",
     "all": "Todas",
     "alerts": "Alertas",
-    "activeAlerts": "{{count}} alertas ativas"
+    "activeAlerts": "{{count}} alertas ativas",
+    "severity": {
+      "CRITICAL": "Alerta crítico",
+      "WARNING": "Aviso",
+      "INFO": "Informação"
+    },
+    "alertMessage": "{{variable}} fora do intervalo em {{environment}}{{value}}",
+    "unknownEnvironment": "ambiente desconhecido",
+    "loadError": "Não foi possível carregar os alertas"
   },
   "leaderboard": {
     "title": "Ranking de Ambientes",
     "subtitle": "Pontuação calculada por temperatura, umidade, CO₂ e ruído · Toque em um ambiente para ver detalhes",
     "filters": {
       "all": "Todos",
-      "normal": "✅ Normal",
-      "warning": "⚠️ Aviso",
-      "alert": "🔴 Alertas"
+      "normal": "Normal",
+      "warning": "Aviso",
+      "alert": "Alertas"
     },
     "addFavorite": "Adicionar aos favoritos",
     "removeFavorite": "Remover dos favoritos",
@@ -769,7 +790,7 @@
       "remove": "Remover favorito"
     },
     "legend": {
-      "title": "💡 Como a pontuação é calculada",
+      "title": "Como a pontuação é calculada",
       "temp": "Temp ideal: 18–24 °C",
       "humidity": "Umidade ideal: 40–60 %",
       "co2": "CO₂ ideal: < 1000 ppm",
@@ -1059,14 +1080,17 @@
       "referenceRange": "Faixa de referência",
       "co2Range": "Abaixo de 800 ppm",
       "throughTime": "ao longo do tempo",
-      "syncedData": "Dados sincronizados"
+      "syncedData": "Dados sincronizados",
+      "noData": "Sem medições neste período"
     },
     "kpi": {
       "averagePrefix": "Média ",
       "vsPreviousPeriod": "7,4% vs. período anterior",
       "environmentsInRange": "ambientes dentro da faixa",
       "requireFollowUp": "requerem acompanhamento",
-      "requireAttention": "requerem atenção"
+      "requireAttention": "requerem atenção",
+      "measurementsCount": "medições registradas",
+      "noSummary": "Sem resumo disponível"
     },
     "context": {
       "environments": "Ambientes",
@@ -1113,7 +1137,10 @@
     "heroLine1": "A qualidade ambiental",
     "contextLabel": "CONTEXTO",
     "updatedNow": "atualizado agora",
-    "updatedAgo": "há 3 min"
+    "updatedAgo": "sem dados",
+    "updatedMinutes": "há {{count}} min",
+    "updatedHours": "há {{count}} h",
+    "updatedDays": "há {{count}} d"
   },
   "sensors": {
     "title": "Sensores e variáveis",
@@ -1170,7 +1197,21 @@
     "unitNoise": "dB",
     "eyebrow": "Gestão técnica",
     "synced": "Sincronizado {{time}}",
-    "syncNow": "Sincronizado agora"
+    "syncNow": "Sincronizado agora",
+    "statusUninstalled": "Não instalado",
+    "summaryUninstalled": "Não instalado",
+    "colModel": "Modelo",
+    "colInstalled": "Instalado",
+    "uninstall": "Desvincular",
+    "uninstallDone": "Dispositivo desvinculado do ambiente",
+    "requiredModel": "Selecione um modelo e um estado do catálogo",
+    "modelLabel": "Modelo",
+    "neverSeen": "Nunca reportou",
+    "searchPlaceholderDevice": "Buscar serial, modelo ou ambiente…",
+    "editSubtitleDevice": "Altere o modelo, o estado ou o ambiente do dispositivo.",
+    "statusCatalogError": "Catálogo de estados indisponível",
+    "provisionNew": "Provisionar dispositivo",
+    "catalogError": "Não foi possível carregar os catálogos"
   },
   "devices": {
     "title": "Dispositivos IoT",
@@ -1216,7 +1257,9 @@
       "wifiFail": "O ESP32 não conseguiu entrar na rede Wi-Fi",
       "badPayload": "O dispositivo rejeitou os dados recebidos",
       "timeout": "O dispositivo não respondeu a tempo",
-      "mac": "O endereço MAC é obrigatório"
+      "mac": "O endereço MAC é obrigatório",
+      "bleUnavailable": "Bluetooth indisponível. O app precisa de uma build de desenvolvimento, não Expo Go.",
+      "permissionTimeout": "A permissão de Bluetooth não respondeu. Verifique as permissões do app."
     }
   },
   "provisioning": {
@@ -1256,13 +1299,25 @@
       "scanning": "Escaneando por SERVICE_UUID…",
       "connecting": "ESP32_Config encontrado, conectando…",
       "ready": "Link estabelecido e características descobertas",
-      "sending": "Gravando {ssid, pass} em Base64…",
+      "sending": "Gravando credenciais (SSID, senha, token, instalação) no nó…",
       "waiting": "Aguardando notificação de status do ESP32…",
       "connected": "O dispositivo respondeu STATUS:CONNECTED",
       "fail": "O dispositivo respondeu STATUS:FAIL",
       "errJson": "O dispositivo respondeu STATUS:ERR_JSON",
       "error": "Processo interrompido com erros",
       "status": "Notificação do dispositivo"
-    }
+    },
+    "configLabel": "Configuração do nó",
+    "modelLabel": "Modelo do sensor",
+    "environmentLabel": "Ambiente",
+    "noEnvironments": "Nenhum ambiente disponível",
+    "registered": "Registrado como {{id}}",
+    "notRegistered": "Ainda não registrado",
+    "errors": {
+      "model": "Escolha um modelo de sensor",
+      "environment": "Escolha um ambiente",
+      "retryHint": "Toque em “Procurar” para tentar novamente."
+    },
+    "statusLabel": "Estado do sensor"
   }
 }

@@ -1,31 +1,35 @@
-export function getEnvironmentStatus(statusKey, t) {
+export function getEnvironmentStatus(statusKey, t, colors) {
   switch (statusKey) {
     case 'dashboard.statusNormal':
       return {
-        color: '#22c55e',
+        color: colors?.success || '#22c55e',
+        icon: 'checkmark-circle',
         text: t('dashboard.statusNormal'),
-        bg: '#22c55e20',
+        bg: colors?.successDim || '#22c55e20',
       }
 
     case 'dashboard.statusWarning':
       return {
-        color: '#f59e0b',
+        color: colors?.warning || '#f59e0b',
+        icon: 'warning',
         text: t('dashboard.statusWarning'),
-        bg: '#f59e0b20',
+        bg: colors?.warningDim || '#f59e0b20',
       }
 
     case 'dashboard.statusAlert':
       return {
-        color: '#ef4444',
+        color: colors?.error || '#ef4444',
+        icon: 'alert-circle',
         text: t('dashboard.statusAlert'),
-        bg: '#ef444420',
+        bg: colors?.errorDim || '#ef444420',
       }
 
     default:
       return {
-        color: '#94a3b8',
+        color: colors?.textMuted || '#64748b',
+        icon: 'help-circle',
         text: t('common.unknown'),
-        bg: '#94a3b820',
+        bg: colors?.bgSubtle || '#94a3b820',
       }
   }
 }

@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { MdOutlineMeetingRoom, MdMenu, MdClose } from 'react-icons/md';
 
-import { FaUser, FaHeart, FaBell, FaChevronDown, FaTrophy } from 'react-icons/fa';
+import { FaUser, FaHeart, FaBell, FaChevronDown, FaTrophy, FaBuilding } from 'react-icons/fa';
 
 import { IoStatsChart, IoSettings, IoLogOut } from 'react-icons/io5';
 
 import NavbarInfo from '../../components/NavbarInfo/NavbarInfo';
 import NotificationPanel from '../../../notifications/components/NotificationPanel';
-import authService from '../../../auth/services/authService';
+import { useAuth } from '../../../../context/useAuth';
 
 import logo from '../../../../shared/assets/EduAirControlLogo.png';
 
@@ -20,16 +21,21 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { user, isAdmin: isAdminUser, isSuperAdmin, logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const dropdownRef = useRef(null);
+  const dropdownMenuRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      const clickedProfile = dropdownRef.current?.contains(e.target);
+      const clickedDropdown = dropdownMenuRef.current?.contains(e.target);
+      if (!clickedProfile && !clickedDropdown) {
         setDropdownOpen(false);
       }
     };
@@ -37,8 +43,35 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const userRole = (authService.getUser()?.role || 'USER').toLowerCase();
-  const isAdmin = authService.isAdmin();
+  useLayoutEffect(() => {
+    if (!dropdownOpen) return undefined;
+
+    const updateDropdownPosition = () => {
+      if (!dropdownRef.current) return;
+
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const position = {
+        top: rect.top + 62,
+        left: Math.max(8, Math.min(rect.right - 240, window.innerWidth - 248)),
+      };
+
+      setDropdownPosition((current) =>
+        current.top === position.top && current.left === position.left ? current : position
+      );
+    };
+
+    updateDropdownPosition();
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+    };
+  }, [dropdownOpen]);
+
+  const userRole = (user?.role || 'USER').toLowerCase();
+  const isAdmin = isAdminUser;
 
   const menuItems = [
     {
@@ -65,6 +98,15 @@ function Navbar() {
           },
         ]
       : []),
+    ...(isSuperAdmin
+      ? [
+          {
+            icon: <FaBuilding />,
+            label: t('nav.institutions', 'Instituciones'),
+            path: '/admin/institutions',
+          },
+        ]
+      : []),
   ];
 
   const isProfileActive = location.pathname === '/profile' || location.pathname === '/settings';
@@ -76,8 +118,7 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    authService.logout();
-    go('/landing');
+    logout();
   };
 
   return (
@@ -131,29 +172,6 @@ function Navbar() {
               />
             </div>
 
-            {dropdownOpen && (
-              <div className="dashboard-profile-dropdown">
-                <div className="dashboard-profile-dropdown-item" onClick={() => go('/profile')}>
-                  <FaUser />
-                  <span>{t('nav.profile')}</span>
-                </div>
-
-                <div className="dashboard-profile-dropdown-item" onClick={() => go('/settings')}>
-                  <IoSettings />
-                  <span>{t('nav.settings')}</span>
-                </div>
-
-                <div className="dashboard-profile-dropdown-divider" />
-
-                <div
-                  className="dashboard-profile-dropdown-item logout"
-                  onClick={handleLogout}
-                >
-                  <IoLogOut />
-                  <span>{t('nav.logout')}</span>
-                </div>
-              </div>
-            )}
           </div>{' '}
           {/* CORREGIDO: Cierre correcto del perfil */}
           {/* 3. BOTÓN HAMBURGUESA */}
@@ -167,6 +185,33 @@ function Navbar() {
           </button>
         </div>
       </nav>
+
+      {dropdownOpen &&
+        createPortal(
+          <div
+            ref={dropdownMenuRef}
+            className="dashboard-profile-dropdown"
+            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+          >
+            <div className="dashboard-profile-dropdown-item" onClick={() => go('/profile')}>
+              <FaUser />
+              <span>{t('nav.profile')}</span>
+            </div>
+
+            <div className="dashboard-profile-dropdown-item" onClick={() => go('/settings')}>
+              <IoSettings />
+              <span>{t('nav.settings')}</span>
+            </div>
+
+            <div className="dashboard-profile-dropdown-divider" />
+
+            <div className="dashboard-profile-dropdown-item logout" onClick={handleLogout}>
+              <IoLogOut />
+              <span>{t('nav.logout')}</span>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* MENÚ MÓVIL (SIDEBAR LATERAL) */}
       <div className={`dashboard-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>

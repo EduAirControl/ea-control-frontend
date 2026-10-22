@@ -11,26 +11,39 @@ import EnvironmentExplanation from '../EnvironmentExplanation/EnvironmentExplana
 import InfoTooltip from '../InfoTooltip/InfoTooltip';
 
 import { getRecommendations } from '../../utils/getRecommendations';
+import { hasAnyMetric } from '../../utils/environmentMetrics';
 
 import './EnvironmentModal.css';
+
+function formatValue(value, unit) {
+  return value === undefined || value === null || Number.isNaN(value) ? '—' : `${value} ${unit}`;
+}
 
 function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation();
 
   if (!isOpen || !environment) return null;
 
-  const statusText = environment.statusKey ? t(environment.statusKey) : environment.status;
+  // Sin mediciones no hay estado que derivar: `environment.status` es el enum del
+  // backend ("ACTIVE"), que no es un estado ambiental y además salía sin
+  // traducir. Antes caía en la rama `danger` y pintaba un ambiente vacío en rojo.
+  const hasMetrics = hasAnyMetric(environment);
 
-  const statusClass =
-    environment.statusKey === 'dashboard.statusNormal'
+  const statusClass = !hasMetrics
+    ? 'unknown'
+    : environment.statusKey === 'dashboard.statusNormal'
       ? 'normal'
       : environment.statusKey === 'dashboard.statusWarning'
         ? 'warning'
         : 'danger';
 
+  const statusText = hasMetrics
+    ? t(environment.statusKey || 'common.unknown')
+    : t('common.noData');
+
   return (
-    <div className="environment-modal-overlay">
-      <div className="environment-modal">
+    <div className="environment-modal-overlay" onClick={onClose}>
+      <div className="environment-modal" onClick={(e) => e.stopPropagation()}>
         <button className="env-modal__close" onClick={onClose} aria-label="Cerrar">
           <FaTimes />
         </button>
@@ -54,42 +67,46 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
         </div>
 
         <div className="modal-sensors">
-          <div style={{ position: 'relative' }}>
+          {/* className, no style inline: el wrapper necesita ser flex para que la
+              sensor-card se estire a la altura de la fila. Con position:relative
+              a secas la fila se igualaba pero las cards dentro seguian tomando
+              solo su alto de contenido. */}
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.temperature')} />
             <SensorInfo
               icon={<FaTemperatureHigh />}
               title={t('dashboard.temperature')}
-              value={`${environment.temp} °C`}
+              value={formatValue(environment.temp, '°C')}
               description={t('allEnvironments.tempDescription')}
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.humidity')} />
             <SensorInfo
               icon={<WiHumidity />}
               title={t('dashboard.humidity')}
-              value={`${environment.humidity}%`}
+              value={formatValue(environment.humidity, '%')}
               description={t('allEnvironments.humidityDescription')}
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.co2')} />
             <SensorInfo
               icon={<MdCo2 />}
               title={t('allEnvironments.co2')}
-              value={`${environment.co2} ppm`}
+              value={formatValue(environment.co2, 'ppm')}
               description={t('allEnvironments.co2Description')}
             />
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="sensor-card-wrap">
             <InfoTooltip text={t('tooltips.noise')} />
             <SensorInfo
               icon={<HiSpeakerWave />}
               title={t('dashboard.noise')}
-              value={`${environment.noise} dB`}
+              value={formatValue(environment.noise, 'dB')}
               description={t('allEnvironments.noiseDescription')}
             />
           </div>

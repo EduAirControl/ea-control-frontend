@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Input, Button } from '../../../../shared/components';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import authService from '../../services/authService';
 
 function ChangePasswordForm() {
@@ -67,7 +68,11 @@ function ChangePasswordForm() {
         onChange={(e) => setConfirmPassword(e.target.value)}
         required
       />
-      {apiError && <p className="error-text">⚠ {apiError}</p>}
+      {apiError && (
+        <p className="error-text">
+          <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+        </p>
+      )}
       <Button
         className="btn-confirm"
         type="submit"

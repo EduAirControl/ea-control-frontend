@@ -15,6 +15,7 @@ import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import { setAppLanguage } from '../../../../shared/i18n/i18n.js'
 import storage from '../../../../shared/storage/storage.js'
+import authService from '../../../auth/services/authService.js'
 import {
   getAccessibilitySettings,
   saveAccessibilitySettings,
@@ -59,24 +60,28 @@ const DATE_FORMATS = [
   { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD', sample: '2026/10/06' },
 ]
 
-function Toggle({ value, onValueChange, currentColors }) {
+function Toggle({ value, onValueChange, currentColors, accessibilityLabel }) {
   return (
     <TouchableOpacity
-      style={[styles.toggle, { backgroundColor: value ? currentColors.accent : currentColors.borderColor }]}
+      style={[styles.toggle, { backgroundColor: value ? (currentColors.accentButton || currentColors.accent) : currentColors.borderColor }]}
       onPress={() => onValueChange(!value)}
       activeOpacity={0.8}
+      accessibilityRole="switch"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ checked: value }}
+      hitSlop={8}
     >
       <View style={[styles.toggleCircle, value && { transform: [{ translateX: 20 }] }]} />
     </TouchableOpacity>
   )
 }
 
-function SectionCard({ icon, title, children, currentColors, style }) {
+function SectionCard({ icon, title, children, currentColors }) {
   return (
     <View style={[styles.card, { backgroundColor: currentColors.bgCard, borderColor: currentColors.borderColor }]}>
       <View style={styles.cardHeader}>
         <Ionicons name={icon} size={18} color={currentColors.accent} />
-        <Text style={[styles.cardTitle, { color: currentColors.textPrimary }]}>{title}</Text>
+        <Text accessibilityRole="header" style={[styles.cardTitle, { color: currentColors.textPrimary }]}>{title}</Text>
       </View>
       {children}
     </View>
@@ -108,7 +113,8 @@ export default function SettingsScreen({ navigation }) {
   const [dateFormat, setDateFormat] = useState('DD-MM-YYYY')
   const [dateFormatDraft, setDateFormatDraft] = useState('DD-MM-YYYY')
   const [reminders, setReminders] = useState({ alerts: true, warnings: true, daily: false, sound: true })
-  const [privacy, setPrivacy] = useState({ visible: false })
+  // El valor se persiste y se restaura pero la UI no lo lee todavia.
+  const [, setPrivacy] = useState({ visible: false })
   const [showLangModal, setShowLangModal] = useState(false)
   const [showDateFormatModal, setShowDateFormatModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -172,7 +178,7 @@ export default function SettingsScreen({ navigation }) {
     setShowDateFormatModal(false)
   }
 
-  const handleSavePassword = () => {
+  const handleSavePassword = async () => {
     const pm = t('settings.passwordModal', { returnObjects: true })
     if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
       return Alert.alert('', pm.errorEmpty)
@@ -180,27 +186,47 @@ export default function SettingsScreen({ navigation }) {
     if (passwordData.new !== passwordData.confirm) {
       return Alert.alert('', pm.errorMatch)
     }
-    if (passwordData.new.length < 6) {
+    if (passwordData.new.length < 8) {
       return Alert.alert('', pm.errorLength)
+    }
+    try {
+      await authService.changePassword(passwordData.current, passwordData.new)
+    } catch (e) {
+      return Alert.alert('', e?.message || pm.errorLength)
     }
     Alert.alert('', pm.success)
     setShowPasswordModal(false)
     setPasswordData({ current: '', new: '', confirm: '' })
   }
 
-  const handleDeleteAccountConfirm = () => {
-    if (!deletePassword.trim()) {
+  const handleDeleteAccountConfirm = async () => {
+    const password = deletePassword.trim()
+    if (!password) {
       return Alert.alert('', 'Ingresa tu contraseña para confirmar la eliminación de la cuenta.')
     }
-
-    setDeleteSent(true)
-    setDeletePassword('')
+    try {
+      await authService.deleteAccount(password)
+      setDeleteSent(true)
+      setDeletePassword('')
+    } catch (e) {
+      Alert.alert('', e?.message || 'No se pudo eliminar la cuenta')
+    }
   }
 
-  const handleCloseDeleteModal = () => {
+  const handleCloseDeleteModal = async () => {
+    const wasDeleted = deleteSent
     setDeleteSent(false)
     setDeletePassword('')
     setShowDeleteModal(false)
+    if (wasDeleted) {
+      // La cuenta ya no existe: se cierra la sesión y se vuelve al login.
+      try {
+        await authService.logout()
+      } catch {
+        // la sesión local ya quedó limpia en deleteAccount
+      }
+      navigation.replace('Login')
+    }
   }
 
   const themeLabel = (key) => {
@@ -239,9 +265,9 @@ export default function SettingsScreen({ navigation }) {
         return (
           <View style={styles.helpContactList}>
             {[
-              { icon: '✉️', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
-              { icon: '🕐', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
-              { icon: '⏱️', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
+              { icon: 'mail-outline', label: t('settings.contact.emailTitle'), value: t('settings.contact.emailDesc') },
+              { icon: 'time-outline', label: t('settings.contact.scheduleTitle'), value: t('settings.contact.scheduleDesc') },
+              { icon: 'hourglass-outline', label: t('settings.contact.responseTitle'), value: t('settings.contact.responseDesc') },
             ].map((row, idx) => (
               <View
                 key={idx}
@@ -254,7 +280,7 @@ export default function SettingsScreen({ navigation }) {
                 ]}
               >
                 <View style={[styles.helpContactIcon, { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}>
-                  <Text style={styles.helpContactIconText}>{row.icon}</Text>
+                  <Ionicons name={row.icon} size={16} color={currentColors.accent} />
                 </View>
                 <View style={styles.helpContactText}>
                   <Text style={[styles.helpLabel, { color: currentColors.textPrimary }]}>{row.label}</Text>
@@ -383,7 +409,7 @@ export default function SettingsScreen({ navigation }) {
             icon={darkMode ? 'moon' : 'moon-outline'}
             label={t('settings.darkMode')}
             currentColors={currentColors}
-            right={<Toggle value={darkMode} onValueChange={toggleDarkMode} currentColors={currentColors} />}
+            right={<Toggle value={darkMode} onValueChange={toggleDarkMode} currentColors={currentColors} accessibilityLabel={t('settings.darkMode')} />}
           />
           <Row icon="eye-outline" label={t('settings.accessibleThemes')} value={themeLabel(colorTheme)} currentColors={currentColors} color={colorTheme === '' ? null : currentColors.accent} />
           <View style={styles.chipWrap}>
@@ -396,13 +422,21 @@ export default function SettingsScreen({ navigation }) {
                   colorTheme === c.key && { backgroundColor: currentColors.accentDim },
                 ]}
                 onPress={() => handleThemeChange(c.key)}
+                accessibilityRole="radio"
+                accessibilityLabel={t(c.label)}
+                accessibilityState={{ selected: colorTheme === c.key }}
+                hitSlop={3}
               >
                 <Text style={[styles.chipLabel, { color: colorTheme === c.key ? currentColors.accent : currentColors.textSecondary }]}>
                   {t(c.label)}
                 </Text>
+                {colorTheme === c.key && <Ionicons name="checkmark-circle" size={17} color={currentColors.accent} accessibilityElementsHidden />}
               </TouchableOpacity>
             ))}
           </View>
+          <Text style={[styles.cardDesc, { color: currentColors.textMuted }]}>
+            {t('settings.accessibleThemesHint', 'Elige la paleta que distingas mejor. Los estados también muestran iconos y etiquetas.')}
+          </Text>
         </SectionCard>
 
         <SectionCard icon="globe-outline" title={t('settings.langAndDates')} currentColors={currentColors}>
@@ -425,7 +459,7 @@ export default function SettingsScreen({ navigation }) {
             icon="time-outline"
             label={t('settings.autoTimezone')}
             currentColors={currentColors}
-            right={<Toggle value={autoTimezone} onValueChange={(v) => { setAutoTimezone(v); persist('autoTimezone', v) }} currentColors={currentColors} />}
+            right={<Toggle value={autoTimezone} onValueChange={(v) => { setAutoTimezone(v); persist('autoTimezone', v) }} currentColors={currentColors} accessibilityLabel={t('settings.autoTimezone')} />}
           />
           {!autoTimezone && (
             <View style={styles.timezoneWrap}>
@@ -670,9 +704,9 @@ export default function SettingsScreen({ navigation }) {
         {deleteSent ? (
           <View style={[styles.deleteSuccessCard, { backgroundColor: currentColors.bgBody, borderColor: currentColors.borderColor }]}>
             <Ionicons name="checkmark-circle-outline" size={32} color={currentColors.accent} />
-            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Solicitud enviada</Text>
+            <Text style={[styles.modalText, { color: currentColors.textPrimary }]}>Cuenta eliminada</Text>
             <Text style={[styles.helpValue, { color: currentColors.textSecondary }]}>
-              Tu cuenta queda pendiente de eliminación segura. Verificaremos la confirmación y te avisaremos si necesitamos más información.
+              Tu cuenta y los datos de tu perfil han sido eliminados. Se cerrará la sesión en este dispositivo.
             </Text>
             <Button variant="secondary" onPress={handleCloseDeleteModal} style={styles.deleteSuccessButton}>
               Cerrar
@@ -753,4 +787,3 @@ export default function SettingsScreen({ navigation }) {
     </SafeAreaView>
   )
 }
-

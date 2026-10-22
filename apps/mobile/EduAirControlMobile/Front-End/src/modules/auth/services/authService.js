@@ -1,96 +1,175 @@
-import apiClient from '../../../shared/services/apiClient'
+import apiClient, { clearSession } from '../../../shared/services/apiClient'
 import storage from '../../../shared/storage/storage'
 
+const BASE = '/api/v1/auth'
+
 function base64UrlDecode(str) {
-  const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-  return atob(padded)
+const normalized = str.replace(/-/g, '+').replace(/_/g, '/')
+const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+return atob(padded)
 }
 
 function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1]
-    return JSON.parse(base64UrlDecode(payload))
-  } catch {
-    return null
+try {
+const payload = token.split('.')[1]
+return JSON.parse(base64UrlDecode(payload))
+} catch {
+return null
+}
+}
+
+/**
+ * Guarda la sesión con la forma real de la respuesta de ms-security:
+ * `{ accessToken, refreshToken, expiresIn, user }` (antes se leía `data.token`,
+ * que el backend no devuelve nunca, y el rol salía de `claims.role` cuando el
+ * token lleva `roles[]`).
+ */
+async function storeSession(data) {
+  if (!data?.accessToken) throw new Error('Respuesta de autenticación inválida')
+  await storage.setItem('token', data.accessToken)
+  if (data.refreshToken) await storage.setItem('refreshToken', data.refreshToken)
+
+  const claims = decodeJWT(data.accessToken) || {}
+  const summary = data.user || {}
+  const roles = Array.isArray(summary.roles) && summary.roles.length
+    ? summary.roles
+    : (Array.isArray(claims.roles) ? claims.roles : (claims.role ? [claims.role] : []))
+
+  const user = {
+    id: summary.id || claims.sub || null,
+    email: summary.email || claims.email || null,
+    username: summary.username || claims.username || null,
+    roles,
+    role: roles[0] || 'USER',
+    institutionId: summary.institutionId || claims.institutionId || null,
+    campusId: summary.campusId || claims.campusId || null,
   }
+  await storage.setItem('user', JSON.stringify(user))
+  return user
 }
 
 const authService = {
-  async login(email, password, companyCode) {
-    const data = await apiClient.post('/auth/login', { email, password, companyCode })
-    await storage.setItem('token', data.token)
-    const claims = decodeJWT(data.token)
-    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name: email.split('@')[0] }
-    await storage.setItem('user', JSON.stringify(user))
-    return data
+  /** `LoginRequest` es solo `{email, password}`: el `companyCode` lo ignora el backend. */
+  async login(email, password) {
+    const data = await apiClient.post(`${BASE}/login`, { email, password })
+    return storeSession(data)
   },
 
-  async register(name, email, password, companyCode) {
-    const data = await apiClient.post('/auth/register', { name, email, password, companyCode })
-    await storage.setItem('token', data.token)
-    const claims = decodeJWT(data.token)
-    const user = { email: claims?.sub || email, role: claims?.role || 'USER', name }
-    await storage.setItem('user', JSON.stringify(user))
-    return data
+  /** `RegisterRequest`: `{email, password, username, companyCode, campusId?}`. */
+  async register(name, email, password, companyCode, campusId) {
+    const data = await apiClient.post(`${BASE}/register`, {
+      email,
+      password,
+      username: name,
+      companyCode,
+      ...(campusId ? { campusId } : {}),
+    })
+    return storeSession(data)
+  },
+
+  async refresh() {
+    const refreshToken = storage.getItem('refreshToken')
+    if (!refreshToken) return false
+    const data = await apiClient.post(`${BASE}/refresh`, { refreshToken })
+    await storeSession(data)
+    return true
   },
 
   async logout() {
-    await storage.removeItem('token')
-    await storage.removeItem('user')
+    const refreshToken = storage.getItem('refreshToken')
+    // Mejor esfuerzo: si el backend no responde, la sesión local se limpia igual.
+    try {
+      await apiClient.post(`${BASE}/logout`, { refreshToken, allDevices: false })
+    } catch {
+      // ignorado a propósito
+    }
+    await clearSession()
   },
 
   async forgotPassword(email) {
-    return apiClient.post('/auth/forgot-password', { email })
+    return apiClient.post(`${BASE}/forgot-password`, { email })
   },
 
   async verifyCode(email, code) {
-    return apiClient.post('/auth/verify-code', { email, code })
+    return apiClient.post(`${BASE}/verify-code`, { email, code })
   },
 
   async resendCode(email) {
-    return apiClient.post('/auth/resend-code', { email })
+    return apiClient.post(`${BASE}/resend-code`, { email })
   },
 
   async resetPassword(email, code, newPassword) {
-    return apiClient.post('/auth/reset-password', { email, code, newPassword })
+    return apiClient.post(`${BASE}/reset-password`, { email, code, newPassword })
   },
 
   async changePassword(currentPassword, newPassword) {
-    return apiClient.post('/auth/change-password', { currentPassword, newPassword })
+    return apiClient.post(`${BASE}/change-password`, { currentPassword, newPassword })
+  },
+
+  /** `DeleteAccountRequest` exige `{password}` como confirmación. */
+  async deleteAccount(password) {
+    await apiClient.delete(`${BASE}/account`, { body: JSON.stringify({ password }) })
+    await clearSession()
+  },
+
+  getRefreshToken() {
+    return storage.getItem('refreshToken')
   },
 
   getToken() {
     return storage.getItem('token')
   },
 
-  getUser() {
-    try {
-      return JSON.parse(storage.getItem('user'))
-    } catch {
-      return null
-    }
-  },
+getUser() {
+try {
+return JSON.parse(storage.getItem('user'))
+} catch {
+return null
+}
+},
 
   isAuthenticated() {
     const token = storage.getItem('token')
     if (!token) return false
     const claims = decodeJWT(token)
     if (!claims) {
-      this.logout()
+      // Solo limpieza local: un logout remoto con token inválido solo provoca
+      // un refresh en camino y carrera con clearSession.
+      clearSession()
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      this.logout()
+      clearSession()
       return false
     }
     return true
   },
 
+  /**
+   * Los roles viajan como lista en `roles`. Se acepta `role` (string) por si
+   * llegara un token antiguo.
+   */
+  roles() {
+    const user = this.getUser()
+    if (user?.roles?.length) return user.roles
+    const claims = decodeJWT(this.getToken()) || {}
+    if (Array.isArray(claims.roles)) return claims.roles
+    return claims.role ? [claims.role] : []
+  },
+
+  /**
+   * SUPER_ADMIN cuenta como administrador, igual que en la web (AuthContext): sin
+   * esto un SUPER_ADMIN no ve la pestana de gestion.
+   */
   isAdmin() {
-    if (!this.isAuthenticated()) return false
-    const role = this.getUser()?.role || decodeJWT(this.getToken())?.role || ''
-    return String(role).toUpperCase() === 'ADMIN'
+    return this.roles().some((r) => {
+      const role = String(r).toUpperCase()
+      return role === 'ADMIN' || role === 'SUPER_ADMIN'
+    })
+  },
+
+  isSuperAdmin() {
+    return this.roles().some((r) => String(r).toUpperCase() === 'SUPER_ADMIN')
   },
 }
 

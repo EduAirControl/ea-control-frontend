@@ -16,6 +16,11 @@ import {
   FaEye,
   FaEyeSlash,
   FaInfoCircle,
+  FaEnvelope,
+  FaHourglassHalf,
+  FaMobileAlt,
+  FaExclamationTriangle,
+  FaCheck,
 } from 'react-icons/fa';
 import { IoSettings } from 'react-icons/io5';
 import { MdEdit } from 'react-icons/md';
@@ -377,7 +382,7 @@ function SettingsScreen() {
                 <span className="theme-label">{themeLabel(key)}</span>
                 {theme === key && (
                   <span className="theme-check" aria-hidden="true">
-                    ✓
+                    <FaCheck aria-hidden="true" />
                   </span>
                 )}
               </button>
@@ -590,10 +595,14 @@ function SettingsScreen() {
 
       {/* ── MODAL CAMBIAR CONTRASEÑA ── */}
       <Modal isOpen={showPasswordModal} onClose={handleClosePasswordModal} size="sm">
-        <h3 className="password-title">🔐 {t('settings.passwordModal.title')}</h3>
+        <h3 className="password-title">
+          <FaLock aria-hidden="true" /> {t('settings.passwordModal.title')}
+        </h3>
         {passwordSuccess ? (
           <div className="password-success">
-            <span className="password-success-icon">✓</span>
+            <span className="password-success-icon">
+              <FaCheck aria-hidden="true" />
+            </span>
             <p>{t('settings.passwordModal.success')}</p>
           </div>
         ) : (
@@ -686,7 +695,11 @@ function SettingsScreen() {
               >
                 <img src={flag} alt={flagAlt} className="lang-modal-flag" loading="lazy" />
                 <span>{label}</span>
-                {isSelected && <span className="lang-modal-check">✓</span>}
+                {isSelected && (
+                  <span className="lang-modal-check">
+                    <FaCheck aria-hidden="true" />
+                  </span>
+                )}
               </button>
             );
           })}
@@ -697,7 +710,9 @@ function SettingsScreen() {
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} size="sm">
         {deleteStep === 'confirm' ? (
           <>
-            <h3 style={{ color: '#ff4d5b' }}>⚠️ {t('settings.deleteAccount')}</h3>
+            <h3 style={{ color: '#ff4d5b' }}>
+              <FaExclamationTriangle aria-hidden="true" /> {t('settings.deleteAccount')}
+            </h3>
             <p
               style={{
                 fontSize: 'calc(var(--a11y-font-size) * 0.875)',
@@ -738,7 +753,9 @@ function SettingsScreen() {
           </>
         ) : (
           <>
-            <h3 style={{ color: 'var(--accent)' }}>✉️ {t('settings.deleteRequestSent')}</h3>
+            <h3 style={{ color: 'var(--accent)' }}>
+              <FaEnvelope aria-hidden="true" /> {t('settings.deleteRequestSent')}
+            </h3>
             <Button
               variant="secondary"
               onClick={() => setShowDeleteModal(false)}
@@ -754,7 +771,9 @@ function SettingsScreen() {
       <Modal isOpen={helpModal.open} onClose={() => setHelpModal({ open: false, type: null })} size="lg">
         {helpModal.type === 'faq' && (
           <>
-            <h3>❓ {t('settings.helpFaq')}</h3>
+            <h3>
+              <FaQuestionCircle aria-hidden="true" /> {t('settings.helpFaq')}
+            </h3>
             <div className="help-modal-body">
               {[
                 { q: t('settings.faq.q1'), a: t('settings.faq.a1') },
@@ -773,21 +792,23 @@ function SettingsScreen() {
 
         {helpModal.type === 'contact' && (
           <>
-            <h3>📬 {t('settings.helpContact')}</h3>
+            <h3>
+              <FaEnvelope aria-hidden="true" /> {t('settings.helpContact')}
+            </h3>
             <div className="help-modal-body">
               {[
                 {
-                  icon: '✉️',
+                  icon: <FaEnvelope aria-hidden="true" />,
                   title: t('settings.contact.emailTitle'),
                   desc: 'soporte@eduaircontrol.com',
                 },
                 {
-                  icon: '🕐',
+                  icon: <FaClock aria-hidden="true" />,
                   title: t('settings.contact.scheduleTitle'),
                   desc: t('settings.contact.scheduleDesc'),
                 },
                 {
-                  icon: '⏱️',
+                  icon: <FaHourglassHalf aria-hidden="true" />,
                   title: t('settings.contact.responseTitle'),
                   desc: t('settings.contact.responseDesc'),
                 },
@@ -826,7 +847,9 @@ function SettingsScreen() {
 
         {helpModal.type === 'privacy' && (
           <>
-            <h3>🔒 {t('settings.helpPrivacy')}</h3>
+            <h3>
+              <FaLock aria-hidden="true" /> {t('settings.helpPrivacy')}
+            </h3>
             <div className="help-modal-body help-modal-scroll">
               <p>{t('settings.privacyModal.intro')}</p>
               {t('settings.privacyModal.sections', { returnObjects: true }).map(
@@ -848,7 +871,9 @@ function SettingsScreen() {
 
         {helpModal.type === 'version' && (
           <>
-            <h3>📱 {t('settings.helpVersion')}</h3>
+            <h3>
+              <FaMobileAlt aria-hidden="true" /> {t('settings.helpVersion')}
+            </h3>
             <div className="help-modal-body">
               <div className="version-info">
                 <div className="version-badge">v1.0.0</div>

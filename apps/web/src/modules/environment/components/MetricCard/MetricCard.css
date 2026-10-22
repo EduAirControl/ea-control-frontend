@@ -4,26 +4,26 @@
     gap:14px;
     padding:14px;
     border-radius:14px;
-    background:#fff;
-    border:1px solid #e5e7eb;
+    background:var(--bg-card);
+    border:1px solid var(--border-card);
     transition:.25s;
 }
 
 .metric-card:hover{
     transform:translateY(-3px);
-    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    box-shadow:var(--shadow-md);
 }
 
 .metric-icon{
     width:50px;
     height:50px;
     border-radius:50%;
-    background:#f3f4f6;
+    background:var(--bg-subtle);
     display:flex;
     justify-content:center;
     align-items:center;
     font-size:28px;
-    color:#25e77c;
+    color:var(--color-success);
     flex-shrink:0;
 }
 
@@ -31,38 +31,35 @@
     display:flex;
     flex-direction:column;
     flex:1;
+    /* Sin min-width:0 un hijo flex no puede encogerse por debajo de su contenido,
+       asi que la etiqueta larga desbordaba en vez de truncarse. */
+    min-width:0;
 }
 
 .metric-label{
     font-size:13px;
-    color:#6b7280;
+    color:var(--text-muted);
+    /* Truncar en vez de partir en dos lineas: el alto de la tarjeta depende de
+       cuantas lineas ocupe la etiqueta. */
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .metric-value{
     font-size:20px;
     font-weight:700;
-    color:#111827;
+    color:var(--text-primary);
     margin:2px 0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .metric-status{
     font-size:12px;
     font-weight:600;
-}
-
-body.dark-mode .metric-card{
-    background:#16213e;
-    border-color:#263042;
-}
-
-body.dark-mode .metric-icon{
-    background:#24324d;
-}
-
-body.dark-mode .metric-value{
-    color:#f8fafc;
-}
-
-body.dark-mode .metric-label{
-    color:#94a3b8;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }

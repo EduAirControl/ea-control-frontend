@@ -16,20 +16,11 @@ import { useTranslation } from 'react-i18next'
 import { useEnvironment } from '../../../../context/EnvironmentContext.jsx'
 import { useDashboardAnalysisVM } from '../../viewmodels/useDashboardAnalysisVM.js'
 import {
-  ENVIRONMENT_COLORS,
   METRICS,
   normalizeStatus,
 } from '../../utils/historicalSeries.js'
 import { styles } from './DashboardScreen.style'
-
-const GRID_COLOR = 'rgba(167,188,208,.28)'
-const AXIS_TEXT_COLOR = '#8394A8'
-
-const STATUS_COLORS = {
-  normal: '#25E77C',
-  warning: '#FFB11A',
-  alert: '#FF4D5B',
-}
+import { usePolling } from '../../../../shared/hooks/usePolling.js'
 
 function MetricIcon({ name, size = 14, color }) {
   return <Ionicons name={name} size={size} color={color} />
@@ -91,6 +82,13 @@ export default function DashboardScreen({ navigation }) {
   const { t } = useTranslation()
   const { loading } = useEnvironment()
   const vm = useDashboardAnalysisVM()
+  usePolling(vm.refresh, 30000)
+  const statusColors = {
+    normal: currentColors.success,
+    warning: currentColors.warning,
+    alert: currentColors.error,
+  }
+  const chartPalette = currentColors.chartPalette
 
   const screenWidth = Dimensions.get('window').width
 
@@ -99,7 +97,7 @@ export default function DashboardScreen({ navigation }) {
     screenWidth - 32 - 28 - 44
   )
 
-  const pointCount = vm.periodLabels?.[vm.period]?.length || 0
+  const pointCount = vm.pointCount || 0
 
   const initialSpacing = 10
   const endSpacing = 10
@@ -115,44 +113,27 @@ export default function DashboardScreen({ navigation }) {
 
   const chartColors = vm.series.map(
     (_, index) =>
-      ENVIRONMENT_COLORS[
-        index % ENVIRONMENT_COLORS.length
-      ]
+      chartPalette[index % chartPalette.length]
   )
 
   /*
-   * Datos para el gráfico de barras.
-   *
-   * Se toma el último valor disponible de cada serie.
+   * Datos para el gráfico de barras: valor actual real de cada ambiente
+   * (comparación por ambiente de la métrica seleccionada).
    */
   const barData = useMemo(() => {
-    if (!Array.isArray(vm.series)) {
+    if (!Array.isArray(vm.comparisonData)) {
       return []
     }
 
-    return vm.series
+    return vm.comparisonData
       .map((item, index) => {
-        const points = Array.isArray(item.points)
-          ? item.points
-          : []
-
-        const lastPoint =
-          points.length > 0
-            ? points[points.length - 1]
-            : null
-
-        const value =
-          typeof lastPoint?.value === 'number'
-            ? lastPoint.value
-            : 0
+        const value = typeof item.value === 'number' ? item.value : 0
 
         return {
           value,
           label: item.name || '',
           frontColor:
-            ENVIRONMENT_COLORS[
-              index % ENVIRONMENT_COLORS.length
-            ],
+            chartPalette[index % chartPalette.length],
           topLabelComponent: () => (
             <Text
               style={{
@@ -168,9 +149,10 @@ export default function DashboardScreen({ navigation }) {
       })
       .filter((item) => item.value >= 0)
   }, [
-    vm.series,
+    vm.comparisonData,
     vm.formatMetric,
     currentColors.textMuted,
+    chartPalette,
   ])
 
   const barWidth = Math.max(
@@ -204,20 +186,23 @@ export default function DashboardScreen({ navigation }) {
     return [
       {
         value: normal,
-        color: STATUS_COLORS.normal,
+        color: statusColors.normal,
       },
       {
         value: warning,
-        color: STATUS_COLORS.warning,
+        color: statusColors.warning,
       },
       {
         value: alert,
-        color: STATUS_COLORS.alert,
+        color: statusColors.alert,
       },
     ].filter((item) => item.value > 0)
   }, [
     vm.statusCounts,
     currentColors.borderColor,
+    currentColors.success,
+    currentColors.warning,
+    currentColors.error,
   ])
 
   /*
@@ -232,9 +217,7 @@ export default function DashboardScreen({ navigation }) {
       const number = index + 1
 
       const color =
-        ENVIRONMENT_COLORS[
-          index % ENVIRONMENT_COLORS.length
-        ]
+        chartPalette[index % chartPalette.length]
 
       if (number > 1) {
         props[`data${number}`] = item.points || []
@@ -254,7 +237,7 @@ export default function DashboardScreen({ navigation }) {
     }
 
     return props
-  }, [vm.series])
+  }, [vm.series, chartPalette])
 
   /*
    * Tooltip del gráfico histórico.
@@ -346,14 +329,6 @@ export default function DashboardScreen({ navigation }) {
     vm.healthPercent || 0
   )
 
-  /*
-   * Navegación al detalle de un ambiente.
-   */
-  const handleEnvironmentPress = (id) => {
-    navigation.navigate('EnvironmentDetail', {
-      envId: id,
-    })
-  }
 
   return (
     <SafeAreaView
@@ -821,7 +796,7 @@ export default function DashboardScreen({ navigation }) {
                     )
 
                   const statusColor =
-                    STATUS_COLORS[
+                    statusColors[
                       normalizedStatus.key
                     ] ||
                     currentColors.accent
@@ -1010,9 +985,17 @@ export default function DashboardScreen({ navigation }) {
               value={vm.formatMetric(
                 vm.average
               )}
-              note={`↓ ${t(
-                'dashboardAnalysis.kpi.vsPreviousPeriod'
-              )}`}
+              note={
+                vm.summaryCounts
+                  ? `${vm.summaryCounts.measurements} ${t(
+                      'dashboardAnalysis.kpi.measurementsCount',
+                      'mediciones registradas'
+                    )}`
+                  : t(
+                      'dashboardAnalysis.kpi.noSummary',
+                      'Sin resumen disponible'
+                    )
+              }
               icon={vm.metricInfo.icon}
               iconColor={currentColors.accent}
               valueColor={currentColors.accent}
@@ -1030,8 +1013,8 @@ export default function DashboardScreen({ navigation }) {
                 'dashboardAnalysis.kpi.environmentsInRange'
               )}
               icon="checkmark-circle-outline"
-              iconColor={STATUS_COLORS.normal}
-              valueColor={STATUS_COLORS.normal}
+              iconColor={statusColors.normal}
+              valueColor={statusColors.normal}
               noteColor={currentColors.textMuted}
               cardColor={
                 currentColors.borderColor
@@ -1048,8 +1031,8 @@ export default function DashboardScreen({ navigation }) {
                 'dashboardAnalysis.kpi.requireFollowUp'
               )}
               icon="stats-chart-outline"
-              iconColor={STATUS_COLORS.warning}
-              valueColor={STATUS_COLORS.warning}
+              iconColor={statusColors.warning}
+              valueColor={statusColors.warning}
               noteColor={currentColors.textMuted}
               cardColor={
                 currentColors.borderColor
@@ -1066,8 +1049,8 @@ export default function DashboardScreen({ navigation }) {
                 'dashboardAnalysis.kpi.requireAttention'
               )}
               icon="speedometer-outline"
-              iconColor={STATUS_COLORS.alert}
-              valueColor={STATUS_COLORS.alert}
+              iconColor={statusColors.alert}
+              valueColor={statusColors.alert}
               noteColor={currentColors.textMuted}
               cardColor={
                 currentColors.borderColor
@@ -1180,10 +1163,7 @@ export default function DashboardScreen({ navigation }) {
                         styles.legendDot,
                         {
                           backgroundColor:
-                            ENVIRONMENT_COLORS[
-                              index %
-                                ENVIRONMENT_COLORS.length
-                            ],
+                            chartPalette[index % chartPalette.length],
                         },
                       ]}
                     />
@@ -1233,6 +1213,23 @@ export default function DashboardScreen({ navigation }) {
               </View>
             </View>
 
+            {vm.seriesLoading ? (
+              <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                <ActivityIndicator color={currentColors.accent} />
+              </View>
+            ) : vm.seriesError ? (
+              <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                <Text style={{ color: currentColors.error, fontSize: 12, textAlign: 'center' }}>
+                  {vm.seriesError}
+                </Text>
+              </View>
+            ) : pointCount === 0 ? (
+              <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                <Text style={{ color: currentColors.textMuted, fontSize: 12 }}>
+                  {t('dashboardAnalysis.chart.noData', 'Sin mediciones en este período')}
+                </Text>
+              </View>
+            ) : (
             <LineChart
               {...lineProps}
               areaChart
@@ -1250,7 +1247,7 @@ export default function DashboardScreen({ navigation }) {
               noOfSections={4}
               thickness={2.5}
               isAnimated={false}
-              rulesColor={GRID_COLOR}
+              rulesColor={currentColors.borderColorLight}
               dashWidth={3}
               dashGap={5}
               rulesType="dashed"
@@ -1259,11 +1256,11 @@ export default function DashboardScreen({ navigation }) {
               yAxisThickness={0}
               yAxisLabelWidth={44}
               xAxisLabelTextStyle={{
-                color: AXIS_TEXT_COLOR,
+                color: currentColors.textMuted,
                 fontSize: 10,
               }}
               yAxisTextStyle={{
-                color: AXIS_TEXT_COLOR,
+                color: currentColors.textMuted,
                 fontSize: 10,
               }}
               showReferenceLine1
@@ -1292,6 +1289,7 @@ export default function DashboardScreen({ navigation }) {
                   pointerLabel,
               }}
             />
+            )}
 
             <View style={styles.captionRow}>
               <Text
@@ -1427,7 +1425,7 @@ export default function DashboardScreen({ navigation }) {
                 initialSpacing={8}
                 endSpacing={8}
                 isAnimated={false}
-                rulesColor={GRID_COLOR}
+                rulesColor={currentColors.borderColorLight}
                 dashWidth={3}
                 dashGap={5}
                 rulesType="dashed"
@@ -1436,11 +1434,11 @@ export default function DashboardScreen({ navigation }) {
                 yAxisThickness={0}
                 yAxisLabelWidth={44}
                 xAxisLabelTextStyle={{
-                  color: AXIS_TEXT_COLOR,
+                  color: currentColors.textMuted,
                   fontSize: 9,
                 }}
                 yAxisTextStyle={{
-                  color: AXIS_TEXT_COLOR,
+                  color: currentColors.textMuted,
                   fontSize: 10,
                 }}
                 disableScroll
@@ -1619,7 +1617,7 @@ export default function DashboardScreen({ navigation }) {
                         styles.networkDot,
                         {
                           backgroundColor:
-                            STATUS_COLORS[
+                            statusColors[
                               item.key
                             ],
                         },

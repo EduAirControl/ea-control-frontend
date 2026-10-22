@@ -13,3 +13,6 @@ build/
 AGENTS.md
 opencode.json
 .opencode/
+
+# Artefactos de build (el APK se distribuye por GitHub Releases)
+*.apk

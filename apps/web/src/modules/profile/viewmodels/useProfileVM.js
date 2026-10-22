@@ -1,27 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 import authService from '../../auth/services/authService';
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-
 export function useProfileVM() {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
 
-  const [profile, setProfile] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatar: null });
-  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatar: null });
-  const [avatar, setAvatar] = useState(null);
+  const [profile, setProfile] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', title: '', phone: '', location: '', avatarUrl: '' });
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
-  const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     profileService.get().then((data) => {
       setProfile(data);
       setForm(data);
-      setAvatar(data.avatar || null);
+      setAvatarUrl(data.avatarUrl || '');
     });
   }, []);
 
@@ -30,46 +27,46 @@ export function useProfileVM() {
   };
 
   const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+    const url = e.target.value;
+    setAvatarUrl(url);
     setAvatarError(null);
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      setAvatarError('La imagen no debe superar 2 MB');
-      e.target.value = '';
-      return;
-    }
-
-    setAvatarLoading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatar(reader.result);
-      setAvatarLoading(false);
-    };
-    reader.onerror = () => {
-      setAvatarLoading(false);
-      setAvatarError('Error al leer la imagen');
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const img = new Image();
+    img.onerror = () => setAvatarError('URL de imagen inválida');
+    img.src = trimmed;
   };
 
   const handleRemoveAvatar = () => {
-    setAvatar(null);
+    setAvatarUrl('');
     setAvatarError(null);
   };
 
-  const handleSave = () => {
-    const updated = { ...form, avatar };
-    setProfile(updated);
-    profileService.save(updated);
-    setIsEditing(false);
+  const handleSave = async () => {
+    const fullName = (form.fullName || '').trim();
+    // El backend exige fullName (@NotBlank) al crear el perfil.
+    if (!fullName) {
+      setSaveError('El nombre es obligatorio');
+      return;
+    }
+    setSaveError(null);
+    const trimmedUrl = (avatarUrl || '').trim();
+    const updated = { ...form, fullName, avatarUrl: trimmedUrl };
+    try {
+      const saved = await profileService.save(updated);
+      const next = { ...updated, ...(saved || {}) };
+      setProfile(next);
+      setForm(next);
+      setAvatarUrl(next.avatarUrl || '');
+      setIsEditing(false);
+    } catch (e) {
+      setSaveError(e?.message || 'No se pudo guardar el perfil');
+    }
   };
 
   const handleCancel = () => {
     setForm(profile);
-    setAvatar(profile.avatar || null);
+    setAvatarUrl(profile.avatarUrl || '');
     setIsEditing(false);
     setAvatarError(null);
   };
@@ -80,19 +77,14 @@ export function useProfileVM() {
     navigate('/landing');
   };
 
-  const openAvatarPicker = () => {
-    fileInputRef.current?.click();
-  };
-
   return {
     profile,
     form,
-    avatar,
+    avatarUrl,
     isEditing,
     logoutModal,
-    avatarLoading,
     avatarError,
-    fileInputRef,
+    saveError,
     setIsEditing,
     setLogoutModal,
     handleChange,
@@ -101,6 +93,5 @@ export function useProfileVM() {
     handleSave,
     handleCancel,
     handleLogout,
-    openAvatarPicker,
   };
 }

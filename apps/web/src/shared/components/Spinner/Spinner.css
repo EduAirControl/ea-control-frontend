@@ -5,6 +5,11 @@
   padding: 24px;
 }
 
+.ds-spinner-wrapper--fullscreen {
+  min-height: 100vh;
+  padding: 0;
+}
+
 .ds-spinner {
   border-radius: 50%;
   border-style: solid;

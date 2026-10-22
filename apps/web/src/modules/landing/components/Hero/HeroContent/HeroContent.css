@@ -194,6 +194,11 @@ body:not(.dark-mode) .trusted-item {
   font-size: 1.35rem;
 }
 
+.trusted-item svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
 .trusted-item span {
   font-size: 0.95rem;
 }

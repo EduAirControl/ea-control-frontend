@@ -5,7 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../schemas/loginSchema';
 import authService from '../../services/authService';
-import { FaEnvelope, FaLock, FaBuilding } from 'react-icons/fa';
+import SocialLoginButtons from '../SocialLoginButtons/SocialLoginButtons';
+import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import '../../pages/login/Login.css';
 
 function LoginForm() {
@@ -25,31 +27,15 @@ function LoginForm() {
   const onSubmit = async (data) => {
     setApiError('');
     try {
-      await authService.login(data.email, data.password, data.companyCode);
+      await authService.loginWithCredentials(data.email, data.password);
       navigate('/dashboard');
     } catch (err) {
-      setApiError(err.message || t('login.error', 'Error al iniciar sesión'));
+      setApiError(err.message || 'Error al iniciar sesión');
     }
   };
 
   return (
     <form className="login-form-modern" onSubmit={handleSubmit(onSubmit)}>
-      {/* Campo de Empresa*/}
-      <div className="input-group-modern">
-        <label htmlFor="companyCode">{t('login.companyCode', 'Código de Empresa')}</label>
-        <div className="input-wrapper">
-          <FaBuilding className="input-icon" />
-          <input
-            {...register('companyCode')}
-            type="text"
-            id="companyCode"
-            placeholder={t('login.placeholderCompany', 'Ej: EDU-2024')}
-            className={errors.companyCode ? 'input-error shake' : ''}
-          />
-        </div>
-        {errors.companyCode && <p className="error-text">⚠ {t(errors.companyCode.message)}</p>}
-      </div>
-
       <div className="input-group-modern">
         <label htmlFor="email">{t('login.email')}</label>
         <div className="input-wrapper">
@@ -62,7 +48,11 @@ function LoginForm() {
             className={errors.email ? 'input-error shake' : ''}
           />
         </div>
-        {errors.email && <p className="error-text">⚠ {t(errors.email.message)}</p>}
+        {errors.email && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {t(errors.email.message)}
+          </p>
+        )}
       </div>
 
       <div className="input-group-modern">
@@ -77,7 +67,11 @@ function LoginForm() {
             className={errors.password ? 'input-error shake' : ''}
           />
         </div>
-        {errors.password && <p className="error-text">⚠ {t(errors.password.message)}</p>}
+        {errors.password && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {t(errors.password.message)}
+          </p>
+        )}
       </div>
 
       <div className="login-options-modern">
@@ -90,13 +84,23 @@ function LoginForm() {
         </button>
       </div>
 
-      {apiError && <p className="error-text">⚠ {apiError}</p>}
+      {apiError && (
+        <p className="error-text">
+          <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+        </p>
+      )}
 
       <button type="submit" className="btn-login-premium" disabled={isSubmitting}>
         {isSubmitting ? '...' : t('login.title')}
       </button>
 
       {isSubmitting && <p className="loading-text">Validando credenciales...</p>}
+
+      <div className="social-divider">
+        <span>{t('login.socialDivider', 'o continúa con')}</span>
+      </div>
+
+      <SocialLoginButtons showDivider={false} />
     </form>
   );
 }

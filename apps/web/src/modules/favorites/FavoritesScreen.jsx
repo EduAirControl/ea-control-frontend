@@ -1,6 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaHeart } from 'react-icons/fa';
+import {
+  IoCloudOutline,
+  IoThermometerOutline,
+  IoWaterOutline,
+  IoVolumeHighOutline,
+} from 'react-icons/io5';
 import Navbar from '../dashboard/components/Navbar/Navbar';
 import { useEnvironment } from '../../context/useEnvironment';
 import { Modal, Button } from '../../shared/components';
@@ -9,24 +15,29 @@ import './Favorites.css';
 const FAV_METRIC_DEFINITIONS = [
   {
     key: 'temp',
-    icon: '🌡️',
+    icon: <IoThermometerOutline />,
     labelKey: 'dashboard.temperature',
     getValue: (fav) => `${fav.temp}°C`,
   },
   {
     key: 'humidity',
-    icon: '💧',
+    icon: <IoWaterOutline />,
     labelKey: 'dashboard.humidity',
     getValue: (fav) => `${fav.humidity}%`,
   },
   {
     key: 'co2',
-    icon: '🌫️',
+    icon: <IoCloudOutline />,
     labelKey: null,
     staticLabel: 'CO₂',
     getValue: (fav) => `${fav.co2}ppm`,
   },
-  { key: 'noise', icon: '🔊', labelKey: 'dashboard.noise', getValue: (fav) => `${fav.noise} dB` },
+  {
+    key: 'noise',
+    icon: <IoVolumeHighOutline />,
+    labelKey: 'dashboard.noise',
+    getValue: (fav) => `${fav.noise} dB`,
+  },
 ];
 
 // Tarjeta reutilizable: recibe icono, etiqueta y valor por props.

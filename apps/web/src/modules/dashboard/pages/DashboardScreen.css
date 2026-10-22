@@ -25,10 +25,11 @@
       rgba(5, 15, 28, 0.86) 45%,
       rgba(5, 19, 31, 0.94) 100%
     ),
-    url('../../../shared/assets/bg.png');
+    radial-gradient(1200px 600px at 85% -15%, rgba(var(--accent-rgb) / 0.12), transparent 62%);
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  /* fixed se ve mal en iOS Safari: scroll da el mismo resultado sin artefactos */
+  background-attachment: scroll;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -55,10 +56,11 @@ body:not(.dark-mode) .dashboard-analysis-screen {
       rgba(232, 244, 246, 0.88) 45%,
       rgba(238, 248, 249, 0.96) 100%
     ),
-    url('../../../shared/assets/bg.png');
+    radial-gradient(1200px 600px at 85% -15%, rgba(var(--accent-rgb) / 0.12), transparent 62%);
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  /* fixed se ve mal en iOS Safari: scroll da el mismo resultado sin artefactos */
+  background-attachment: scroll;
 }
 
 body:not(.dark-mode) .dashboard-analysis-screen .analysis-heading h1,
@@ -1019,6 +1021,22 @@ body:not(.dark-mode) .analysis-filter-option.selected {
 .analysis-main-chart-wrap {
   height: 315px;
   margin: 9px -9px 0 -12px;
+}
+.analysis-chart-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--analysis-muted);
+  text-align: center;
+  padding: 0 24px;
+}
+.analysis-chart-empty p {
+  max-width: 380px;
+  font-size: calc(var(--a11y-font-size) * 0.75);
+  line-height: 1.5;
 }
 .analysis-chart-caption {
   display: flex;

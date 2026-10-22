@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../../shared/components';
+import { IoAlertCircleOutline, IoCheckmarkCircleOutline } from 'react-icons/io5';
 import authService from '../../services/authService';
 
 const CODE_LENGTH = 6;
@@ -96,8 +97,16 @@ function VerifyCodeForm() {
           />
         ))}
       </div>
-      {apiError && <p className="error-text">⚠ {apiError}</p>}
-      {infoMessage && <p className="error-text">✓ {infoMessage}</p>}
+      {apiError && (
+        <p className="error-text">
+          <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+        </p>
+      )}
+      {infoMessage && (
+        <p className="error-text">
+          <IoCheckmarkCircleOutline aria-hidden="true" /> {infoMessage}
+        </p>
+      )}
       <a href="#" className="resend-code" onClick={handleResend}>
         {isResending ? '...' : t('verifyCode.resend')}
       </a>

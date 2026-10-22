@@ -7,13 +7,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: var(--z-modal);
 }
 
 .environment-modal {
   width: min(900px, 92vw);
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--lb-glass-bg);
   -webkit-backdrop-filter: var(--lb-glass-blur);
   backdrop-filter: var(--lb-glass-blur);
@@ -25,6 +26,12 @@
   box-shadow: var(--shadow-xl);
 }
 
+.environment-modal h2,
+.environment-modal h3,
+.environment-modal p {
+  overflow-wrap: anywhere;
+}
+
 .env-modal__close {
   position: absolute;
   top: 20px;
@@ -34,6 +41,15 @@
   font-size: 24px;
   cursor: pointer;
   color: var(--accent);
+  z-index: 5;
+}
+
+/* Área de toque generosa: el icono se ve pequeño pero el botón responde en
+   toda la esquina superior derecha del modal. */
+.env-modal__close::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
 }
 
 .modal-header {
@@ -69,7 +85,10 @@
 
 .modal-sensors {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Iguala las dos filas: sin esto cada una se dimensionaba a su contenido y las
+     descripciones de distinta longitud dejaban una fila de 138px y otra de 161px. */
+  grid-auto-rows: 1fr;
   gap: 22px;
 }
 
@@ -182,6 +201,13 @@ RECOMENDACIONES
   color: #fff;
 }
 
+/* Ambiente sin mediciones: neutro. Antes caía en .danger y un ambiente vacío
+   aparecía en rojo. */
+.modal-status.unknown {
+  background: var(--bg-subtle, #94a3b8);
+  color: var(--text-secondary, #fff);
+}
+
 /*======================================
 SCORE
 ======================================*/
@@ -191,6 +217,11 @@ SCORE
   align-items: center;
   gap: 28px;
   margin: 30px 0;
+  min-width: 0;
+}
+
+.environment-score > * {
+  min-width: 0;
 }
 
 .environment-score-circle {
@@ -250,7 +281,7 @@ EXPLICACIÓN
 
 .environment-explanation-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -357,10 +388,15 @@ BOTÓN DE INFORMACIÓN (InfoTooltip)
 
 .sensor-card-wrap {
   position: relative;
+  /* Flex para que la sensor-card se estire a la altura de la fila del grid: la
+     grid ya iguala las filas, pero sin esto la cardTomaba solo su alto de
+     contenido y quedaban 138px frente a 161px. */
+  display: flex;
 }
 
 .sensor-card-wrap .sensor-card {
   padding-right: 44px;
+  flex: 1;
 }
 
 .environment-score.info-section {

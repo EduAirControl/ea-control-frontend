@@ -91,6 +91,9 @@
 }
 
 .add-env-modal__label--section {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: calc(var(--a11y-font-size) * 0.8125);
   text-transform: none;
   letter-spacing: 0;
@@ -100,6 +103,14 @@
 .add-env-modal__required {
   color: var(--color-danger);
   margin-left: 2px;
+}
+
+/* Aviso bajo un campo: catálogo vacío o error al cargarlo. No es un asterisco,
+   así que no reutiliza __required (que era rojo de validación). */
+.add-env-modal__hint {
+  color: var(--text-muted);
+  font-size: calc(var(--a11y-font-size) * 0.75);
+  line-height: 1.4;
 }
 
 /* ─── Inputs ────────────────────────────────────────────────── */
@@ -160,6 +171,9 @@
 }
 
 .add-env-modal__profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: 1px solid var(--border-color);
   border-radius: 8px;

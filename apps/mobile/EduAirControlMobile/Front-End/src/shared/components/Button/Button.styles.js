@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native'
 
 export const styles = StyleSheet.create({
   base: {
+    minHeight: 44,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',

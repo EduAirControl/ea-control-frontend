@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, useWatch } from 'react-hook-form';
@@ -6,7 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FaUser, FaEnvelope, FaLock, FaBuilding } from 'react-icons/fa';
 import { HiOutlineDocumentText, HiCheckCircle } from 'react-icons/hi2';
 import { ChevronDown } from 'lucide-react';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 import authService from '../../services/authService';
+import SocialLoginButtons from '../SocialLoginButtons/SocialLoginButtons';
 import { registerSchema } from '../../schemas/registerSchema';
 import '../../pages/signUp/SignUp.css';
 
@@ -20,11 +23,13 @@ function SignUpForm() {
   const [hasReadFullTerms] = useState(
     () => sessionStorage.getItem('eduaircontrol-terms-read') === 'true'
   );
+  void hasReadFullTerms;
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
@@ -54,7 +59,7 @@ function SignUpForm() {
 
   const onSubmit = async (data) => {
     setApiError('');
-    if (!hasReadFullTerms) {
+    if (!data.acceptTerms) {
       setShowTerms(true);
       return;
     }
@@ -84,7 +89,9 @@ function SignUpForm() {
             />
           </div>
           {errors.companyCode && (
-            <p className="error-text">⚠ {t(errors.companyCode.message)}</p>
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.companyCode.message)}
+            </p>
           )}
         </div>
         <div className="input-group-modern">
@@ -99,7 +106,11 @@ function SignUpForm() {
               {...register('name')}
             />
           </div>
-          {errors.name && <p className="error-text">⚠ {t(errors.name.message)}</p>}
+          {errors.name && (
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.name.message)}
+            </p>
+          )}
         </div>
         <div className="input-group-modern">
           <label htmlFor="signup-email">{t('signup.email')}</label>
@@ -113,7 +124,11 @@ function SignUpForm() {
               {...register('email')}
             />
           </div>
-          {errors.email && <p className="error-text">⚠ {t(errors.email.message)}</p>}
+          {errors.email && (
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.email.message)}
+            </p>
+          )}
         </div>
         <div className="form-row-modern">
           <div className="input-group-modern">
@@ -128,7 +143,11 @@ function SignUpForm() {
                 {...register('password')}
               />
             </div>
-            {errors.password && <p className="error-text">⚠ {t(errors.password.message)}</p>}
+            {errors.password && (
+              <p className="error-text">
+                <IoAlertCircleOutline aria-hidden="true" /> {t(errors.password.message)}
+              </p>
+            )}
             {password && (
               <div className="password-strength" aria-live="polite">
                 <div className="password-strength-bar" aria-hidden="true">
@@ -158,7 +177,9 @@ function SignUpForm() {
               />
             </div>
             {errors.confirmPassword && (
-              <p className="error-text">⚠ {t(errors.confirmPassword.message)}</p>
+              <p className="error-text">
+                <IoAlertCircleOutline aria-hidden="true" /> {t(errors.confirmPassword.message)}
+              </p>
             )}
           </div>
         </div>
@@ -167,7 +188,6 @@ function SignUpForm() {
             <input
               id="signup-accept-terms"
               type="checkbox"
-              disabled={!hasReadFullTerms}
               {...register('acceptTerms')}
             />
             <span className="slider-modern"></span>
@@ -178,20 +198,25 @@ function SignUpForm() {
               {t('signup.termsModal.link')}
             </button>
           </p>
-          {!hasReadFullTerms && (
-            <p className="terms-read-required">{t('signup.termsModal.readRequired')}</p>
-          )}
           {errors.acceptTerms && (
-            <p className="error-text">⚠ {t(errors.acceptTerms.message)}</p>
+            <p className="error-text">
+              <IoAlertCircleOutline aria-hidden="true" /> {t(errors.acceptTerms.message)}
+            </p>
           )}
         </div>
-        {apiError && <p className="error-text">⚠ {apiError}</p>}
+        {apiError && (
+          <p className="error-text">
+            <IoAlertCircleOutline aria-hidden="true" /> {apiError}
+          </p>
+        )}
         <button type="submit" className="btn-signup-premium" disabled={isSubmitting}>
           {isSubmitting ? '...' : t('signup.signUpBtn')}
         </button>
+
+        <SocialLoginButtons />
       </form>
 
-      {showTerms && (
+      {showTerms && createPortal(
         <div className="modal-overlay-modern" onClick={() => setShowTerms(false)}>
           <div className="modal-content-modern" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -249,11 +274,23 @@ function SignUpForm() {
                 </button>
               </p>
             </div>
-            <button className="btn-close-modal" onClick={() => setShowTerms(false)}>
-              {t('common.close')}
-            </button>
+            <div className="terms-modal-actions">
+              <button
+                className="btn-accept-terms"
+                onClick={() => {
+                  setValue('acceptTerms', true);
+                  setShowTerms(false);
+                }}
+              >
+                {t('signup.termsModal.acceptBtn', 'Acepto los términos')}
+              </button>
+              <button className="btn-close-modal" onClick={() => setShowTerms(false)}>
+                {t('common.close')}
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

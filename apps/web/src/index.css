@@ -57,6 +57,16 @@
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
   --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.18);
 
+  /* ── Escala de z-index ──
+     Antes habia 21 valores sueltos (de 0 a 99999) y un Toast podia quedar
+     tapado por la pantalla de carga. Con estos cinco niveles queda claro que
+     cada capa esta por encima de la anterior. */
+  --z-panel:    100;   /* paneles laterales: notificaciones, filtros */
+  --z-modal:    200;   /* modales y dialogs */
+  --z-tooltip:  300;   /* tooltips, siempre encima del modal que los contiene */
+  --z-toast:    400;   /* avisos: tienen que verse siempre */
+  --z-loading:  500;   /* pantalla de carga, solo por debajo de un toast */
+
   /* ── Radios de borde ── */
   --radius-sm: 10px;
   --radius-md: 16px;
@@ -75,7 +85,9 @@
   --a11y-font-size: 16px;
 }
 
-/* ── Protanopia (Daltonismo Rojo) ── */
+/* ── Temas de accesibilidad (daltonismo) ──
+   Solo cambian el ACENTO. Los bordes/superficies "glass" se derivan de
+   --accent-rgb, así que se adaptan solos en claro y oscuro (uniforme). */
 body.theme-protanopia {
   --accent:                #007aa7;
   --accent-rgb:            0 122 167;
@@ -83,20 +95,14 @@ body.theme-protanopia {
   --accent-light:          #e6f5fb;
   --accent-dark:           #005a82;
   --border-nav:            #007aa7;
-  --lb-glass-border:       rgba(0, 122, 167, 0.28);
-  --lb-glass-border-hover: rgba(0, 122, 167, 0.58);
-  --lb-surface:            rgba(0, 122, 167, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-protanopia {
-  --accent:                #0085b5;
-  --accent-rgb:            0 133 181;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #2aa5d1;
+  --accent-rgb:            42 165 209;
+  --accent-hover:          #1f8cb5;
+  --accent-light:          #0b3a4a;
+  --accent-dark:           #7fd0ea;
 }
 
 /* ── Deuteranopia (Daltonismo Verde) ── */
@@ -107,20 +113,14 @@ body.theme-deuteranopia {
   --accent-light:          #eef9dc;
   --accent-dark:           #335d00;
   --border-nav:            #4f7e00;
-  --lb-glass-border:       rgba(79, 126, 0, 0.28);
-  --lb-glass-border-hover: rgba(79, 126, 0, 0.58);
-  --lb-surface:            rgba(79, 126, 0, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-deuteranopia {
-  --accent:                #4ca649;
-  --accent-rgb:            76 166 73;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #7fbf3f;
+  --accent-rgb:            127 191 63;
+  --accent-hover:          #6aa530;
+  --accent-light:          #1f2e0d;
+  --accent-dark:           #b6e08a;
 }
 
 /* ── Tritanopia (Daltonismo Azul-Amarillo) ── */
@@ -131,23 +131,14 @@ body.theme-tritanopia {
   --accent-light:          #f0ebff;
   --accent-dark:           #413460;
   --border-nav:            #5b4b8a;
-  --lb-glass-border:       rgba(91, 75, 138, 0.28);
-  --lb-glass-border-hover: rgba(91, 75, 138, 0.58);
-  --lb-surface:            rgba(91, 75, 138, 0.12);
-  --text-primary:          #0f172a;
-  --text-secondary:        #333333;
-  --text-muted:            #666666;
 }
 
 body.dark-mode.theme-tritanopia {
-  --accent:                #8a7ae6;
-  --accent-rgb:            138 122 230;
-  --accent-hover:          #7664d6;
-  --accent-light:          #f1eeff;
-  --accent-dark:           #5d4eb1;
-  --text-primary:          #e2e8f0;
-  --text-secondary:        #cbd5e1;
-  --text-muted:            #94a3b8;
+  --accent:                #a99bf0;
+  --accent-rgb:            169 155 240;
+  --accent-hover:          #8f7fe0;
+  --accent-light:          #241f3d;
+  --accent-dark:           #cdc4ff;
 }
 
 /* ── Dark Mode ── */
@@ -170,7 +161,7 @@ body.dark-mode {
   --color-success:   #4ca649;
   --color-warning:   #ffc107;
   --color-danger:    #f23838;
-  --color-info:      #57b752;
+  --color-info:      #5aa9e6;
 
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.55);
   --shadow-nav: 0 4px 16px rgba(0, 0, 0, 0.55);
@@ -237,26 +228,6 @@ a,
   border: 0;
 }
 
-.skip-link {
-  position: absolute;
-  top: -100%;
-  left: 16px;
-  z-index: 10000;
-  padding: 12px 24px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  border-radius: 0 0 8px 8px;
-  text-decoration: none;
-  transition: top 0.2s ease;
-}
-
-.skip-link:focus {
-  top: 0;
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -270,7 +241,7 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll;
 
   color: var(--text-primary);
   position: relative;
@@ -418,7 +389,7 @@ button {
 }
 .navbar-item.logout:hover {
   background-color: #ffe0e0;
-  color: #ff4444;
+  color: #b91c1c;
 }
 
 .navbar-info {
@@ -783,7 +754,7 @@ button:active {
 /* ============================================ */
 
 /* ============================================
-   📱 MÓVIL PEQUEÑO (<480px)
+   MÓVIL PEQUEÑO (<480px)
 ============================================ */
 @media (max-width: 480px) {
   .navbar-logo h2 {
@@ -820,7 +791,7 @@ button:active {
 }
 
 /* ============================================
-   📱 MÓVIL (<768px)
+   MÓVIL (<768px)
 ============================================ */
 @media (max-width: 768px) {
   /* Navbar */
@@ -841,7 +812,7 @@ button:active {
     font-size: 20px;
   }
 
-  /* 🔥 ocultar texto en móvil */
+  /* Ocultar texto en móvil */
   .navbar-item span {
     display: none;
   }
@@ -859,10 +830,10 @@ button:active {
 }
 
 /* ============================================
-   📲 TABLET (768px – 1199px)
+   TABLET (768px – 1199px)
 ============================================ */
 @media (min-width: 769px) and (max-width: 1199px) {
-  /* 🔥 también oculto en tablet */
+  /* Ocultar texto en tablet */
   .navbar-item span {
     display: none;
   }
@@ -881,10 +852,10 @@ button:active {
 }
 
 /* ============================================
-   💻 COMPUTADOR (≥1200px)
+   COMPUTADOR (≥1200px)
 ============================================ */
 @media (min-width: 1200px) {
-  /* 🔥 mostrar texto SOLO en PC */
+  /* Mostrar texto solo en computador */
   .navbar-item span {
     display: inline;
   }

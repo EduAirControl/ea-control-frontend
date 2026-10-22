@@ -1,16 +1,20 @@
 .recommendation-box{
-    background:#ffffff;
+    background:var(--bg-card);
     border-radius:18px;
     padding:22px;
-    border:1px solid #e6e6e6;
+    margin-top: 5%;
+    border:1px solid var(--border-card);
     display:flex;
     flex-direction:column;
     gap:18px;
 }
 
 .recommendation-box h3{
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size:18px;
-    color:#1f2937;
+    color:var(--text-primary);
     font-weight:700;
 }
 
@@ -24,23 +28,9 @@
 .recommendation-box li{
     padding:14px 16px;
     border-radius:12px;
-    background:#f7faf8;
-    border-left:5px solid #22c55e;
-    color:#4b5563;
+    background:var(--bg-subtle);
+    border-left:5px solid var(--color-success);
+    color:var(--text-secondary);
     font-size:14px;
     line-height:1.5;
-}
-
-body.dark-mode .recommendation-box{
-    background:#1b2433;
-    border-color:#2d3748;
-}
-
-body.dark-mode .recommendation-box h3{
-    color:white;
-}
-
-body.dark-mode .recommendation-box li{
-    background:#243246;
-    color:#d7dde6;
 }

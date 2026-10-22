@@ -1,8 +1,12 @@
 import { Navigate } from 'react-router-dom';
-import authService from '../../../modules/auth/services/authService';
+import { useAuth } from '../../../context/useAuth';
+import Spinner from '../Spinner/Spinner';
 
 function GuestRoute({ children }) {
-  if (authService.isAuthenticated()) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <Spinner size="lg" label="Verificando sesión..." fullscreen />;
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 

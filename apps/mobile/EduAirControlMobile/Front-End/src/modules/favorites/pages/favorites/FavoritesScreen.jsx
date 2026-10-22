@@ -17,13 +17,14 @@ import Modal from '../../../../shared/components/Modal/Modal.jsx'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import { styles } from './FavoritesScreen.styles'
 
-function scoreColor(score) {
-  return score >= 75 ? '#4CAF50' : score >= 50 ? '#FFC107' : '#F44336'
+function scoreColor(score, colors) {
+  return score >= 75 ? colors.success : score >= 50 ? colors.warning : colors.error
 }
 
 function EnvironmentCard({ environment, rank, onPress, onRemoveFavorite, currentColors, t }) {
-  const status = getEnvironmentStatus(environment.statusKey, t)
+  const status = getEnvironmentStatus(environment.statusKey, t, currentColors)
   const score = calculateEnvironmentScore(environment)
+  const scoreTone = scoreColor(score, currentColors)
 
   return (
     <TouchableOpacity
@@ -43,8 +44,8 @@ function EnvironmentCard({ environment, rank, onPress, onRemoveFavorite, current
           <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
         </View>
       </View>
-      <View style={[styles.scoreRing, { borderColor: scoreColor(score) }]}>
-        <Text style={[styles.scoreText, { color: scoreColor(score) }]}>{score}</Text>
+      <View style={[styles.scoreRing, { borderColor: scoreTone }]}>
+        <Text style={[styles.scoreText, { color: scoreTone }]}>{score}</Text>
       </View>
       <TouchableOpacity
         onPress={() => onRemoveFavorite(environment)}

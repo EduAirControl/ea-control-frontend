@@ -1,6 +1,7 @@
 import './HeroContent.css';
 import { Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
+import { FaBuilding, FaFlask, FaGraduationCap, FaSchool } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
 function HeroContent() {
@@ -59,22 +60,22 @@ function HeroContent() {
 
         <div className="trusted-items">
           <div className="trusted-item">
-            🏫
+            <FaSchool aria-hidden="true" />
             <span>{t('landing.hero.trusted1')}</span>
           </div>
 
           <div className="trusted-item">
-            🎓
+            <FaGraduationCap aria-hidden="true" />
             <span>{t('landing.hero.trusted2')}</span>
           </div>
 
           <div className="trusted-item">
-            🧪
+            <FaFlask aria-hidden="true" />
             <span>{t('landing.hero.trusted3')}</span>
           </div>
 
           <div className="trusted-item">
-            🏢
+            <FaBuilding aria-hidden="true" />
             <span>{t('landing.hero.trusted4')}</span>
           </div>
         </div>

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import {
   View,
   Text,
@@ -15,20 +16,24 @@ import { useTranslation } from 'react-i18next'
 import { useManagementVM } from '../../viewmodels/useManagementVM.js'
 import { getEnvironmentStatus } from '../../utils/getEnvironmentStatus.js'
 import authService from '../../../auth/services/authService.js'
+import environmentService from '../../services/environmentService.js'
 import Button from '../../../../shared/components/Button/Button.jsx'
 import Modal from '../../../../shared/components/Modal/Modal.jsx'
 import Input from '../../../../shared/components/Input/Input.jsx'
 import { useToast } from '../../../../shared/components/Toast/Toast.jsx'
+import CampusManagementPanel from './CampusManagementPanel.jsx'
 import SensorVariablePanel from './SensorVariablePanel.jsx'
 import { styles } from './EnvironmentManagementScreen.styles'
+import { useEnvironments } from '../../../../context/EnvironmentContext.jsx'
 
 const TABS = [
   { id: 'environments', key: 'management.tabEnvironments', icon: 'business-outline' },
   { id: 'sensors', key: 'management.tabSensors', icon: 'hardware-chip-outline' },
-  { id: 'devices', key: 'management.tabDevices', icon: 'wifi-outline' },
+  { id: 'campuses', label: 'Campuses', icon: 'business-outline' },
+  { id: 'provisioning', key: 'management.tabProvisioning', icon: 'wifi-outline' },
 ]
 
-function SummaryCard({ label, value, emoji, accent, active, onPress, currentColors }) {
+function SummaryCard({ label, value, iconName, accent, active, onPress, currentColors }) {
   return (
     <TouchableOpacity
       style={[
@@ -39,7 +44,12 @@ function SummaryCard({ label, value, emoji, accent, active, onPress, currentColo
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Text style={styles.summaryEmoji}>{emoji}</Text>
+      <Ionicons
+        name={iconName}
+        size={18}
+        color={active ? accent : currentColors.textMuted}
+        style={styles.summaryIcon}
+      />
       <Text style={[styles.summaryValue, { color: active ? accent : currentColors.textPrimary }]}>{value}</Text>
       <Text style={[styles.summaryLabel, { color: active ? accent : currentColors.textMuted }]}>{label}</Text>
     </TouchableOpacity>
@@ -47,13 +57,14 @@ function SummaryCard({ label, value, emoji, accent, active, onPress, currentColo
 }
 
 function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
-  const status = getEnvironmentStatus(environment.statusKey, t)
+  const status = getEnvironmentStatus(environment.statusKey, t, currentColors)
+  const fmt = (value, unit) => (value === undefined || value === null ? `—${unit}` : `${value}${unit}`)
 
   const metrics = [
-    { key: 'temp', icon: '🌡️', label: t('dashboard.temperature'), value: `${environment.temp}°C` },
-    { key: 'humidity', icon: '💧', label: t('dashboard.humidity'), value: `${environment.humidity}%` },
-    { key: 'co2', icon: '☁️', label: t('allEnvironments.co2'), value: `${environment.co2}ppm` },
-    { key: 'noise', icon: '🔊', label: t('dashboard.noise'), value: `${environment.noise}dB` },
+    { key: 'temp', icon: 'thermometer-outline', label: t('dashboard.temperature'), value: fmt(environment.temp, '°C') },
+    { key: 'humidity', icon: 'water-outline', label: t('dashboard.humidity'), value: fmt(environment.humidity, '%') },
+    { key: 'co2', icon: 'cloud-outline', label: t('allEnvironments.co2'), value: fmt(environment.co2, 'ppm') },
+    { key: 'noise', icon: 'volume-high-outline', label: t('dashboard.noise'), value: fmt(environment.noise, 'dB') },
   ]
 
   return (
@@ -81,11 +92,11 @@ function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
               {environment.location || '—'}
             </Text>
             <Ionicons name="people-outline" size={11} color={currentColors.textMuted} style={{ marginLeft: 6 }} />
-            <Text style={[styles.cardMetaTxt, { color: currentColors.textMuted }]}>{environment.capacity} p.</Text>
+            <Text style={[styles.cardMetaTxt, { color: currentColors.textMuted }]}>{environment.capacity ?? '—'} p.</Text>
           </View>
         </View>
         <View style={[styles.statusPill, { backgroundColor: status.bg, borderColor: status.color }]}>
-          <View style={[styles.statusDot, { backgroundColor: status.color }]} />
+          <Ionicons name={status.icon} size={13} color={status.color} accessibilityElementsHidden />
           <Text style={[styles.statusTxt, { color: status.color }]}>{status.text}</Text>
         </View>
       </View>
@@ -93,7 +104,7 @@ function EnvironmentCard({ environment, onEdit, onDelete, currentColors, t }) {
       <View style={[styles.metricsRow, { borderTopColor: currentColors.borderColor }]}>
         {metrics.map((m) => (
           <View key={m.key} style={styles.metricCell}>
-            <Text style={styles.metricIcon}>{m.icon}</Text>
+            <Ionicons name={m.icon} size={18} color={currentColors.accent} style={styles.metricIcon} />
             <Text style={[styles.metricValue, { color: currentColors.textPrimary }]}>{m.value}</Text>
             <Text style={[styles.metricLabel, { color: currentColors.textMuted }]}>{m.label}</Text>
           </View>
@@ -178,17 +189,101 @@ function FilterBar({ vm, currentColors, t }) {
   )
 }
 
-const EMPTY_FORM = { name: '', capacity: '', location: '' }
+const EMPTY_FORM = {
+  name: '',
+  code: '',
+  capacity: '',
+  floor: '',
+  campusId: '',
+  environmentTypeId: '',
+}
+
+function ChipPicker({ label, options, value, onChange, currentColors, required, loading, error, onRetry }) {
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={{ fontSize: 12, fontWeight: '600', color: currentColors.textSecondary, marginBottom: 6 }}>
+        {label}{required ? ' *' : ''}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {options.map((option) => {
+          const active = value === option.id
+          return (
+            <TouchableOpacity
+              key={option.id}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: active ? currentColors.accent : currentColors.borderColor,
+                backgroundColor: active ? currentColors.accentDim : currentColors.bgCard,
+              }}
+              onPress={() => onChange(active ? '' : option.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: active ? currentColors.accent : currentColors.textSecondary }}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          )
+        })}
+        {loading && (
+          <Text style={{ fontSize: 12, color: currentColors.textMuted }}>Cargando…</Text>
+        )}
+        {!loading && error && (
+          <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
+            <Text style={{ fontSize: 12, color: currentColors.error }}>
+              {error} · Reintentar
+            </Text>
+          </TouchableOpacity>
+        )}
+        {!loading && !error && options.length === 0 && (
+          <Text style={{ fontSize: 12, color: currentColors.textMuted }}>Sin opciones disponibles</Text>
+        )}
+      </View>
+    </View>
+  )
+}
 
 export default function EnvironmentManagementScreen({ navigation }) {
   const { darkMode, currentColors } = useTheme()
   const { t } = useTranslation()
   const toast = useToast()
+  const { refreshEnvironments } = useEnvironments()
   const vm = useManagementVM()
+
+  useFocusEffect(useCallback(() => {
+    refreshEnvironments()
+  }, [refreshEnvironments]))
 
   const [form, setForm] = useState(EMPTY_FORM)
   const [isEdit, setIsEdit] = useState(false)
   const [tab, setTab] = useState('environments')
+  const [campuses, setCampuses] = useState([])
+  const [envTypes, setEnvTypes] = useState([])
+  const [catalogLoading, setCatalogLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState(null)
+
+  const loadCatalogs = useCallback(async () => {
+    setCatalogLoading(true)
+    setCatalogError(null)
+    try {
+      const [campusRows, typeRows] = await Promise.all([
+        environmentService.getCampuses(),
+        environmentService.getEnvironmentTypes(),
+      ])
+      setCampuses(campusRows.map((c) => ({ id: c.campusId ?? c.id, label: c.name })))
+      setEnvTypes(typeRows.map((ty) => ({ id: ty.environmentTypeId ?? ty.id, label: ty.name })))
+    } catch (e) {
+      setCatalogError(e?.message || 'No se pudieron cargar las opciones')
+    } finally {
+      setCatalogLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCatalogs()
+  }, [loadCatalogs])
 
   useEffect(() => {
     if (!authService.isAdmin()) {
@@ -208,31 +303,59 @@ export default function EnvironmentManagementScreen({ navigation }) {
 
   const openEdit = (env) => {
     setIsEdit(true)
-    setForm({ name: env.name, capacity: String(env.capacity ?? ''), location: env.location || '' })
+    setForm({
+      name: env.name || '',
+      code: env.code || '',
+      capacity: String(env.capacity ?? ''),
+      floor: env.floor != null ? String(env.floor) : '',
+      campusId: env.campusId || '',
+      environmentTypeId: env.envType || '',
+    })
     vm.setEditEnv(env)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) {
       toast.error(t('management.requiredName', 'El nombre es obligatorio'))
       return
     }
+    if (!isEdit) {
+      if (!form.code.trim()) {
+        toast.error(t('management.requiredCode', 'El código es obligatorio'))
+        return
+      }
+      if (!form.campusId) {
+        toast.error(t('management.requiredCampus', 'Selecciona una sede'))
+        return
+      }
+      if (!form.environmentTypeId) {
+        toast.error(t('management.requiredType', 'Selecciona un tipo de ambiente'))
+        return
+      }
+    }
+    const capacity = Number(form.capacity)
+    if (form.capacity !== '' && (Number.isNaN(capacity) || capacity < 1)) {
+      toast.error(t('management.invalidCapacity', 'La capacidad debe ser 1 o más'))
+      return
+    }
     const data = {
       name: form.name.trim(),
-      capacity: Number(form.capacity) || 0,
-      // Vacío al editar = conservar la ubicación actual; al crear, el backend
-      // deriva el campus del nombre.
-      location: form.location.trim() || (isEdit ? vm.editEnv?.location : undefined),
+      capacity: form.capacity === '' ? undefined : capacity,
+      floor: form.floor === '' ? undefined : form.floor,
     }
-    if (isEdit && vm.editEnv) vm.handleEdit(vm.editEnv.id, data)
-    else vm.handleAdd(data)
-    toast.success(isEdit ? t('management.edited', 'Ambiente actualizado') : t('management.added', 'Ambiente agregado'))
+    if (form.code.trim()) data.code = form.code.trim()
+    if (form.campusId) data.campusId = form.campusId
+    if (form.environmentTypeId) data.environmentTypeId = form.environmentTypeId
+    const ok = isEdit && vm.editEnv
+      ? await vm.handleEdit(vm.editEnv.id, data)
+      : await vm.handleAdd(data)
+    if (ok) toast.success(isEdit ? t('management.edited', 'Ambiente actualizado') : t('management.added', 'Ambiente agregado'))
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!vm.deleteEnv) return
-    vm.handleDelete(vm.deleteEnv.id)
-    toast.success(t('management.deleted', 'Ambiente eliminado'))
+    const ok = await vm.handleDelete(vm.deleteEnv.id)
+    if (ok) toast.success(t('management.deleted', 'Ambiente eliminado'))
   }
 
   const hasFilters = Boolean(vm.search) || vm.activeFilter !== 'all' || Boolean(vm.minCapacity) || Boolean(vm.maxCapacity)
@@ -255,7 +378,7 @@ export default function EnvironmentManagementScreen({ navigation }) {
           <Text style={[styles.headerTitle, { color: currentColors.textPrimary }]}>{t('management.title')}</Text>
         </View>
         {tab === 'environments' && (
-          <TouchableOpacity style={[styles.addBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.addBtn, { backgroundColor: currentColors.accentButton || currentColors.accent }]} onPress={openAdd} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={t('management.addBtn')}>
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={[styles.addBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
           </TouchableOpacity>
@@ -270,8 +393,8 @@ export default function EnvironmentManagementScreen({ navigation }) {
               key={item.id}
               style={[styles.tabBtn, active && { backgroundColor: currentColors.accentDim, borderColor: currentColors.accent }]}
               onPress={() => {
-                if (item.id === 'devices') {
-                  navigation.navigate('Devices')
+                if (item.id === 'provisioning') {
+                  navigation.navigate('Provisioning')
                   return
                 }
                 setTab(item.id)
@@ -282,14 +405,18 @@ export default function EnvironmentManagementScreen({ navigation }) {
               <Text
                 style={[styles.tabTxt, { color: active ? currentColors.accent : currentColors.textMuted }]}
               >
-                {t(item.key)}
+                {item.label || t(item.key)}
               </Text>
             </TouchableOpacity>
           )
         })}
       </View>
 
-      {tab === 'sensors' ? (
+      {tab === 'campuses' ? (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <CampusManagementPanel />
+        </ScrollView>
+      ) : tab === 'sensors' ? (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <SensorVariablePanel />
         </ScrollView>
@@ -297,20 +424,20 @@ export default function EnvironmentManagementScreen({ navigation }) {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.summaryRow}>
             <SummaryCard
-              label={t('filterBar.all')} value={vm.stats.total} emoji="🏫"
+              label={t('filterBar.all')} value={vm.stats.total} iconName="business-outline"
               accent={currentColors.accent} active={vm.activeFilter === 'all'} onPress={() => vm.setActiveFilter('all')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.normal')} value={vm.stats.normals} emoji="✅"
-              accent="#4CAF50" active={vm.activeFilter === 'normal'} onPress={() => vm.setActiveFilter('normal')} currentColors={currentColors}
+              label={t('status.normal')} value={vm.stats.normals} iconName="checkmark-circle-outline"
+              accent={currentColors.success} active={vm.activeFilter === 'normal'} onPress={() => vm.setActiveFilter('normal')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.warning')} value={vm.stats.warnings} emoji="🔔"
-              accent="#FFC107" active={vm.activeFilter === 'warning'} onPress={() => vm.setActiveFilter('warning')} currentColors={currentColors}
+              label={t('status.warning')} value={vm.stats.warnings} iconName="notifications-outline"
+              accent={currentColors.warning} active={vm.activeFilter === 'warning'} onPress={() => vm.setActiveFilter('warning')} currentColors={currentColors}
             />
             <SummaryCard
-              label={t('status.alert')} value={vm.stats.alerts} emoji="⚠️"
-              accent="#F44336" active={vm.activeFilter === 'alert'} onPress={() => vm.setActiveFilter('alert')} currentColors={currentColors}
+              label={t('status.alert')} value={vm.stats.alerts} iconName="warning-outline"
+              accent={currentColors.error} active={vm.activeFilter === 'alert'} onPress={() => vm.setActiveFilter('alert')} currentColors={currentColors}
             />
           </View>
 
@@ -354,7 +481,12 @@ export default function EnvironmentManagementScreen({ navigation }) {
 
           {vm.filtered.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🏫</Text>
+              <Ionicons
+                name="business-outline"
+                size={48}
+                color={currentColors.textMuted}
+                style={styles.emptyIcon}
+              />
               <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>
                 {vm.stats.total === 0 ? t('management.noResults') : t('management.noResultsSearch')}
               </Text>
@@ -362,12 +494,12 @@ export default function EnvironmentManagementScreen({ navigation }) {
                 {vm.stats.total === 0 ? t('management.noResultsSub') : t('management.noResultsSearchSub')}
               </Text>
               {vm.stats.total === 0 ? (
-                <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]} onPress={openAdd}>
+                <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: currentColors.accentButton || currentColors.accent }]} onPress={openAdd}>
                   <Text style={[styles.emptyBtnTxt, { color: '#fff' }]}>{t('management.addBtn')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={[styles.emptyBtn, { backgroundColor: currentColors.accent }]}
+                  style={[styles.emptyBtn, { backgroundColor: currentColors.accentButton || currentColors.accent }]}
                   onPress={() => {
                     vm.setSearch('')
                     vm.setActiveFilter('all')
@@ -407,6 +539,13 @@ export default function EnvironmentManagementScreen({ navigation }) {
           placeholder={t('management.namePlaceholder')}
         />
         <Input
+          label={`${t('management.codeLabel', 'Código')}${isEdit ? '' : ' *'}`}
+          value={form.code}
+          onChangeText={(v) => setForm((p) => ({ ...p, code: v }))}
+          placeholder={t('management.codePlaceholder', 'Ej. A-102')}
+          autoCapitalize="characters"
+        />
+        <Input
           label={t('management.capacityLabel')}
           value={form.capacity}
           onChangeText={(v) => setForm((p) => ({ ...p, capacity: v }))}
@@ -414,10 +553,33 @@ export default function EnvironmentManagementScreen({ navigation }) {
           keyboardType="numeric"
         />
         <Input
-          label={t('management.locationLabel')}
-          value={form.location}
-          onChangeText={(v) => setForm((p) => ({ ...p, location: v }))}
-          placeholder={t('management.locationPlaceholder')}
+          label={t('management.floorLabel', 'Piso')}
+          value={form.floor}
+          onChangeText={(v) => setForm((p) => ({ ...p, floor: v }))}
+          placeholder={t('management.floorPlaceholder', 'Ej. 1')}
+          keyboardType="numeric"
+        />
+        <ChipPicker
+          label={t('management.campusLabel', 'Sede')}
+          required={!isEdit}
+          options={campuses}
+          value={form.campusId}
+          onChange={(v) => setForm((p) => ({ ...p, campusId: v }))}
+          currentColors={currentColors}
+          loading={catalogLoading}
+          error={catalogError}
+          onRetry={loadCatalogs}
+        />
+        <ChipPicker
+          label={t('management.typeLabel', 'Tipo de ambiente')}
+          required={!isEdit}
+          options={envTypes}
+          value={form.environmentTypeId}
+          onChange={(v) => setForm((p) => ({ ...p, environmentTypeId: v }))}
+          currentColors={currentColors}
+          loading={catalogLoading}
+          error={catalogError}
+          onRetry={loadCatalogs}
         />
         <View style={styles.modalActions}>
           <Button variant="outline" onPress={() => { vm.setShowAdd(false); vm.setEditEnv(null) }}>

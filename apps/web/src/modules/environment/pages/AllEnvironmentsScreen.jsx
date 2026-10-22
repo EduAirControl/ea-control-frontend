@@ -7,6 +7,7 @@ import EnvironmentModal from '../components/EnvironmentModal/EnvironmentModal';
 import calculateEnvironmentScore from '../utils/calculateEnvironmentScore';
 import { useAllEnvironmentsVM } from '../viewmodels/useAllEnvironmentsVM';
 import { useEnvironment } from '../../../context/useEnvironment';
+import authService from '../../auth/services/authService';
 import './AllEnvironments.css';
 
 function AllEnvironmentsScreen() {
@@ -14,6 +15,8 @@ function AllEnvironmentsScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { environments, toggleFavorite } = useEnvironment();
+  const user = authService.getUser();
+  const isSuperAdminWithoutInstitution = user?.role === 'SUPER_ADMIN' && !user?.institutionId;
 
   const { filtered, filters, setFilters, counts, suggestions } = useAllEnvironmentsVM();
 
@@ -27,6 +30,24 @@ function AllEnvironmentsScreen() {
     nextParams.delete('environment');
     setSearchParams(nextParams, { replace: true });
   };
+
+  if (isSuperAdminWithoutInstitution) {
+    return (
+      <div className="all-env-page">
+        <Navbar />
+        <main id="main-content">
+          <div className="app-page-container">
+            <header className="all-env-header">
+              <div>
+                <h1>{t('allEnvironments.title')}</h1>
+                <p>{t('allEnvironments.noAccess')}</p>
+              </div>
+            </header>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="all-env-page">

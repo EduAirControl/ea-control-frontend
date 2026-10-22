@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   IoSearchOutline,
   IoAddOutline,
   IoSwapVerticalOutline,
-  IoRadioOutline,
+  IoChevronDownOutline,
+  IoCheckmarkCircleOutline,
+  IoNotificationsOutline,
+  IoWarningOutline,
+  IoSchoolOutline,
 } from 'react-icons/io5';
 import { MdOutlineGridView } from 'react-icons/md';
 import { TbBuildingCommunity } from 'react-icons/tb';
@@ -13,7 +17,7 @@ import ManagementCard from '../components/management/ManagementCard/ManagementCa
 import AddEnvironmentModal from '../components/management/AddEnvironmentModal/AddEnvironmentModal';
 import EditEnvironmentModal from '../components/management/EditEnvironmentModal/EditEnvironmentModal';
 import DeleteEnvironmentModal from '../components/management/DeleteEnvironmentModal/DeleteEnvironmentModal';
-import SensorVariablePanel from '../components/management/SensorVariablePanel/SensorVariablePanel';
+import CampusManagementPanel from '../components/management/CampusManagementPanel/CampusManagementPanel';
 import { useManagementVM } from '../viewmodels/useManagementVM';
 import './EnvironmentManagement.css';
 
@@ -43,11 +47,115 @@ function SummaryCard({ modifier, icon, label, value, onClick }) {
   );
 }
 
+function ViewDropdown({ activeView, setActiveView, t }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const firstOptionRef = useRef(null);
+  const views = [
+    {
+      value: 'environments',
+      label: t('management.environmentsTab', 'Ambientes'),
+    },
+    {
+      value: 'campuses',
+      label: t('management.campusesTab', 'Sedes'),
+    },
+  ];
+  const selectedView = views.find((view) => view.value === activeView) ?? views[0];
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (!dropdownRef.current?.contains(event.target)) setIsOpen(false);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    firstOptionRef.current?.focus();
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isOpen]);
+
+  const handleMenuKeyDown = (event) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+
+    const options = [...event.currentTarget.querySelectorAll('[role="menuitemradio"]')];
+    const currentIndex = options.indexOf(document.activeElement);
+    const nextIndex =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? options.length - 1
+          : (currentIndex + (event.key === 'ArrowDown' ? 1 : options.length - 1)) %
+            options.length;
+    options[nextIndex]?.focus();
+  };
+
+  const selectView = (view) => {
+    setActiveView(view.value);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  return (
+    <span className="env-management-view-select" ref={dropdownRef}>
+      <button
+        type="button"
+        className="env-management-view-select__trigger"
+        aria-label={t('management.viewsAria', 'Sección de gestión')}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        ref={triggerRef}
+      >
+        {selectedView.label}
+        <IoChevronDownOutline aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <div
+          className="env-management-view-select__menu"
+          role="menu"
+          aria-label={t('management.viewsAria', 'Sección de gestión')}
+          onKeyDown={handleMenuKeyDown}
+        >
+          {views.map((view, index) => (
+            <button
+              type="button"
+              role="menuitemradio"
+              aria-checked={view.value === activeView}
+              className="env-management-view-select__option"
+              key={view.value}
+              onClick={() => selectView(view)}
+              ref={index === 0 ? firstOptionRef : undefined}
+            >
+              <span>{view.label}</span>
+              {view.value === activeView && (
+                <span className="env-management-view-select__indicator" aria-hidden="true" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
 function EnvironmentManagement() {
   const { t } = useTranslation();
   const [activeView, setActiveView] = useState('environments');
   const {
-    environments,
     filtered,
     stats,
     search,
@@ -82,7 +190,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'normal',
-      icon: '✅',
+      icon: <IoCheckmarkCircleOutline size={19} />,
       labelKey: 'management.summaryNormal',
       fallback: 'Normal',
       value: stats.normals,
@@ -90,7 +198,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'warning',
-      icon: '🔔',
+      icon: <IoNotificationsOutline size={19} />,
       labelKey: 'management.summaryWarnings',
       fallback: 'Advertencias',
       value: stats.warnings,
@@ -98,7 +206,7 @@ function EnvironmentManagement() {
     },
     {
       modifier: 'alert',
-      icon: '⚠️',
+      icon: <IoWarningOutline size={19} />,
       labelKey: 'management.summaryAlerts',
       fallback: 'En Alerta',
       value: stats.alerts,
@@ -134,7 +242,8 @@ function EnvironmentManagement() {
               <MdOutlineGridView size={19} />
             </span>
             <h1 className="env-management-topbar__title">
-              {t('management.title', 'Gestión general')}
+              <span>{t('management.titlePrefix', 'Gestión de')}</span>
+              <ViewDropdown activeView={activeView} setActiveView={setActiveView} t={t} />
             </h1>
           </div>
 
@@ -159,29 +268,8 @@ function EnvironmentManagement() {
           </div>
         </div>
 
-        <div className="env-management-tabs" role="tablist" aria-label="Gestión general">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'environments'}
-            className={activeView === 'environments' ? 'active' : ''}
-            onClick={() => setActiveView('environments')}
-          >
-            <TbBuildingCommunity size={17} /> Ambientes <span>{stats.total}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'sensors'}
-            className={activeView === 'sensors' ? 'active' : ''}
-            onClick={() => setActiveView('sensors')}
-          >
-            <IoRadioOutline size={17} /> Sensores y variables
-          </button>
-        </div>
-
-        {activeView === 'sensors' ? (
-          <SensorVariablePanel environments={environments} />
+        {activeView === 'campuses' ? (
+          <CampusManagementPanel />
         ) : (
           <>
             {/* ── Summary cards ── */}
@@ -237,7 +325,9 @@ function EnvironmentManagement() {
             <div className="env-management-list">
               {filtered.length === 0 ? (
                 <div className="env-management-empty">
-                  <div className="env-management-empty__icon">🏫</div>
+                  <div className="env-management-empty__icon">
+                    <IoSchoolOutline aria-hidden="true" />
+                  </div>
                   <h3 className="env-management-empty__title">
                     {search
                       ? t('management.noResultsSearch', 'Sin resultados para tu búsqueda')

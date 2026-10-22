@@ -296,6 +296,9 @@ body.theme-tritanopia .detail-metric-icon {
 .detail-info-card h3 {
   font-size: 13px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 8px;
   font-weight: 600;
   text-transform: uppercase;
@@ -307,6 +310,27 @@ body.theme-tritanopia .detail-metric-icon {
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+}
+
+.detail-unlink-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning, #ff9f43);
+  background: transparent;
+  border: 1px solid var(--warning, #ff9f43);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.detail-unlink-btn:hover {
+  background: var(--warning, #ff9f43);
+  color: #fff;
 }
 
 /* Responsive */

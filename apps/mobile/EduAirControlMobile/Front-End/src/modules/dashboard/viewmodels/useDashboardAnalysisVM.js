@@ -1,32 +1,66 @@
 /**
  * ViewModel: useDashboardAnalysisVM
- * Lógica del análisis del dashboard (período, métrica, series históricas,
- * KPIs y salud de la red) — equivalente móvil del DashboardScreen del web.
+ * Lógica del dashboard (período, métrica, serie histórica, KPIs y salud de la
+ * red) — consumiendo la API real de ms-environment-monitoring:
+ *
+ * - GET /api/v1/dashboard/summary  → averages, counts, lastUpdated
+ * - GET /api/v1/dashboard/series   → buckets {bucket, value, samples}
+ *
+ * Los valores actuales por ambiente (comparación) salen del contexto de
+ * ambientes, que ya mergea /api/v1/environments/current.
  */
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEnvironments } from '../../../context/EnvironmentContext'
-import {
-  CURVES,
-  METRICS,
-  PERIOD_IDS,
-  MAX_SERIES,
-  formatMetric,
-  getHistoricalValue,
-  getPeriodLabels,
-  getPeriodValue,
-  normalizeStatus,
-} from '../utils/historicalSeries'
+import apiClient from '../../../shared/services/apiClient'
+import { METRICS, PERIOD_IDS, formatMetric, normalizeStatus } from '../utils/historicalSeries'
+
+const METRIC_FIELD = {
+  co2: 'co2',
+  temperature: 'temp',
+  humidity: 'humidity',
+  noise: 'noise',
+}
+
+function formatBucketLabel(bucket, period, locale) {
+  const date = new Date(bucket)
+  if (Number.isNaN(date.getTime())) return ''
+  if (period === 'day') {
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  }
+  if (period === 'year') {
+    return date.toLocaleDateString(locale, { month: 'short' })
+  }
+  return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })
+}
+
+function relativeLabel(iso, t) {
+  if (!iso) return t('dashboardAnalysis.updatedAgo', 'sin datos')
+  const diffMs = Date.now() - new Date(iso).getTime()
+  if (Number.isNaN(diffMs)) return t('dashboardAnalysis.updatedAgo', 'sin datos')
+  const minutes = Math.max(0, Math.round(diffMs / 60000))
+  if (minutes < 1) return t('dashboardAnalysis.updatedNow', 'actualizado ahora')
+  if (minutes < 60) return t('dashboardAnalysis.updatedMinutes', { count: minutes, defaultValue: 'hace {{count}} min' })
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return t('dashboardAnalysis.updatedHours', { count: hours, defaultValue: 'hace {{count}} h' })
+  const days = Math.round(hours / 24)
+  return t('dashboardAnalysis.updatedDays', { count: days, defaultValue: 'hace {{count}} d' })
+}
 
 export function useDashboardAnalysisVM() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { environments = [], refreshEnvironments } = useEnvironments()
 
   const [period, setPeriod] = useState('day')
   const [metric, setMetric] = useState('co2')
   const [environmentId, setEnvironmentId] = useState('all')
+  const [summary, setSummary] = useState(null)
+  const [buckets, setBuckets] = useState([])
+  const [seriesLoading, setSeriesLoading] = useState(true)
+  const [seriesError, setSeriesError] = useState(null)
   const [isFresh, setIsFresh] = useState(false)
+  const requestId = useRef(0)
 
   const periods = useMemo(
     () =>
@@ -37,8 +71,6 @@ export function useDashboardAnalysisVM() {
       })),
     [t]
   )
-
-  const periodLabels = useMemo(() => getPeriodLabels(t), [t])
 
   const metricLabels = useMemo(
     () => ({
@@ -64,71 +96,95 @@ export function useDashboardAnalysisVM() {
     return environments.filter((env) => String(env.id) === String(environmentId))
   }, [environmentId, environments])
 
-  const visibleEnvironments = selectedEnvironments.length ? selectedEnvironments : environments
-
   const periodInfo = periods.find((item) => item.id === period) || periods[0]
 
   const selectedLabel =
     environmentId === 'all'
       ? t('dashboardAnalysis.context.allEnvironments')
-      : visibleEnvironments[0]?.name || t('dashboardAnalysis.context.noEnvironment', 'Sin ambiente seleccionado')
+      : selectedEnvironments[0]?.name || t('dashboardAnalysis.context.noEnvironment', 'Sin ambiente seleccionado')
 
-  const labels = periodLabels[period] || []
+  const metricInfo = METRICS[metric]
 
-  const series = useMemo(
-    () =>
-      visibleEnvironments.slice(0, MAX_SERIES).map((environment, environmentIndex) => ({
-        id: environment.id,
-        name: environment.name,
-        points: labels.map((label, index) => ({
-          label,
-          value: getHistoricalValue(
-            environment,
-            metric,
-            CURVES[period][index] ?? 1,
-            index + environmentIndex
-          ),
-        })),
-      })),
-    [visibleEnvironments, labels, metric, period]
-  )
+  const loadSummary = useCallback(async () => {
+    try {
+      const data = await apiClient.get('/api/v1/dashboard/summary')
+      setSummary(data)
+    } catch {
+      // el summary es best-effort: el gráfico y los contadores siguen siendo útiles
+      setSummary(null)
+    }
+  }, [])
 
+  const loadSeries = useCallback(async () => {
+    const id = ++requestId.current
+    setSeriesLoading(true)
+    setSeriesError(null)
+    try {
+      const params = { period, variable: metric }
+      if (environmentId !== 'all') params.environmentId = environmentId
+      const rows = await apiClient.get('/api/v1/dashboard/series', { params })
+      if (id !== requestId.current) return
+      setBuckets(Array.isArray(rows) ? rows : [])
+    } catch (e) {
+      if (id !== requestId.current) return
+      setBuckets([])
+      setSeriesError(e.message || 'No fue posible cargar la serie')
+    } finally {
+      if (id === requestId.current) setSeriesLoading(false)
+    }
+  }, [period, metric, environmentId])
+
+  useEffect(() => {
+    loadSeries()
+  }, [loadSeries])
+
+  useEffect(() => {
+    loadSummary()
+  }, [loadSummary])
+
+  const series = useMemo(() => {
+    const points = buckets.map((row) => ({
+      label: formatBucketLabel(row.bucket, period, i18n.language),
+      value: Number(row.value),
+    }))
+    return [{ id: environmentId === 'all' ? 'network' : environmentId, name: selectedLabel, points }]
+  }, [buckets, period, environmentId, selectedLabel, i18n.language])
+
+  const pointCount = series[0]?.points.length || 0
+
+  // Comparación por ambiente: último valor real de la métrica seleccionada.
   const comparisonData = useMemo(
     () =>
-      visibleEnvironments.map((environment, index) => ({
-        id: environment.id,
-        name: environment.name.replace('Ambiente ', ''),
-        value: getPeriodValue(environment, metric, period),
-        color: index,
-      })),
-    [visibleEnvironments, metric, period]
+      selectedEnvironments
+        .map((environment, index) => ({
+          id: environment.id,
+          name: environment.name,
+          value: Number(environment[METRIC_FIELD[metric]]) || 0,
+          color: index,
+        }))
+        .filter((item) => item.value > 0),
+    [selectedEnvironments, metric]
   )
 
   const average = useMemo(() => {
-    if (!visibleEnvironments.length) return 0
-    return (
-      visibleEnvironments.reduce(
-        (total, environment) => total + getPeriodValue(environment, metric, period),
-        0
-      ) / visibleEnvironments.length
-    )
-  }, [visibleEnvironments, metric, period])
+    const fromSummary = summary?.averages?.[metric]
+    if (fromSummary != null) return Number(fromSummary)
+    if (!comparisonData.length) return 0
+    return comparisonData.reduce((total, item) => total + item.value, 0) / comparisonData.length
+  }, [summary, metric, comparisonData])
 
   const statusCounts = useMemo(
     () =>
-      visibleEnvironments.reduce(
+      selectedEnvironments.reduce(
         (counts, environment) => {
           counts[normalizeStatus(environment.statusKey).key] += 1
           return counts
         },
         { normal: 0, warning: 0, alert: 0 }
       ),
-    [visibleEnvironments]
+    [selectedEnvironments]
   )
 
-  const metricInfo = METRICS[metric]
-
-  // Rango real del gráfico: domínio teórico ampliado si alguna lectura se sale
   const chartRange = useMemo(() => {
     const values = series.flatMap((item) => item.points.map((point) => point.value))
     const min = Math.min(metricInfo.domain[0], metricInfo.comfort, ...(values.length ? values : [0]))
@@ -138,17 +194,19 @@ export function useDashboardAnalysisVM() {
 
   const refresh = useCallback(() => {
     setIsFresh(true)
+    loadSummary()
+    loadSeries()
     if (refreshEnvironments) refreshEnvironments()
     setTimeout(() => setIsFresh(false), 2600)
-  }, [refreshEnvironments])
+  }, [loadSummary, loadSeries, refreshEnvironments])
 
-  const healthPercent = visibleEnvironments.length
-    ? Math.round((statusCounts.normal / visibleEnvironments.length) * 100)
+  const healthPercent = selectedEnvironments.length
+    ? Math.round((statusCounts.normal / selectedEnvironments.length) * 100)
     : 0
 
   const lastUpdatedLabel = isFresh
     ? t('dashboardAnalysis.updatedNow', 'actualizado ahora')
-    : t('dashboardAnalysis.updatedAgo', 'hace 3 min')
+    : relativeLabel(summary?.lastUpdated, t)
 
   return {
     environments,
@@ -160,21 +218,23 @@ export function useDashboardAnalysisVM() {
     setEnvironmentId,
     periods,
     periodInfo,
-    periodLabels,
     metricLabels,
     statusLabels,
     metricInfo,
     metricLabel: metricLabels[metric],
     selectedLabel,
     selectedEnvironments,
-    visibleEnvironments,
     series,
+    pointCount,
     comparisonData,
     average,
+    summaryCounts: summary?.counts || null,
     statusCounts,
     chartRange,
     healthPercent,
     lastUpdatedLabel,
+    seriesLoading,
+    seriesError,
     formatMetric: (value) => formatMetric(value, metric),
     refresh,
   }

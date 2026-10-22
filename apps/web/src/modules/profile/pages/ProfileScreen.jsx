@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { FaUser, FaEnvelope, FaBriefcase, FaPhone, FaMapMarkerAlt, FaCamera } from 'react-icons/fa';
-import { IoLogOut } from 'react-icons/io5';
+import { IoCloseOutline, IoLogOut } from 'react-icons/io5';
 import { MdEdit } from 'react-icons/md';
 
 import { useProfileVM } from '../../../viewmodels';
@@ -21,12 +21,11 @@ function ProfileScreen() {
   const {
     profile,
     form,
-    avatar,
+    avatarUrl,
     isEditing,
     logoutModal,
-    avatarLoading,
     avatarError,
-    fileInputRef,
+    saveError,
     setIsEditing,
     setLogoutModal,
     handleChange,
@@ -35,7 +34,6 @@ function ProfileScreen() {
     handleSave,
     handleCancel,
     handleLogout,
-    openAvatarPicker,
   } = useProfileVM();
 
   return (
@@ -48,26 +46,23 @@ function ProfileScreen() {
         <div className={`profile-hero-final ${isEditing ? 'editing' : ''}`}>
           <div
             className={`hero-avatar-wrapper ${isEditing ? 'editable' : ''}`}
-            onClick={isEditing ? openAvatarPicker : undefined}
           >
-            {avatar ? (
-              <img src={avatar} alt="Foto de perfil" className="hero-avatar-img" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Foto de perfil" className="hero-avatar-img" />
             ) : (
               <div className="hero-avatar-icon">
                 <FaUser />
               </div>
             )}
 
-            {avatarLoading && <div className="hero-avatar-loading" />}
-
-            {isEditing && !avatarLoading && (
+            {isEditing && (
               <div className="hero-avatar-overlay">
                 <FaCamera />
                 <span className="hero-avatar-overlay-text">Cambiar foto</span>
               </div>
             )}
 
-            {isEditing && avatar && (
+            {isEditing && avatarUrl && (
               <button
                 className="hero-avatar-overlay-remove"
                 onClick={(e) => {
@@ -76,20 +71,23 @@ function ProfileScreen() {
                 }}
                 title="Eliminar foto"
               >
-                ✕
+                <IoCloseOutline aria-hidden="true" />
               </button>
             )}
           </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={handleAvatarChange}
-          />
+          {isEditing && (
+            <input
+              className="hero-avatar-url"
+              type="url"
+              placeholder="https://ejemplo.com/avatar.png"
+              value={avatarUrl}
+              onChange={(e) => handleAvatarChange({ target: { value: e.target.value } })}
+            />
+          )}
 
           {avatarError && <p className="hero-avatar-error">{avatarError}</p>}
+          {saveError && <p className="hero-avatar-error">{saveError}</p>}
 
           <div className="hero-info-final">
             <h1>{profile.fullName}</h1>

@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
   disabled: { opacity: 0.6 },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   wrapper: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaCheck, FaChevronDown } from 'react-icons/fa';
 import i18n from '../../i18n/i18n';
 
 const LANGUAGES = [
@@ -66,7 +66,11 @@ function LanguageSelector({ openUp = false }) {
             >
               <img src={lang.flag} alt={lang.label} className="lang-flag-img-dropdown" />
               <span>{lang.label}</span>
-              {lang.code === i18nInstance.language && <span className="lang-check">✓</span>}
+              {lang.code === i18nInstance.language && (
+                <span className="lang-check">
+                  <FaCheck aria-hidden="true" />
+                </span>
+              )}
             </button>
           ))}
         </div>

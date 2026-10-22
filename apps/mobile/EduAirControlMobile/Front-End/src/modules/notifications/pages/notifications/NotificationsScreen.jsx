@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
@@ -14,9 +15,9 @@ import { useNotificationsVM } from '../../viewmodels/useNotificationsVM.js'
 import { styles } from './NotificationsScreen.styles'
 
 const TYPE_CONFIG = {
-  danger: { icon: 'alert-circle', color: '#F44336', bg: 'rgba(244,67,54,0.12)' },
-  warning: { icon: 'warning', color: '#FFC107', bg: 'rgba(255,193,7,0.12)' },
-  info: { icon: 'information-circle', color: '#00b894', bg: 'rgba(0,184,148,0.12)' },
+  danger: { icon: 'alert-circle', colorKey: 'error', bgKey: 'errorDim' },
+  warning: { icon: 'warning', colorKey: 'warning', bgKey: 'warningDim' },
+  info: { icon: 'information-circle', colorKey: 'info', bgKey: 'infoDim' },
 }
 
 const HOUR_LOCALES = { es: 'es-CO', en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' }
@@ -32,7 +33,8 @@ function timeLabel(date, currentColors, lang) {
 
 function NotificationItem({ notification, onPress, currentColors }) {
   const { i18n } = useTranslation()
-  const cfg = TYPE_CONFIG[notification.type] || TYPE_CONFIG.info
+  const config = TYPE_CONFIG[notification.type] || TYPE_CONFIG.info
+  const cfg = { ...config, color: currentColors[config.colorKey], bg: currentColors[config.bgKey] }
 
   return (
     <TouchableOpacity
@@ -40,6 +42,9 @@ function NotificationItem({ notification, onPress, currentColors }) {
       onPress={onPress}
       activeOpacity={0.8}
       disabled={!notification.envId}
+      accessibilityRole="button"
+      accessibilityLabel={`${notification.title}. ${notification.message}`}
+      accessibilityState={{ disabled: !notification.envId }}
     >
       <View style={[styles.iconWrap, { backgroundColor: cfg.color + '22' }]}>
         <Ionicons name={cfg.icon} size={22} color={cfg.color} />
@@ -79,13 +84,13 @@ export default function NotificationsScreen({ navigation }) {
         <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: currentColors.textPrimary }]}>{t('notifications.title')}</Text>
           {vm.unreadCount > 0 && (
-            <Text style={[styles.headerSub, { color: TYPE_CONFIG.danger.color }]}>
+              <Text style={[styles.headerSub, { color: currentColors.error }]}>
               {t('notifications.activeAlerts', '{{count}} alertas activas', { count: vm.unreadCount })}
             </Text>
           )}
         </View>
         {vm.unreadCount > 0 && (
-          <View style={[styles.badge, { backgroundColor: TYPE_CONFIG.danger.color }]}>
+          <View style={[styles.badge, { backgroundColor: currentColors.errorButton || currentColors.error }]}>
             <Text style={styles.badgeText}>{vm.unreadCount}</Text>
           </View>
         )}
@@ -110,13 +115,16 @@ export default function NotificationsScreen({ navigation }) {
             style={[
               styles.filterChip,
               { borderColor: currentColors.borderColor },
-              vm.filter === f.key && { backgroundColor: currentColors.accent, borderColor: currentColors.accent },
+              vm.filter === f.key && { backgroundColor: currentColors.accentButton || currentColors.accent, borderColor: currentColors.accentButton || currentColors.accent },
             ]}
             onPress={() => vm.setFilter(f.key)}
+            accessibilityRole="radio"
+            accessibilityLabel={f.label}
+            accessibilityState={{ selected: vm.filter === f.key }}
           >
             <Text style={[
               styles.filterChipText,
-              { color: vm.filter === f.key ? currentColors.bgBody : currentColors.textSecondary },
+              { color: vm.filter === f.key ? (currentColors.textOnAccent || '#fff') : currentColors.textSecondary },
             ]}>
               {f.label}
             </Text>
@@ -125,7 +133,23 @@ export default function NotificationsScreen({ navigation }) {
       </ScrollView>
 
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {vm.notifications.length === 0 ? (
+        {vm.loading ? (
+          <View style={styles.empty}>
+            <ActivityIndicator color={currentColors.accent} size="large" />
+          </View>
+        ) : vm.error ? (
+          <View style={styles.empty}>
+            <Ionicons name="cloud-offline-outline" size={60} color={currentColors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>
+              {t('notifications.loadError', 'No se pudieron cargar las alertas')}
+            </Text>
+            <TouchableOpacity onPress={vm.reload} style={{ marginTop: 12 }}>
+              <Text style={{ color: currentColors.accent, fontWeight: '700' }}>
+                {t('common.retry', 'Reintentar')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : vm.notifications.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="checkmark-circle" size={60} color={currentColors.accent} />
             <Text style={[styles.emptyTitle, { color: currentColors.textPrimary }]}>
@@ -138,7 +162,10 @@ export default function NotificationsScreen({ navigation }) {
               key={n.id}
               notification={n}
               currentColors={currentColors}
-              onPress={() => n.envId && navigation.navigate('EnvironmentDetail', { envId: n.envId })}
+              onPress={() => {
+                if (n.id !== 'summary') vm.acknowledge(n.id)
+                if (n.envId) navigation.navigate('EnvironmentDetail', { envId: n.envId })
+              }}
             />
           ))
         )}

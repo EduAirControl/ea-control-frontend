@@ -2,7 +2,7 @@
  * ViewModel: useProvisioningVM
  * Aprovisionamiento Wi-Fi del ESP32 por Bluetooth LE (ver
  * guia_configuracion_esp32_react_native_ble.md): escaneo filtrado por
- * SERVICE_UUID, escritura de {ssid, pass} en Base64 y escucha de
+ * SERVICE_UUID, escritura de {ssid, pass, token, installationId} y escucha de
  * STATUS:CONNECTED | STATUS:FAIL | STATUS:ERR_JSON.
  */
 
@@ -65,7 +65,7 @@ export function useProvisioningVM() {
     } catch (e) {
       setPhase('error')
       setErrorKey(toBleErrorKey(e))
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', e?.message)
       return null
     }
 
@@ -100,14 +100,22 @@ export function useProvisioningVM() {
       pushLog('provisioning.log.ready')
       return device
     } catch (e) {
+      // El codigo del error se deja en el log: sin el, un fallo de BLE es un
+      // "algo falló" imposible de diagnosticar desde el movil.
       setPhase('error')
       setErrorKey(toBleErrorKey(e))
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', e?.message)
       return null
     }
   }, [pushLog])
 
-  const submit = useCallback(async () => {
+  /**
+   * Envía las credenciales al nodo y espera su respuesta.
+   *
+   * @param {{token: string, installationId: string}} deviceConfig credencial del
+   *   dispositivo e id de instalación; van en el mismo payload BLE que el Wi-Fi.
+   */
+  const submit = useCallback(async (deviceConfig = {}) => {
     const device = deviceRef.current
     if (!device) {
       setErrorKey('devices.errors.notConnected')
@@ -128,12 +136,19 @@ export function useProvisioningVM() {
     })
 
     try {
-      await sendCredentials(device, ssid.trim(), password)
+      await sendCredentials(
+        device,
+        ssid.trim(),
+        password,
+        deviceConfig.token,
+        deviceConfig.installationId
+      )
     } catch (e) {
+      // Sin el codigo real (message/name) un fallo de BLE es indiagnostico.
       statusResolverRef.current = null
       setPhase('error')
       setErrorKey('devices.errors.generic')
-      pushLog('provisioning.log.error')
+      pushLog('provisioning.log.error', `${e?.name || 'Error'}: ${e?.message || e}`)
       return null
     }
 

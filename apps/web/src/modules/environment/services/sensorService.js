@@ -1,40 +1,30 @@
 import apiClient from '../../../shared/services/apiClient';
 
-const BASE = '/api/v1/sensors';
+const INSTALLATIONS = '/api/v1/sensor-installations';
+const SENSORS = '/api/v1/sensors';
+
+function toList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.content)) return payload.content;
+  return [];
+}
 
 const sensorService = {
-  async getAll(environmentId) {
-    const query = environmentId ? `?environmentId=${environmentId}` : '';
-    const data = await apiClient.get(`${BASE}${query}`);
-    return Array.isArray(data) ? data : data.items || [];
+  async listInstallationsByEnvironment(educationalEnvironmentId, { active = true } = {}) {
+    return toList(
+      await apiClient.get(INSTALLATIONS, {
+        params: { educationalEnvironmentId, active, limit: 100 },
+      })
+    );
   },
 
-  async getByEnvironment(environmentId) {
-    return this.getAll(environmentId);
+  async getSensor(sensorId) {
+    return apiClient.get(`${SENSORS}/${encodeURIComponent(sensorId)}`);
   },
 
-  async getById(serial) {
-    return apiClient.get(`${BASE}/${serial}`);
-  },
-
-  async create(sensor) {
-    return apiClient.post(BASE, sensor);
-  },
-
-  /**
-   * Edición completa: el backend exige `environmentId` y `variable` en todo PATCH.
-   */
-  async update(serial, updates) {
-    return apiClient.patch(`${BASE}/${serial}`, updates);
-  },
-
-  async delete(serial) {
-    return apiClient.delete(`${BASE}/${serial}`);
-  },
-
-  /** Alterna activo/inactivo; el backend lo resuelve en POST /{id}/toggle. */
-  async toggleActive(serial) {
-    return apiClient.post(`${BASE}/${serial}/toggle`, {});
+  removeInstallation(installationId) {
+    return apiClient.post(`${INSTALLATIONS}/${encodeURIComponent(installationId)}/remove`);
   },
 };
 

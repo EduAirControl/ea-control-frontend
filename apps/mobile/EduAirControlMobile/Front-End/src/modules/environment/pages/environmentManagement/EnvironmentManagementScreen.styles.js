@@ -102,7 +102,7 @@ export const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
   },
-  summaryEmoji: { fontSize: 18, marginBottom: 4 },
+  summaryIcon: { marginBottom: 4 },
   summaryValue: { fontSize: 20, fontWeight: '900', lineHeight: 24 },
   summaryLabel: { fontSize: 9.5, fontWeight: '700', marginTop: 2, textAlign: 'center' },
   searchBar: {
@@ -184,7 +184,7 @@ export const styles = StyleSheet.create({
     gap: 10,
     borderRadius: 16,
   },
-  emptyIcon: { fontSize: 52 },
+  emptyIcon: { marginBottom: 4 },
   emptyTitle: { fontSize: 17, fontWeight: '800', textAlign: 'center' },
   emptySub: { fontSize: 13, lineHeight: 18, textAlign: 'center', paddingHorizontal: 24, marginTop: -4 },
   emptyBtn: { borderRadius: 12, paddingHorizontal: 20, paddingVertical: 11, marginTop: 6 },
