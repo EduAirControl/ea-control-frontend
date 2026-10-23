@@ -2,6 +2,8 @@ import { FaTimes, FaHeart, FaRegHeart, FaTemperatureHigh } from 'react-icons/fa'
 import { WiHumidity } from 'react-icons/wi';
 import { MdCo2 } from 'react-icons/md';
 import { HiSpeakerWave } from 'react-icons/hi2';
+import { createPortal } from 'react-dom';
+import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import ScoreCircle from '../ScoreCircle/ScoreCircle';
@@ -21,6 +23,14 @@ function formatValue(value, unit) {
 
 function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation();
+  const shouldHideNavbar = isOpen && Boolean(environment);
+
+  useLayoutEffect(() => {
+    if (!shouldHideNavbar) return undefined;
+
+    document.body.classList.add('environment-modal-open');
+    return () => document.body.classList.remove('environment-modal-open');
+  }, [shouldHideNavbar]);
 
   if (!isOpen || !environment) return null;
 
@@ -41,7 +51,7 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
     ? t(environment.statusKey || 'common.unknown')
     : t('common.noData');
 
-  return (
+  return createPortal(
     <div className="environment-modal-overlay" onClick={onClose}>
       <div className="environment-modal" onClick={(e) => e.stopPropagation()}>
         <button className="env-modal__close" onClick={onClose} aria-label="Cerrar">
@@ -133,7 +143,8 @@ function EnvironmentModal({ isOpen, onClose, environment, isFavorite, onToggleFa
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
