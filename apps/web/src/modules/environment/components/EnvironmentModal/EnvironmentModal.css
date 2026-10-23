@@ -7,12 +7,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: var(--z-modal);
+  box-sizing: border-box;
+  padding: 20px;
+  z-index: 2147483647;
 }
 
 .environment-modal {
   width: min(900px, 92vw);
-  max-height: 90vh;
+  max-height: calc(100vh - 40px);
+  box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--lb-glass-bg);
@@ -308,6 +311,10 @@ EXPLICACIÓN
 }
 
 @media (max-width: 768px) {
+  .environment-modal {
+    max-height: calc(100vh - 24px);
+  }
+
   .modal-sensors {
     grid-template-columns: 1fr;
   }

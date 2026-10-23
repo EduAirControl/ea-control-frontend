@@ -125,7 +125,10 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
       return; // el viewmodel ya muestra el toast de error
     }
     try {
-      await environmentService.updateTemperatureThreshold(environment.id, tempMin, tempMax);
+      await environmentService.updateThresholds(environment.id, 'temperature', {
+        minValue: tempMin,
+        maxValue: tempMax,
+      });
     } catch (err) {
       toast.error(err?.message || 'No se pudieron guardar los umbrales');
       return;

@@ -49,14 +49,11 @@ export function useDashboardVM() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [summary, seriesData] = await Promise.all([
-        apiClient.get('/api/v1/dashboard/summary'),
-        apiClient.get('/api/v1/dashboard/series', {
-          params: { period: 'day', variable: 'co2' },
-        }),
-      ]);
-      setDashboardData({ summary, series: seriesData });
-      setSeries(seriesData);
+      // Solo el summary: la serie la trae fetchSeries con el periodo/métrica
+      // que el usuario tenga seleccionado. Pedirla aquí fija (day/co2) pisaba
+      // la gráfica cada tick de auto-refresh y la dejaba "vacía".
+      const summary = await apiClient.get('/api/v1/dashboard/summary');
+      setDashboardData({ summary });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
