@@ -19,8 +19,6 @@ RUN addgroup -S appgroup -g 1000 && adduser -S appuser -G appgroup -u 1000
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN chown -R appuser:appgroup /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
-# Como appuser no puede escribir en /run, el pid de nginx pasa a /tmp.
-RUN sed -i 's|pid\s*/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf
 
 USER appuser
 

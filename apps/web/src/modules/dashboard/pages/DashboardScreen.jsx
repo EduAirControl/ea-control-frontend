@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  FaArrowDown,
   FaArrowUp,
   FaCalendarAlt,
   FaChartBar,
@@ -196,7 +195,7 @@ function KpiCard({ className = '', icon, label, value, valueClassName, note }) {
         {icon}
       </div>
       <strong className={valueClassName}>{value}</strong>
-      <small>{note}</small>
+      {note && <small>{note}</small>}
     </article>
   );
 }
@@ -361,11 +360,6 @@ function DashboardScreen() {
       icon: <MetricIcon size={17} />,
       label: `${t('dashboardAnalysis.kpi.averagePrefix')}${metricLabels[metric]}`,
       value: formatMetric(average, metric),
-      note: (
-        <>
-          <FaArrowDown size={13} /> {t('dashboardAnalysis.kpi.vsPreviousPeriod')}
-        </>
-      ),
     },
     {
       key: 'normal',

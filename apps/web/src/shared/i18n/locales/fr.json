@@ -1048,7 +1048,6 @@
     },
     "kpi": {
       "averagePrefix": "Moyenne ",
-      "vsPreviousPeriod": "7,4 % vs. période précédente",
       "environmentsInRange": "environnements dans la plage",
       "requireFollowUp": "nécessitent un suivi",
       "requireAttention": "nécessitent une attention"
