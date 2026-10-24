@@ -1,5 +1,6 @@
 import apiClient from '../../../shared/services/apiClient';
 import catalogService from './catalogService';
+import alertService from '../../notifications/services/alertService';
 import {
   mapMetricsByEnvironment,
   deriveStatusKey,
@@ -20,7 +21,7 @@ const BASE = '/api/v1/educational-environments';
  * campus, que es lo que el filtro de {@code EnvironmentFilters} y el dashboard
  * esperan en {@code building}.
  */
-function toUi(env, metrics, campusNameById, favoriteIds) {
+function toUi(env, metrics, campusNameById, favoriteIds, alertSeverityByEnv) {
   if (!env) return env;
   // El backend expone `educationalEnvironmentId`; los mocks usaban `id`.
   const envId = env.educationalEnvironmentId ?? env.id;
@@ -46,8 +47,28 @@ function toUi(env, metrics, campusNameById, favoriteIds) {
     co2: m?.co2,
     noise: m?.noise,
     measuredAt: m?.measuredAt,
-    statusKey: deriveStatusKey(m),
+    statusKey: deriveStatusKey(m, alertSeverityByEnv?.[envId]),
   };
+}
+
+/**
+ * Peor severidad activa por ambiente a partir de las alertas del backend.
+ *
+ * <p>El estado NO se calcula en el navegador con umbrales fijos: lo decide
+ * ms-environment-monitoring al evaluar las mediciones con la configuración
+ * (override por ambiente) que edita el admin. El front solo refleja esa decisión.
+ */
+function worstSeverityByEnvironment(alerts) {
+  const rank = { WARNING: 1, CRITICAL: 2 };
+  const byEnv = {};
+  for (const a of alerts || []) {
+    const sev = a?.severityCode;
+    if (!a?.environmentId || !rank[sev]) continue;
+    if (!byEnv[a.environmentId] || rank[sev] > rank[byEnv[a.environmentId]]) {
+      byEnv[a.environmentId] = sev;
+    }
+  }
+  return byEnv;
 }
 
 function toPayload(environment) {
@@ -74,7 +95,7 @@ const environmentService = {
   },
 
   async getAll() {
-    const [data, metrics, campuses, favoriteIds] = await Promise.all([
+    const [data, metrics, campuses, favoriteIds, alerts] = await Promise.all([
       apiClient.get(`${BASE}`, { params: { limit: 100 } }),
       // Si el servicio de métricas no responde, el listado se pinta igual
       // (sin métricas) en vez de quedarse en blanco.
@@ -82,26 +103,32 @@ const environmentService = {
       catalogService.getCampuses().catch(() => []),
       // Favoritos (ms-user-experience): best-effort, la lista sigue siendo válida.
       environmentService.getFavorites().catch(() => []),
+      // Alertas activas (fuente de verdad del estado): best-effort.
+      alertService.listActive(200).catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
     const favoriteSet = new Set(favoriteIds);
+    const alertSeverityByEnv = worstSeverityByEnvironment(alerts);
     const items = data?.data || (Array.isArray(data) ? data : []);
-    return items.map((env) => toUi(env, metrics, campusNameById, favoriteSet));
+    return items.map((env) =>
+      toUi(env, metrics, campusNameById, favoriteSet, alertSeverityByEnv));
   },
 
   async getById(id) {
-    const [env, metrics, campuses, favoriteIds] = await Promise.all([
+    const [env, metrics, campuses, favoriteIds, alerts] = await Promise.all([
       apiClient.get(`${BASE}/${id}`),
       environmentService.getMetrics().catch(() => ({})),
       catalogService.getCampuses().catch(() => []),
       environmentService.getFavorites().catch(() => []),
+      alertService.listActive(200).catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
-    return toUi(env, metrics, campusNameById, new Set(favoriteIds));
+    return toUi(env, metrics, campusNameById, new Set(favoriteIds),
+      worstSeverityByEnvironment(alerts));
   },
 
   async getFavorites() {
