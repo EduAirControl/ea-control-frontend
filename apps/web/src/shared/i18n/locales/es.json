@@ -1024,7 +1024,6 @@
     },
     "kpi": {
       "averagePrefix": "Promedio ",
-      "vsPreviousPeriod": "7.4% vs. periodo anterior",
       "environmentsInRange": "ambientes en rango",
       "requireFollowUp": "requieren seguimiento",
       "requireAttention": "requieren atención"
