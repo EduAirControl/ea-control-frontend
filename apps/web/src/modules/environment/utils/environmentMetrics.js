@@ -32,6 +32,10 @@ export function mapMetricsByEnvironment(rows) {
     if (!field || row.environmentId == null) continue;
     const entry = byEnvironment[row.environmentId] || (byEnvironment[row.environmentId] = {});
     entry[field] = Number(row.value);
+    // El backend evalúa la lectura contra los umbrales vigentes del ambiente.
+    // Se guarda por variable para que cada tarjeta pinte su propio estado.
+    entry.severity = entry.severity || {};
+    entry.severity[field] = row.severityCode || null;
     if (!entry.measuredAt || row.measuredAt > entry.measuredAt) entry.measuredAt = row.measuredAt;
   }
   return byEnvironment;
@@ -40,16 +44,17 @@ export function mapMetricsByEnvironment(rows) {
 const SEVERITY = { OK: 0, WARNING: 1, ALERT: 2 };
 
 /**
- * Severidad de una alerta del backend ('WARNING' | 'CRITICAL') → nivel.
+ * Severidad del backend ('OK' | 'WARNING' | 'CRITICAL') → nivel.
  *
  * <p>Los umbrales NO viven aquí: los calcula ms-environment-monitoring con la
  * configuración (override por ambiente) que edita el admin en la gestión. El front
  * solo pinta lo que el backend decide — una sola fuente de verdad.
  */
-function levelOfAlert(alertSeverity) {
-  if (alertSeverity === 'CRITICAL') return SEVERITY.ALERT;
-  if (alertSeverity === 'WARNING') return SEVERITY.WARNING;
-  return SEVERITY.OK;
+function levelOfSeverity(severityCode) {
+  if (severityCode === 'CRITICAL') return SEVERITY.ALERT;
+  if (severityCode === 'WARNING') return SEVERITY.WARNING;
+  if (severityCode === 'OK') return SEVERITY.OK;
+  return null;
 }
 
 /**
@@ -70,17 +75,35 @@ export function hasAnyMetric(environment) {
 /**
  * Estado global de un ambiente.
  *
- * <p>La severidad REAL la da el backend: `alertSeverity` es la peor alerta activa
- * del ambiente (o `undefined` si no hay). Con eso:
+ * <p>Se toma la peor severidad de las lecturas actuales evaluadas por el backend
+ * contra los umbrales del ambiente. Reconocer una alerta no cambia el estado: una
+ * lectura sigue fuera de rango hasta que el sensor reporte un valor normal o el
+ * admin ajuste el umbral. Si el backend todavía no envía `severityCode` se usa la
+ * peor alerta activa como respaldo.
+ *
  * <ul>
  *   <li>CRITICAL → alerta; WARNING → advertencia;</li>
- *   <li>sin alerta y con mediciones → normal;</li>
- *   <li>sin alerta y sin mediciones → «desconocido» (no pintar verde inventado).</li>
+ *   <li>solo OK y con mediciones → normal;</li>
+ *   <li>sin datos evaluables → «desconocido» (no pintar verde inventado).</li>
  * </ul>
  */
 export function deriveStatusKey(metrics, alertSeverity) {
-  const level = levelOfAlert(alertSeverity);
-  if (level >= SEVERITY.ALERT) return STATUS.ALERT;
-  if (level >= SEVERITY.WARNING) return STATUS.WARNING;
+  const severities = Object.values(metrics?.severity || {});
+  const levels = severities.map(levelOfSeverity).filter((level) => level !== null);
+
+  if (levels.length > 0) {
+    const worst = Math.max(...levels);
+    if (worst >= SEVERITY.ALERT) return STATUS.ALERT;
+    if (worst >= SEVERITY.WARNING) return STATUS.WARNING;
+    return STATUS.NORMAL;
+  }
+
+  const fallback = levelOfSeverity(alertSeverity);
+  if (fallback !== null) {
+    if (fallback >= SEVERITY.ALERT) return STATUS.ALERT;
+    if (fallback >= SEVERITY.WARNING) return STATUS.WARNING;
+    return STATUS.NORMAL;
+  }
+
   return hasAnyMetric(metrics) ? STATUS.NORMAL : undefined;
 }

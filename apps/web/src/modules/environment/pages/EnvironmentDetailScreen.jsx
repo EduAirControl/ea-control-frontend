@@ -13,7 +13,9 @@ import { useEnvironment } from '../../../context/useEnvironment';
 import { useToast } from '../../../shared/hooks/useToast';
 import { usePolling } from '../../../shared/hooks/usePolling';
 import sensorService from '../services/sensorService';
-import { STATUS_COLORS, QUALITY_COLORS, IDEAL_RANGES } from '../constants/environments';
+import environmentService from '../services/environmentService';
+import { getMetricColor } from '../utils/environmentHelpers';
+import { STATUS_COLORS, QUALITY_COLORS } from '../constants/environments';
 import './EnvironmentDetail.css';
 
 /**
@@ -23,9 +25,22 @@ import './EnvironmentDetail.css';
 const formatMetric = (value, unit) =>
   value === undefined || value === null || Number.isNaN(value) ? '—' : `${value}${unit}`;
 
-function MetricBar({ value, min, max }) {
+const METRIC_TO_VARIABLE = {
+  temp: 'temperature',
+  humidity: 'humidity',
+  co2: 'co2',
+  noise: 'noise',
+};
+
+const UNIT_BY_METRIC = {
+  temp: '°C',
+  humidity: '%',
+  co2: ' ppm',
+  noise: ' dB',
+};
+
+function MetricBar({ value, min, max, color }) {
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
-  const color = pct < 60 ? '#4CAF50' : pct < 80 ? '#FFC107' : '#F44336';
   return (
     <div className="metric-bar-track">
       <div className="metric-bar-fill" style={{ width: `${pct}%`, background: color }} />
@@ -50,6 +65,7 @@ function EnvironmentDetailScreen() {
 
   const [devices, setDevices] = useState([]);
   const [devicesLoading, setDevicesLoading] = useState(true);
+  const [thresholds, setThresholds] = useState([]);
 
   const loadDevices = useCallback(async () => {
     if (!id) {
@@ -90,6 +106,18 @@ function EnvironmentDetailScreen() {
   // Los dispositivos y las métricas del ambiente se actualizan solos: sin
   // este polling la pantalla quedaba congelada en la carga inicial.
   usePolling(loadDevices, 10000);
+
+  // Rangos normales configurados para ESTE ambiente. La UI no usa cortes fijos:
+  // si el admin cambia los umbrales, aquí se reflejan.
+  useEffect(() => {
+    let cancelled = false;
+    if (!id) return undefined;
+    environmentService
+      .getThresholds(id)
+      .then((rows) => { if (!cancelled) setThresholds(rows || []); })
+      .catch(() => { if (!cancelled) setThresholds([]); });
+    return () => { cancelled = true; };
+  }, [id]);
 
   const handleUnlink = async (installation) => {
     const ok = window.confirm(
@@ -132,13 +160,25 @@ function EnvironmentDetailScreen() {
         : 'dashboard.qualityGood');
   const qualityColor = QUALITY_COLORS[qualityKey];
 
+  const normalByVariable = Object.fromEntries(
+    thresholds
+      .filter((threshold) => threshold.severityCode === 'INFO')
+      .map((threshold) => [threshold.variableCode, threshold])
+  );
+
+  const idealOf = (metricKey) => {
+    const threshold = normalByVariable[METRIC_TO_VARIABLE[metricKey]];
+    if (!threshold || threshold.minValue == null || threshold.maxValue == null) return '—';
+    return `${threshold.minValue}–${threshold.maxValue}${UNIT_BY_METRIC[metricKey]}`;
+  };
+
   const metrics = [
     {
       icon: <WiThermometer className="detail-metric-icon temp" />,
       label: t('dashboard.temperature'),
       value: formatMetric(env.temp, '°C'),
       rawValue: env.temp,
-      ideal: IDEAL_RANGES.temp,
+      ideal: idealOf('temp'),
       min: 0,
       max: 50,
       key: 'temp',
@@ -148,7 +188,7 @@ function EnvironmentDetailScreen() {
       label: t('dashboard.humidity'),
       value: formatMetric(env.humidity, '%'),
       rawValue: env.humidity,
-      ideal: IDEAL_RANGES.humidity,
+      ideal: idealOf('humidity'),
       min: 0,
       max: 100,
       key: 'humidity',
@@ -158,7 +198,7 @@ function EnvironmentDetailScreen() {
       label: 'CO₂',
       value: formatMetric(env.co2, ' ppm'),
       rawValue: env.co2,
-      ideal: IDEAL_RANGES.co2,
+      ideal: idealOf('co2'),
       min: 0,
       max: 2000,
       key: 'co2',
@@ -168,7 +208,7 @@ function EnvironmentDetailScreen() {
       label: t('dashboard.noise'),
       value: formatMetric(env.noise, ' dB'),
       rawValue: env.noise,
-      ideal: IDEAL_RANGES.noise,
+      ideal: idealOf('noise'),
       min: 0,
       max: 120,
       key: 'noise',
@@ -258,7 +298,12 @@ function EnvironmentDetailScreen() {
                 </div>
               </div>
 
-              <MetricBar value={m.rawValue} min={m.min} max={m.max} />
+              <MetricBar
+                value={m.rawValue}
+                min={m.min}
+                max={m.max}
+                color={getMetricColor(m.key, m.rawValue, env.metricSeverity?.[m.key])}
+              />
 
               <div className="detail-metric-footer">
                 <span>{t('dashboard.idealRange')}</span>

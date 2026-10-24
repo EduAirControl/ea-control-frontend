@@ -289,3 +289,86 @@
   background: color-mix(in srgb, var(--color-danger) 85%, #000);
   border-color: color-mix(in srgb, var(--color-danger) 85%, #000);
 }
+
+/* ─── Umbrales por variable (modal de edición) ──────────────── */
+.add-env-modal__threshold-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.add-env-modal__thresholds {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.add-env-modal__threshold {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--lb-glass-border);
+  border-radius: 10px;
+  background: var(--bg-input);
+}
+
+.add-env-modal__threshold-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.add-env-modal__threshold-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.add-env-modal__threshold-unit {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.add-env-modal__threshold-error {
+  margin-left: auto;
+  color: var(--color-danger);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.add-env-modal__threshold-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.add-env-modal__threshold-grid .add-env-modal__input {
+  padding: 6px 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.add-env-modal__threshold-tag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.add-env-modal__threshold-tag--ok {
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: var(--color-success);
+}
+
+.add-env-modal__threshold-tag--warning {
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+  color: var(--color-warning);
+}

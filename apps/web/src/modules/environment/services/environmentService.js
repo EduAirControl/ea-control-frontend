@@ -1,6 +1,5 @@
 import apiClient from '../../../shared/services/apiClient';
 import catalogService from './catalogService';
-import alertService from '../../notifications/services/alertService';
 import {
   mapMetricsByEnvironment,
   deriveStatusKey,
@@ -21,7 +20,7 @@ const BASE = '/api/v1/educational-environments';
  * campus, que es lo que el filtro de {@code EnvironmentFilters} y el dashboard
  * esperan en {@code building}.
  */
-function toUi(env, metrics, campusNameById, favoriteIds, alertSeverityByEnv) {
+function toUi(env, metrics, campusNameById, favoriteIds) {
   if (!env) return env;
   // El backend expone `educationalEnvironmentId`; los mocks usaban `id`.
   const envId = env.educationalEnvironmentId ?? env.id;
@@ -36,6 +35,7 @@ function toUi(env, metrics, campusNameById, favoriteIds, alertSeverityByEnv) {
     areaM2: env.areaM2,
     capacity: env.occupancyCapacity,
     envType: env.environmentTypeId,
+    environmentTypeId: env.environmentTypeId,
     campusId: env.campusId,
     campusName,
     building: campusName,
@@ -47,28 +47,10 @@ function toUi(env, metrics, campusNameById, favoriteIds, alertSeverityByEnv) {
     co2: m?.co2,
     noise: m?.noise,
     measuredAt: m?.measuredAt,
-    statusKey: deriveStatusKey(m, alertSeverityByEnv?.[envId]),
+    // Severidad por variable (OK/WARNING/CRITICAL) decidida por el backend.
+    metricSeverity: m?.severity || {},
+    statusKey: deriveStatusKey(m),
   };
-}
-
-/**
- * Peor severidad activa por ambiente a partir de las alertas del backend.
- *
- * <p>El estado NO se calcula en el navegador con umbrales fijos: lo decide
- * ms-environment-monitoring al evaluar las mediciones con la configuración
- * (override por ambiente) que edita el admin. El front solo refleja esa decisión.
- */
-function worstSeverityByEnvironment(alerts) {
-  const rank = { WARNING: 1, CRITICAL: 2 };
-  const byEnv = {};
-  for (const a of alerts || []) {
-    const sev = a?.severityCode;
-    if (!a?.environmentId || !rank[sev]) continue;
-    if (!byEnv[a.environmentId] || rank[sev] > rank[byEnv[a.environmentId]]) {
-      byEnv[a.environmentId] = sev;
-    }
-  }
-  return byEnv;
 }
 
 function toPayload(environment) {
@@ -95,7 +77,7 @@ const environmentService = {
   },
 
   async getAll() {
-    const [data, metrics, campuses, favoriteIds, alerts] = await Promise.all([
+    const [data, metrics, campuses, favoriteIds] = await Promise.all([
       apiClient.get(`${BASE}`, { params: { limit: 100 } }),
       // Si el servicio de métricas no responde, el listado se pinta igual
       // (sin métricas) en vez de quedarse en blanco.
@@ -103,32 +85,26 @@ const environmentService = {
       catalogService.getCampuses().catch(() => []),
       // Favoritos (ms-user-experience): best-effort, la lista sigue siendo válida.
       environmentService.getFavorites().catch(() => []),
-      // Alertas activas (fuente de verdad del estado): best-effort.
-      alertService.listActive(200).catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
     const favoriteSet = new Set(favoriteIds);
-    const alertSeverityByEnv = worstSeverityByEnvironment(alerts);
     const items = data?.data || (Array.isArray(data) ? data : []);
-    return items.map((env) =>
-      toUi(env, metrics, campusNameById, favoriteSet, alertSeverityByEnv));
+    return items.map((env) => toUi(env, metrics, campusNameById, favoriteSet));
   },
 
   async getById(id) {
-    const [env, metrics, campuses, favoriteIds, alerts] = await Promise.all([
+    const [env, metrics, campuses, favoriteIds] = await Promise.all([
       apiClient.get(`${BASE}/${id}`),
       environmentService.getMetrics().catch(() => ({})),
       catalogService.getCampuses().catch(() => []),
       environmentService.getFavorites().catch(() => []),
-      alertService.listActive(200).catch(() => []),
     ]);
     const campusNameById = Object.fromEntries(
       campuses.map((c) => [c.id, c.name])
     );
-    return toUi(env, metrics, campusNameById, new Set(favoriteIds),
-      worstSeverityByEnvironment(alerts));
+    return toUi(env, metrics, campusNameById, new Set(favoriteIds));
   },
 
   async getFavorites() {
@@ -154,23 +130,38 @@ const environmentService = {
   },
 
   /**
-   * Umbrales WARNING efectivos del ambiente (ms-environment-monitoring).
-   * El backend devuelve los del ambiente si se configuraron, si no los del
-   * tipo; el campo `source` indica cuál aplica ('ENVIRONMENT' | 'TYPE').
+   * Umbrales INFO (normal) y WARNING (advertencia) efectivos del ambiente
+   * (ms-environment-monitoring). El backend devuelve los del ambiente si se
+   * configuraron, si no los del tipo; `source` indica cuál aplica.
    */
   async getThresholds(environmentId) {
     return apiClient.get(`/api/v1/environments/${environmentId}/thresholds`);
   },
 
   /**
-   * Guarda el umbral WARNING (minValue/maxValue) de una variable para este
-   * ambiente como override. El backend (ms-environment-monitoring) solo
-   * acepta minValue/maxValue en PUT /environments/{id}/thresholds/{code}.
+   * Guarda el umbral de una variable y severidad (INFO|WARNING) para este
+   * ambiente como override.
    */
-  async updateThresholds(environmentId, variableCode, { minValue, maxValue }) {
+  async updateThresholds(environmentId, variableCode, { minValue, maxValue }, severityCode = 'WARNING') {
     return apiClient.put(`/api/v1/environments/${environmentId}/thresholds/${variableCode}`, {
+      severityCode,
       minValue: minValue != null ? Number(minValue) : undefined,
       maxValue: maxValue != null ? Number(maxValue) : undefined,
+    });
+  },
+
+  /**
+   * Guarda todos los umbrales del ambiente de una sola vez.
+   * @param {Array<{variableCode:string, severityCode:string, minValue:number, maxValue:number}>} thresholds
+   */
+  async updateAllThresholds(environmentId, thresholds) {
+    return apiClient.put(`/api/v1/environments/${environmentId}/thresholds`, {
+      thresholds: thresholds.map((t) => ({
+        variableCode: t.variableCode,
+        severityCode: t.severityCode,
+        minValue: t.minValue != null ? Number(t.minValue) : undefined,
+        maxValue: t.maxValue != null ? Number(t.maxValue) : undefined,
+      })),
     });
   },
 };

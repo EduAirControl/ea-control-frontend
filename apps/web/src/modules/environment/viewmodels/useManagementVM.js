@@ -9,11 +9,12 @@ import { useTranslation } from 'react-i18next';
 
 import { useEnvironments } from '../../../context/useEnvironment';
 import { useToast } from '../../../shared/hooks/useToast';
+import environmentService from '../services/environmentService';
 
 export function useManagementVM() {
   const { t } = useTranslation();
   const toast = useToast();
-  const { environments, addEnvironment, editEnvironment, deleteEnvironment } =
+  const { environments, addEnvironment, editEnvironment, deleteEnvironment, refreshEnvironments } =
     useEnvironments();
 
   // El auto-refresh de la lista (10 s) vive en EnvironmentContext: ahí se
@@ -50,7 +51,7 @@ export function useManagementVM() {
         alert: 'dashboard.statusAlert',
       };
       const target = keyMap[activeFilter];
-      result = result.filter((env) => (env.statusKey || 'dashboard.statusNormal') === target);
+      result = result.filter((env) => env.statusKey === target);
     }
 
     // 4. Sort
@@ -83,8 +84,7 @@ export function useManagementVM() {
       total: environments.length,
       alerts: environments.filter((e) => e.statusKey === 'dashboard.statusAlert').length,
       warnings: environments.filter((e) => e.statusKey === 'dashboard.statusWarning').length,
-      normals: environments.filter((e) => e.statusKey === 'dashboard.statusNormal' || !e.statusKey)
-        .length,
+      normals: environments.filter((e) => e.statusKey === 'dashboard.statusNormal').length,
     }),
     [environments]
   );
@@ -99,13 +99,20 @@ export function useManagementVM() {
     }
   };
 
-  const handleEdit = async (id, data) => {
+  const handleEdit = async (id, data, thresholds) => {
     try {
       await editEnvironment(id, data);
+      // Los umbrales viven en ms-environment-monitoring: se guardan en la misma
+      // acción para que el estado del ambiente no quede desincronizado.
+      if (thresholds?.length) {
+        await environmentService.updateAllThresholds(id, thresholds);
+      }
       setEditEnv(null);
+      await refreshEnvironments();
       toast.success(t('management.toast.updated', 'Cambios guardados'));
     } catch (err) {
       toast.error(err.message);
+      throw err;
     }
   };
 

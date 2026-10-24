@@ -669,11 +669,11 @@
     "uppercaseRequired:_password": "Deve conter pelo menos uma letra maiúscula.",
     "password_min_8": "A senha deve ter pelo menos 8 caracteres"
   },
-"notifications": {
+  "notifications": {
     "title": "Notificações",
     "empty": "Sem notificações",
     "markAllRead": "Marcar todas como lidas",
-    "deleteAllRead": "Excluir todas as lidas",
+    "deleteAllRead": "Excluir todas as lidas ({{count}})",
     "deleteAllReadCount": "Excluir {{count}} lidas",
     "delete": "Excluir",
     "co2High": "CO₂ alto",
@@ -692,8 +692,23 @@
     "thresholdInfoTemplate": "Limite: {{min}} – {{max}}",
     "environmentId": "Ambiente {{id}}",
     "acknowledge": "Reconhecer",
-    "delete": "Excluir",
-    "deleteAllRead": "Excluir todas as lidas ({{count}})"
+    "subtitle": "{{active}} ativas · {{acknowledged}} reconhecidas",
+    "filters": "Filtros",
+    "filterAll": "Todas",
+    "filterCritical": "Críticas",
+    "filterWarning": "Avisos",
+    "filterAcknowledged": "Reconhecidas",
+    "noFiltered": "Não há alertas neste filtro",
+    "loadError": "Não foi possível carregar os alertas",
+    "loading": "Carregando alertas…",
+    "retry": "Tentar novamente",
+    "active": "Ativa",
+    "acknowledged": "Reconhecida",
+    "deleted": "Alerta eliminado",
+    "deleteError": "Não foi possível eliminar o alerta",
+    "deletedCount": "{{count}} alerta(s) eliminado(s)",
+    "acknowledgedToast": "Alerta reconhecido",
+    "acknowledgeError": "Não foi possível reconhecer o alerta"
   },
   "leaderboard": {
     "title": "Ranking de Ambientes",
@@ -967,8 +982,9 @@
     "subtitle": "também conta uma história.",
     "description": "Compare a evolução dos seus ambientes, identifique mudanças e tome decisões antes que um alerta interrompa a aprendizagem.",
     "periods": {
-      "hour": "Hora", "hourContext": "Últimos 60 minutos",
-            "day": "Dia",
+      "hour": "Hora",
+      "hourContext": "Últimos 60 minutos",
+      "day": "Dia",
       "dayContext": "Últimas 24 horas",
       "week": "Semana",
       "weekContext": "18 — 24 agosto 2026",
