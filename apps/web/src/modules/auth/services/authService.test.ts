@@ -6,7 +6,8 @@ import apiClient from '../../../shared/services/apiClient'
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
-// Mock apiClient
+// Mock apiClient (getToken/clearToken reales: isAuthenticated y getCurrentUser
+// los usan para leer la sesión de localStorage)
 vi.mock('../../../shared/services/apiClient', () => ({
   default: {
     get: vi.fn(),
@@ -17,8 +18,8 @@ vi.mock('../../../shared/services/apiClient', () => ({
     deleteWithBody: vi.fn(),
     request: vi.fn(),
   },
-  getToken: vi.fn(),
-  clearToken: vi.fn(),
+  getToken: () => localStorage.getItem('token'),
+  clearToken: () => localStorage.removeItem('token'),
   API_BASE: 'http://localhost:8080',
 }))
 
@@ -233,10 +234,12 @@ describe('authService', () => {
   })
 
   describe('getUser', () => {
-    it('returns currentUser', () => {
-      const user = { id: '1', email: 'test@test.com' }
-      authService.getCurrentUser = vi.fn().mockResolvedValue(user)
-      expect(authService.getUser()).toBeNull() // currentUser is null until hydrated
+    it('returns null before the session is hydrated', async () => {
+      // Módulo fresco: los tests anteriores hidrataron el currentUser del
+      // módulo ya importado y este caso debe ver el estado inicial.
+      vi.resetModules()
+      const fresh = (await import('../../../modules/auth/services/authService')).default
+      expect(fresh.getUser()).toBeNull()
     })
   })
 
@@ -271,6 +274,6 @@ function createMockToken(payload = {}) {
     ...payload,
   }
   const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
-  const payload = btoa(JSON.stringify(defaultPayload))
-  return `${header}.${payload}.signature`
+  const body = btoa(JSON.stringify(defaultPayload))
+  return `${header}.${body}.signature`
 }

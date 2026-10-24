@@ -1,27 +1,56 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+// Storage funcional (no spies): los tests leen y escriben valores reales y
+// `vi.resetAllMocks()` no debe dejar los métodos sin implementación.
+function createStorage(): Storage {
+  let data: Record<string, string> = {}
+  return {
+    getItem: (key: string) =>
+      Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null,
+    setItem: (key: string, value: string) => {
+      data[key] = String(value)
+    },
+    removeItem: (key: string) => {
+      delete data[key]
+    },
+    clear: () => {
+      data = {}
+    },
+    key: (index: number) => Object.keys(data)[index] ?? null,
+    get length() {
+      return Object.keys(data).length
+    },
+  }
 }
-Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
-// Mock sessionStorage
-const sessionStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-}
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock })
+Object.defineProperty(window, 'localStorage', {
+  value: createStorage(),
+  configurable: true,
+  writable: true,
+})
 
-// Mock window.location
+Object.defineProperty(window, 'sessionStorage', {
+  value: createStorage(),
+  configurable: true,
+  writable: true,
+})
+
+// `pathname` hace falta para PUBLIC_PATHS de AuthContext/apiClient y `assign`
+// debe cambiar `href` para poder asertar el redirect tras logout.
 Object.defineProperty(window, 'location', {
-  value: { href: 'http://localhost', assign: vi.fn(), replace: vi.fn() },
+  value: {
+    href: 'http://localhost/',
+    pathname: '/dashboard',
+    origin: 'http://localhost',
+    assign: (url: string) => {
+      window.location.href = url
+    },
+    replace: (url: string) => {
+      window.location.href = url
+    },
+  },
+  configurable: true,
   writable: true,
 })
 
