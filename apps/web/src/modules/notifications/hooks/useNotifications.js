@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useEnvironments } from "../../../context/useEnvironment";
+import { usePolling } from "../../../shared/hooks/usePolling";
 import alertService from "../services/alertService";
 
 const SEVERITY_TO_TYPE = {
@@ -29,48 +30,80 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const nameOf = useCallback(
-    (environmentId) => {
-      const env = environments.find((e) => e.id === environmentId);
-      return env?.name || env?.code || environmentId;
-    },
-    [environments]
-  );
+  // El nombre del ambiente se resuelve al cargar; el ref permite que `load`
+  // sea estable aunque cambie la lista de ambientes (si dependiera de ella,
+  // cada tick de 10 s re-petiría las alertas y parpadearía el spinner).
+  const environmentsRef = useRef(environments);
+  useEffect(() => {
+    environmentsRef.current = environments;
+  }, [environments]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const alerts = await alertService.listActive(50);
-      setNotifications(
-        alerts.map((a) => ({
-          id: a.id,
-          type: SEVERITY_TO_TYPE[a.severityCode] || "info",
-          title: "notifications.thresholdExceeded",
-          message: "notifications.thresholdExceededMessage",
-          data: {
-            name: nameOf(a.environmentId),
-            variable: a.variableCode || "",
-            value: a.triggeringValue ?? "",
-            severity: SEVERITY_TO_LABEL[a.severityCode] || "notifications.thresholdInfo",
-            thresholdMin: a.thresholdMinValue,
-            thresholdMax: a.thresholdMaxValue,
-          },
-          time: a.raisedAt ? new Date(a.raisedAt) : new Date(),
-          read: Boolean(a.acknowledgedAt),
-          alertId: a.id,
-        }))
-      );
-    } catch {
-      // Sin alertas no hay nada que pintar: no romper el panel por un fallo de red.
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [nameOf]);
+  const nameOf = useCallback((environmentId) => {
+    const env = environmentsRef.current.find((e) => e.id === environmentId);
+    return env?.name || env?.code || environmentId;
+  }, []);
+
+  /**
+   * `background` = refresh del polling: conserva los datos y el spinner tal
+   * como están para que la lista no parpadee cada 10 s.
+   */
+  const load = useCallback(
+    async ({ background = false } = {}) => {
+      if (!background) setLoading(true);
+      try {
+        const alerts = await alertService.listActive(50);
+        setNotifications(
+          alerts.map((a) => ({
+            id: a.id,
+            type: SEVERITY_TO_TYPE[a.severityCode] || "info",
+            title: "notifications.thresholdExceeded",
+            message: "notifications.thresholdExceededMessage",
+            environmentId: a.environmentId,
+            data: {
+              name: nameOf(a.environmentId),
+              variable: a.variableCode || "",
+              value: a.triggeringValue ?? "",
+              severity: SEVERITY_TO_LABEL[a.severityCode] || "notifications.thresholdInfo",
+              thresholdMin: a.thresholdMinValue,
+              thresholdMax: a.thresholdMaxValue,
+            },
+            time: a.raisedAt ? new Date(a.raisedAt) : new Date(),
+            read: Boolean(a.acknowledgedAt),
+            alertId: a.id,
+          }))
+        );
+      } catch {
+        // Sin alertas no hay nada que pintar: no romper el panel por un fallo de red.
+        if (!background) setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [nameOf]
+  );
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Las alertas se piden cada 10 s; los nombres de ambientes se re-mapean
+  // aquí sin volver a llamar al backend.
+  useEffect(() => {
+    setNotifications((prev) => {
+      let changed = false;
+      const next = prev.map((n) => {
+        const name = nameOf(n.environmentId);
+        if (n.data?.name === name) return n;
+        changed = true;
+        return { ...n, data: { ...n.data, name } };
+      });
+      return changed ? next : prev;
+    });
+  }, [environments, nameOf]);
+
+  // El panel está montado en el Navbar de todas las pantallas: con este
+  // polling el badge y la lista de alertas están frescos en toda la app.
+  usePolling(() => load({ background: true }), 10000);
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.read).length,

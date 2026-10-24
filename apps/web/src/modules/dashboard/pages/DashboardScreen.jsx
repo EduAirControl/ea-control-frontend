@@ -34,6 +34,7 @@ import {
 
 import { useEnvironment } from '../../../context/useEnvironment';
 import { useDashboardVM } from '../viewmodels/useDashboardVM';
+import { usePolling } from '../../../shared/hooks/usePolling';
 import Navbar from '../components/Navbar/Navbar';
 
 import './DashboardScreen.css';
@@ -240,27 +241,13 @@ function DashboardScreen() {
 
   // Auto-refresh: el ESP32 publica mediciones cada 10 s; con el mismo
   // intervalo el dashboard se ve "tiempo real" en la propia página (sin
-  // recargar). Cada tick son ~7 peticiones repartidas en rutas distintas
-  // (~6 req/min por ruta) frente al rate limit del gateway de 100/60s.
-  // Si la pestaña está oculta no se peta: al volver se refresca una vez.
-  useEffect(() => {
-    const REFRESH_MS = 10000;
-    const tick = () => {
-      if (document.visibilityState !== 'visible') return;
-      fetchDashboardData();
-      fetchSeries(period, metric, environmentId);
-      refreshEnvironments();
-    };
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') tick();
-    };
-    const interval = setInterval(tick, REFRESH_MS);
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, [fetchDashboardData, fetchSeries, refreshEnvironments, period, metric, environmentId]);
+  // recargar). Los ambientes los refresca solos EnvironmentContext, así que
+  // aquí solo se piden summary + serie (~6 req/min por ruta frente al rate
+  // limit del gateway de 100/60s). Con la pestaña oculta no se peta.
+  usePolling(() => {
+    fetchDashboardData();
+    fetchSeries(period, metric, environmentId);
+  }, 10000);
 
   const PERIODS = useMemo(() => [
     { id: 'hour', label: t('dashboardAnalysis.periods.hour'), context: t('dashboardAnalysis.periods.hourContext') },
@@ -364,6 +351,7 @@ function DashboardScreen() {
     window.setTimeout(() => setManualUpdatedText(null), 2600);
     fetchDashboardData();
     fetchSeries(period, metric, environmentId);
+    refreshEnvironments();
   };
 
   const kpiDefinitions = [

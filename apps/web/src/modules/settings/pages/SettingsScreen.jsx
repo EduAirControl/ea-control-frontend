@@ -32,6 +32,7 @@ import authService from '../../auth/services/authService';
 import { EditModal, Modal, Button } from '../../../shared/components';
 import { useDarkMode } from '../../../shared/hooks/useDarkMode';
 import { saveDateFormat } from '../../../shared/hooks/useDateFormat';
+import { usePolling } from '../../../shared/hooks/usePolling';
 import preferencesService, {
   DEFAULT_REMINDERS,
 } from '../services/preferencesService';
@@ -155,41 +156,65 @@ function SettingsScreen() {
   }, []);
 
   // Hidrata las preferencias del backend (sobrescribe localStorage al entrar).
-  useEffect(() => {
-    let cancelled = false;
-    preferencesService.get().then((prefs) => {
-      if (cancelled) return;
-      hydratedRef.current = true;
-      if (!prefs) return;
-      if (prefs.reminders) setReminders({ ...DEFAULT_REMINDERS, ...prefs.reminders });
-      if (typeof prefs.autoTimezone === 'boolean') setAutoTimezone(prefs.autoTimezone);
-      if (prefs.manualTimezone) {
-        setManualTimezone(prefs.manualTimezone);
+  // Cada campo lleva guarda de igualdad: un refresh del polling que no trae
+  // cambios no crea estado nuevo y por eso no dispara el PUT de sincronización
+  // (el efecto de abajo) ni parpadea la UI.
+  const loadPreferences = async () => {
+    let prefs;
+    try {
+      prefs = await preferencesService.get();
+    } catch {
+      return; // best-effort: siguen valiendo las preferencias actuales
+    }
+    hydratedRef.current = true;
+    if (!prefs) return;
+    if (prefs.reminders) {
+      const nextReminders = { ...DEFAULT_REMINDERS, ...prefs.reminders };
+      setReminders((prev) =>
+        JSON.stringify(prev) === JSON.stringify(nextReminders) ? prev : nextReminders
+      );
+    }
+    if (typeof prefs.autoTimezone === 'boolean') setAutoTimezone(prefs.autoTimezone);
+    if (prefs.manualTimezone) {
+      setManualTimezone((prev) => (prev === prefs.manualTimezone ? prev : prefs.manualTimezone));
+      if (localStorage.getItem('manualTimezone') !== prefs.manualTimezone) {
         localStorage.setItem('manualTimezone', prefs.manualTimezone);
       }
-      if (prefs.dateFormat) {
-        setSettings((prev) => ({ ...prev, dateFormat: prefs.dateFormat }));
-        saveDateFormat(prefs.dateFormat);
-      }
-      if (prefs.language) {
+    }
+    if (prefs.dateFormat && prefs.dateFormat !== settings.dateFormat) {
+      setSettings((prev) => ({ ...prev, dateFormat: prefs.dateFormat }));
+      saveDateFormat(prefs.dateFormat);
+    }
+    if (prefs.language) {
+      if (localStorage.getItem('language') !== prefs.language) {
         localStorage.setItem('language', prefs.language);
-        setSettings((prev) => ({ ...prev, language: LANG_NAMES[prefs.language] || prev.language }));
-        if (i18n.language !== prefs.language) i18n.changeLanguage(prefs.language);
       }
-      if (typeof prefs.darkMode === 'boolean') setDarkMode(prefs.darkMode);
-      if (typeof prefs.colorTheme === 'string' && prefs.colorTheme !== theme) {
-        saveAccessibilitySettings({ ...getAccessibilitySettings(), colorTheme: prefs.colorTheme });
-        setTheme(prefs.colorTheme);
-      }
-      if (typeof prefs.notificationsEnabled === 'boolean') {
-        setNotificationsEnabled(prefs.notificationsEnabled);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
+      setSettings((prev) => {
+        const language = LANG_NAMES[prefs.language] || prev.language;
+        return prev.language === language ? prev : { ...prev, language };
+      });
+      if (i18n.language !== prefs.language) i18n.changeLanguage(prefs.language);
+    }
+    if (typeof prefs.darkMode === 'boolean' && prefs.darkMode !== darkMode) {
+      setDarkMode(prefs.darkMode);
+    }
+    if (typeof prefs.colorTheme === 'string' && prefs.colorTheme !== theme) {
+      saveAccessibilitySettings({ ...getAccessibilitySettings(), colorTheme: prefs.colorTheme });
+      setTheme(prefs.colorTheme);
+    }
+    if (typeof prefs.notificationsEnabled === 'boolean') {
+      setNotificationsEnabled(prefs.notificationsEnabled);
+    }
+  };
+
+  useEffect(() => {
+    loadPreferences();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Preferencias frescas si cambian en otro dispositivo: mismos guards que
+  // arriba, así un tick sin cambios no vuelve a hacer PUT al backend.
+  usePolling(loadPreferences, 10000);
 
   // Sincroniza al backend cualquier cambio de preferencias.
   useEffect(() => {
