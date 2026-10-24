@@ -11,6 +11,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEnvironments } from '../../../context/EnvironmentContext'
+import { usePolling } from '../../../shared/hooks/usePolling.js'
 import sensorService from '../services/sensorService'
 
 const EMPTY_FORM = {
@@ -43,9 +44,13 @@ export function useSensorPanelVM() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  // `background` (polling de 10 s): no toca spinner ni error para no
+  // parpadear el panel en cada tick.
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (!background) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const [sensorRows, installations, modelRows, statusRows] = await Promise.all([
         sensorService.getAll(),
@@ -94,7 +99,7 @@ export function useSensorPanelVM() {
         })
       )
     } catch (e) {
-      setError(e.message)
+      if (!background) setError(e.message)
     } finally {
       setLoading(false)
     }
@@ -103,6 +108,9 @@ export function useSensorPanelVM() {
   useEffect(() => {
     load()
   }, [load])
+
+  // Sensores, instalaciones, modelos y estados frescos en el panel.
+  usePolling(() => load({ background: true }), 10000)
 
   const getEnvironmentName = useCallback(
     (id) => {

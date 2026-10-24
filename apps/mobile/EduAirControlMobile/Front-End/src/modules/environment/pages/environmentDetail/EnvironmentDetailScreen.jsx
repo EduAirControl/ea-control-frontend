@@ -76,7 +76,7 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
   const { currentColors } = useTheme()
   const { t } = useTranslation()
   const toast = useToast()
-  const { environments, toggleFavorite, refreshEnvironments } = useEnvironments()
+  const { environments, toggleFavorite } = useEnvironments()
 
   const env = environments.find((e) => e.id === envId)
 
@@ -119,10 +119,9 @@ export default function EnvironmentDetailScreen({ route, navigation }) {
     loadDevices()
   }, [loadDevices])
 
-  usePolling(() => {
-    refreshEnvironments()
-    loadDevices()
-  }, 30000)
+  // Los ambientes los refresca el EnvironmentContext (10 s, app-wide);
+  // aquí solo se mantienen vivos los dispositivos de ESTE ambiente.
+  usePolling(loadDevices, 10000)
 
   const handleUnlink = async (installation) => {
     try {

@@ -82,7 +82,7 @@ export default function DashboardScreen({ navigation }) {
   const { t } = useTranslation()
   const { loading } = useEnvironment()
   const vm = useDashboardAnalysisVM()
-  usePolling(vm.refresh, 30000)
+  usePolling(vm.refresh, 10000)
   const statusColors = {
     normal: currentColors.success,
     warning: currentColors.warning,

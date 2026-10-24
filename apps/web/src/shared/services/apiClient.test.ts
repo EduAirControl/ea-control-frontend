@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { API_BASE, getToken, clearToken, buildUrl, apiClient } from '../../../shared/services/apiClient'
+import apiClient, { API_BASE, getToken, clearToken, buildUrl } from './apiClient'
 
 // Mock fetch
 const mockFetch = vi.fn()
@@ -143,7 +143,7 @@ describe('apiClient', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: () => Promise.resolve({ message: 'Not found' }),
+        json: () => Promise.resolve({}),
       })
 
       localStorage.setItem('token', 'test-token')

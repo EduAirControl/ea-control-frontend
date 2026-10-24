@@ -112,7 +112,14 @@ async function request(endpoint, options = {}) {
   };
 
   const token = getToken();
-  const fetchOptions = { ...options, headers };
+  // Sin `no-store` el navegador puede servir una respuesta cacheada y la UI
+  // mostraría datos antiguos aunque el backend ya tuviera los últimos.
+  const method = (options.method || 'GET').toUpperCase();
+  const fetchOptions = {
+    ...(method === 'GET' ? { cache: 'no-store' } : {}),
+    ...options,
+    headers,
+  };
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;

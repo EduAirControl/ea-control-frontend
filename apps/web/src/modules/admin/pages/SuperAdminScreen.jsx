@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   IoBusinessOutline,
@@ -10,6 +10,7 @@ import {
 import Navbar from '../../dashboard/components/Navbar/Navbar';
 import institutionService from '../services/institutionService';
 import adminService from '../services/adminService';
+import { usePolling } from '../../../shared/hooks/usePolling';
 import './SuperAdminScreen.css';
 
 const EMPTY_FORM = { code: '', name: '', type: '' };
@@ -26,8 +27,10 @@ function SuperAdminScreen() {
   const [savingRoles, setSavingRoles] = useState(null);
   const [userQuery, setUserQuery] = useState('');
 
-  const load = async () => {
-    setLoading(true);
+  // `background` (polling de 10 s) no toca el spinner ni el error: un fallo
+  // transitorio no debe tumbar la pantalla ni parpadear la lista.
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (!background) setLoading(true);
     try {
       const [institutionData, userData, roleData] = await Promise.all([
         institutionService.getAll(),
@@ -39,15 +42,18 @@ function SuperAdminScreen() {
       setRoleCatalog(roleData);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (!background) setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+
+  // Instituciones, usuarios y roles frescos en pantalla sin recargar.
+  usePolling(() => load({ background: true }), 10000);
 
   /**
    * El super-admin no tiene paginacion aqui: `listUsers` devuelve la lista entera y
