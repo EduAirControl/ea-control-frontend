@@ -151,7 +151,9 @@ function ManagementCard({ environment, onEdit, onDelete }) {
             </div>
             <span
               className="mgmt-card__metric-value"
-              style={{ color: getMetricColor(m.key, m.raw) }}
+              style={{
+                color: getMetricColor(m.key, m.raw, environment.metricSeverity?.[m.key]),
+              }}
             >
               {m.value}
             </span>

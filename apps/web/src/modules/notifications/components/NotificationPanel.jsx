@@ -1,28 +1,70 @@
 import './NotificationPanel.css';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
+import { useToast } from '../../../shared/hooks/useToast';
 import {
   FaBell,
+  FaExclamationCircle,
   FaExclamationTriangle,
   FaInfoCircle,
   FaTimes,
   FaTrashAlt,
 } from 'react-icons/fa';
-import { IoCheckmarkOutline } from 'react-icons/io5';
+import { IoCheckmarkDoneOutline, IoCheckmarkOutline } from 'react-icons/io5';
+
+const FILTERS = [
+  { key: 'all', labelKey: 'notifications.filterAll' },
+  { key: 'critical', labelKey: 'notifications.filterCritical' },
+  { key: 'warning', labelKey: 'notifications.filterWarning' },
+  { key: 'acknowledged', labelKey: 'notifications.filterAcknowledged' },
+];
+
+function relativeTime(date, language) {
+  if (!date || Number.isNaN(date.getTime())) return '';
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat(language || 'es', { numeric: 'auto' });
+  const abs = Math.abs(diffSeconds);
+  if (abs < 60) return formatter.format(diffSeconds, 'second');
+  if (abs < 3600) return formatter.format(Math.round(diffSeconds / 60), 'minute');
+  if (abs < 86400) return formatter.format(Math.round(diffSeconds / 3600), 'hour');
+  return formatter.format(Math.round(diffSeconds / 86400), 'day');
+}
+
+function formatValue(value, unit) {
+  if (value === undefined || value === null || value === '') return '—';
+  const number = Number(value);
+  const text = Number.isInteger(number) ? String(number) : number.toFixed(1);
+  return unit ? `${text} ${unit}` : text;
+}
+
+function SeverityIcon({ severityCode }) {
+  if (severityCode === 'CRITICAL') return <FaExclamationCircle aria-hidden="true" />;
+  if (severityCode === 'WARNING') return <FaExclamationTriangle aria-hidden="true" />;
+  return <FaInfoCircle aria-hidden="true" />;
+}
 
 function NotificationPanel({ isOpen, onClose }) {
   const {
     notifications,
-    unreadCount,
+    stats,
+    loading,
+    error,
+    refresh,
     markAsRead,
     markAllRead,
     deleteAlert,
     deleteAllRead,
   } = useNotifications();
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const toast = useToast();
   const panelRef = useRef(null);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    if (isOpen) refresh();
+  }, [isOpen, refresh]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -46,131 +88,215 @@ function NotificationPanel({ isOpen, onClose }) {
     };
   }, [isOpen, onClose]);
 
+  const filtered = useMemo(() => {
+    if (filter === 'critical') {
+      return notifications.filter((n) => !n.read && n.severityCode === 'CRITICAL');
+    }
+    if (filter === 'warning') {
+      return notifications.filter((n) => !n.read && n.severityCode === 'WARNING');
+    }
+    if (filter === 'acknowledged') {
+      return notifications.filter((n) => n.read);
+    }
+    return notifications;
+  }, [notifications, filter]);
+
+  const handleDelete = async (notification) => {
+    const ok = await deleteAlert(notification.id);
+    if (ok) toast.success(t('notifications.deleted'));
+    else toast.error(t('notifications.deleteError'));
+  };
+
+  const handleDeleteAllRead = async () => {
+    const deleted = await deleteAllRead();
+    if (deleted > 0) toast.success(t('notifications.deletedCount', { count: deleted }));
+  };
+
+  const handleAcknowledge = async (notification) => {
+    const ok = await markAsRead(notification.id);
+    if (ok) toast.success(t('notifications.acknowledgedToast'));
+    else toast.error(t('notifications.acknowledgeError'));
+  };
+
   if (!isOpen) return null;
 
-  const readCount = notifications.filter((n) => n.read).length;
+  const activeCount = stats.active;
 
   return (
     <div className="notif-overlay">
-      <div className="notification-panel" ref={panelRef}>
-        {/* HEADER */}
-
-        <div className="notification-header">
+      <aside
+        className="notification-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notification-title"
+      >
+        <header className="notification-header">
           <div className="notification-header-info">
             <div className="notification-header-top">
-              <h3>{t('notifications.title')}</h3>
-
-              {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+              <span className="notification-header-icon">
+                <FaBell aria-hidden="true" />
+              </span>
+              <h3 id="notification-title">{t('notifications.title')}</h3>
+              {activeCount > 0 && <span className="notification-badge">{activeCount}</span>}
             </div>
-
-            {unreadCount > 0 && (
-              <button className="mark-read-link" onClick={markAllRead} aria-label="Marcar todas como leídas">
-                <IoCheckmarkOutline aria-hidden="true" /> {t('notifications.markAllRead')}
-              </button>
-            )}
-
-            {readCount > 0 && (
-              <button className="delete-read-link" onClick={deleteAllRead} aria-label="Eliminar todas las leídas">
-                <FaTrashAlt aria-hidden="true" /> {t('notifications.deleteAllRead')}
-              </button>
-            )}
+            <p className="notification-subtitle">
+              {t('notifications.subtitle', {
+                active: stats.active,
+                acknowledged: stats.acknowledged,
+              })}
+            </p>
+            <div className="notification-header-actions">
+              {activeCount > 0 && (
+                <button className="mark-read-link" onClick={markAllRead}>
+                  <IoCheckmarkDoneOutline aria-hidden="true" />
+                  {t('notifications.markAllRead')}
+                </button>
+              )}
+              {stats.acknowledged > 0 && (
+                <button className="delete-read-link" onClick={handleDeleteAllRead}>
+                  <FaTrashAlt aria-hidden="true" />
+                  {t('notifications.deleteAllReadCount', { count: stats.acknowledged })}
+                </button>
+              )}
+            </div>
           </div>
 
-          <button className="close-btn" onClick={onClose} aria-label="Cerrar notificaciones">
+          <button className="close-btn" onClick={onClose} aria-label={t('common.close')}>
             <FaTimes aria-hidden="true" />
           </button>
+        </header>
+
+        <div className="notification-filters" role="tablist" aria-label={t('notifications.filters')}>
+          {FILTERS.map((item) => {
+            const count =
+              item.key === 'all'
+                ? stats.total
+                : item.key === 'critical'
+                  ? stats.critical
+                  : item.key === 'warning'
+                    ? stats.warning
+                    : stats.acknowledged;
+            return (
+              <button
+                key={item.key}
+                role="tab"
+                aria-selected={filter === item.key}
+                className={`notification-filter ${filter === item.key ? 'active' : ''}`}
+                onClick={() => setFilter(item.key)}
+              >
+                {t(item.labelKey)}
+                <span className="notification-filter-count">{count}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* LISTA */}
-
         <div className="notification-list">
-          {notifications.length === 0 ? (
+          {loading ? (
+            <div className="notification-skeleton" aria-label={t('notifications.loading')}>
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : error ? (
+            <div className="notification-empty">
+              <div className="notification-empty-icon">
+                <FaExclamationTriangle aria-hidden="true" />
+              </div>
+              <p>{t('notifications.loadError')}</p>
+              <button className="notification-retry" onClick={refresh}>
+                {t('notifications.retry')}
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="notification-empty">
               <div className="notification-empty-icon">
                 <FaBell aria-hidden="true" />
               </div>
-
-              <p>{t('notifications.empty')}</p>
+              <p>
+                {notifications.length === 0
+                  ? t('notifications.empty')
+                  : t('notifications.noFiltered')}
+              </p>
             </div>
           ) : (
-            notifications.map((notification) => (
-              <div
+            filtered.map((notification) => (
+              <article
                 key={notification.id}
                 className={`notification-card ${notification.type} ${
-                  !notification.read ? 'unread' : ''
+                  notification.read ? 'read' : 'unread'
                 }`}
-                onClick={(e) => {
-                  if (!e.target.closest('.notification-delete')) {
-                    markAsRead(notification.id);
-                  }
-                }}
               >
-                {/* ICONO */}
-
                 <div className="notification-icon">
-                  {notification.type === 'danger' && <FaExclamationTriangle aria-hidden="true" />}
-                  {notification.type === 'warning' && <FaExclamationTriangle aria-hidden="true" />}
-                  {notification.type === 'info' && <FaInfoCircle aria-hidden="true" />}
+                  <SeverityIcon severityCode={notification.severityCode} />
                 </div>
-
-                {/* CONTENIDO */}
 
                 <div className="notification-content">
                   <div className="notification-title-row">
-                    <strong>{t(notification.title)}</strong>
-
-                    {!notification.read && <span className="notification-dot"></span>}
+                    <strong>
+                      {notification.environmentName
+                        || t('notifications.environmentId', { id: notification.environmentId })}
+                    </strong>
+                    <span className={`notification-severity ${notification.type}`}>
+                      {t(notification.severityLabel)}
+                    </span>
                   </div>
 
-                  <p>{t(notification.message, notification.data)}</p>
+                  <div className="notification-reading">
+                    <span className="notification-variable">
+                      {t(notification.variableLabel)}
+                    </span>
+                    <span className="notification-value">
+                      {formatValue(notification.value, notification.unit)}
+                    </span>
+                  </div>
 
-                  {notification.data.thresholdMin !== undefined &&
-                    notification.data.thresholdMax !== undefined && (
-                      <span className="notification-threshold">
-                        {t('notifications.thresholdInfo', {
-                          min: notification.data.thresholdMin,
-                          max: notification.data.thresholdMax,
-                        })}
-                      </span>
-                    )}
+                  {(notification.thresholdMin !== undefined
+                    || notification.thresholdMax !== undefined) && (
+                    <span className="notification-threshold">
+                      {t('notifications.thresholdInfoTemplate', {
+                        min: formatValue(notification.thresholdMin, notification.unit),
+                        max: formatValue(notification.thresholdMax, notification.unit),
+                      })}
+                    </span>
+                  )}
 
-                  <span className="time">
-                    {notification.time
-                      ? new Date(notification.time).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : ''}
-                  </span>
+                  <div className="notification-meta">
+                    <time dateTime={notification.raisedAt?.toISOString()}>
+                      {relativeTime(notification.raisedAt, i18n.language)}
+                    </time>
+                    <span className={`notification-state ${notification.read ? 'ack' : 'active'}`}>
+                      {notification.read
+                        ? t('notifications.acknowledged')
+                        : t('notifications.active')}
+                    </span>
+                  </div>
+
+                  {!notification.read && (
+                    <button
+                      className="notification-ack"
+                      onClick={() => handleAcknowledge(notification)}
+                    >
+                      <IoCheckmarkOutline aria-hidden="true" />
+                      {t('notifications.acknowledge')}
+                    </button>
+                  )}
                 </div>
 
-                {/* BOTÓN ELIMINAR (solo para alertas leídas) */}
-                {notification.read && (
-                  <button
-                    className="notification-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteAlert(notification.id);
-                    }}
-                    aria-label="Eliminar notificación"
-                    title={t('notifications.delete')}
-                  >
-                    <FaTrashAlt size={14} />
-                  </button>
-                )}
-              </div>
+                <button
+                  className="notification-delete"
+                  onClick={() => handleDelete(notification)}
+                  aria-label={t('notifications.delete')}
+                  title={t('notifications.delete')}
+                >
+                  <FaTrashAlt size={13} />
+                </button>
+              </article>
             ))
           )}
         </div>
-
-        <div className="notification-footer">
-          {readCount > 0 && (
-            <button className="delete-all-read-btn" onClick={deleteAllRead}>
-              <FaTrashAlt size={14} /> {t('notifications.deleteAllRead', { count: readCount })}
-            </button>
-          )}
-        </div>
-      </div>
+      </aside>
     </div>
   );
 }
