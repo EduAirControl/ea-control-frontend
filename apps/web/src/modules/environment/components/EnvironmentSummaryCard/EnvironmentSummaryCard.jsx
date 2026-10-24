@@ -41,7 +41,12 @@ function EnvironmentSummaryCard({ environment, onToggleFavorite }) {
         icon={metric.icon}
         label={t(metric.labelKey)}
         value={metric.getValue(environment)}
-        status={getMetricStatus(metric.statusType, metric.getRaw(environment), t)}
+        status={getMetricStatus(
+          metric.statusType,
+          metric.getRaw(environment),
+          t,
+          environment.metricSeverity?.[metric.key]
+        )}
       />
     );
   });

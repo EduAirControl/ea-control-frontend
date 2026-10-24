@@ -1,76 +1,87 @@
-export default function getMetricStatus(type, value, t) {
-    // Sin medición no se puede afirmar que esté alta ni ideal: `undefined >= 20`
-    // es false, así que antes caía en "Alta" (naranja) una métrica inexistente.
-    if (value === undefined || value === null || Number.isNaN(value)) {
-        return {
-            text: t("common.noData"),
-            color: "#999",
-        };
-    }
+const COLORS = {
+  ok: '#2ecc71',
+  warning: '#f39c12',
+  critical: '#e74c3c',
+  muted: '#999',
+};
 
-    switch (type) {
-        case "temp":
-            return value >= 20 && value <= 26
-                ? {
-                      text: t("allEnvironments.statusIdeal"),
-                      color: "#2ecc71",
-                  }
-                : {
-                      text: t("allEnvironments.statusHigh"),
-                      color: "#f39c12",
-                  };
+function colorOf(severity) {
+  if (severity === 'CRITICAL') return COLORS.critical;
+  if (severity === 'WARNING') return COLORS.warning;
+  return COLORS.ok;
+}
 
-        case "humidity":
-            return value >= 40 && value <= 60
-                ? {
-                      text: t("allEnvironments.statusIdeal"),
-                      color: "#2ecc71",
-                  }
-                : {
-                      text: t("allEnvironments.statusOutOfRange"),
-                      color: "#f39c12",
-                  };
+/**
+ * Estado cualitativo de una métrica según la severidad que calculó el backend
+ * con los umbrales configurados para ese ambiente. El front no compara valores
+ * contra rangos fijos: si no hay severidad, no inventa un estado.
+ */
+export default function getMetricStatus(type, value, t, severityCode) {
+  if (value === undefined || value === null || Number.isNaN(value)) {
+    return {
+      text: t('common.noData'),
+      color: COLORS.muted,
+      severity: null,
+    };
+  }
 
-        case "co2":
-            if (value <= 800)
-                return {
-                    text: t("allEnvironments.co2Good"),
-                    color: "#2ecc71",
-                };
+  if (severityCode !== 'OK' && severityCode !== 'WARNING' && severityCode !== 'CRITICAL') {
+    return {
+      text: '',
+      color: COLORS.muted,
+      severity: null,
+    };
+  }
 
-            if (value <= 1000)
-                return {
-                    text: t("allEnvironments.co2Regular"),
-                    color: "#f39c12",
-                };
+  const severity = severityCode;
+  const color = colorOf(severity);
+  const isOk = severity === 'OK';
+  const isCritical = severity === 'CRITICAL';
 
-            return {
-                text: t("allEnvironments.co2Bad"),
-                color: "#e74c3c",
-            };
+  switch (type) {
+    case 'temp':
+      return {
+        text: isOk
+          ? t('allEnvironments.statusIdeal')
+          : t('allEnvironments.statusOutOfRange'),
+        color,
+        severity,
+      };
 
-        case "noise":
-            if (value <= 50)
-                return {
-                    text: t("allEnvironments.noiseLow"),
-                    color: "#2ecc71",
-                };
+    case 'humidity':
+      return {
+        text: isOk ? t('allEnvironments.statusIdeal') : t('allEnvironments.statusOutOfRange'),
+        color,
+        severity,
+      };
 
-            if (value <= 65)
-                return {
-                    text: t("allEnvironments.noiseModerate"),
-                    color: "#f39c12",
-                };
+    case 'co2':
+      return {
+        text: isOk
+          ? t('allEnvironments.co2Good')
+          : isCritical
+            ? t('allEnvironments.co2Bad')
+            : t('allEnvironments.co2Regular'),
+        color,
+        severity,
+      };
 
-            return {
-                text: t("allEnvironments.noiseHigh"),
-                color: "#e74c3c",
-            };
+    case 'noise':
+      return {
+        text: isOk
+          ? t('allEnvironments.noiseLow')
+          : isCritical
+            ? t('allEnvironments.noiseHigh')
+            : t('allEnvironments.noiseModerate'),
+        color,
+        severity,
+      };
 
-        default:
-            return {
-                text: "",
-                color: "#999",
-            };
-    }
+    default:
+      return {
+        text: '',
+        color: COLORS.muted,
+        severity: null,
+      };
+  }
 }

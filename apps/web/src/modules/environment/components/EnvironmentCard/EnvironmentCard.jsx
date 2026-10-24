@@ -7,7 +7,7 @@ import { HiSpeakerWave } from 'react-icons/hi2';
 import ScoreCircle from '../ScoreCircle/ScoreCircle';
 import MetricCard from '../MetricCard/MetricCard';
 import EnvironmentModal from '../EnvironmentModal/EnvironmentModal';
-import { calculateEnvironmentScore } from '../../utils/calculateEnvironmentScore';
+import calculateEnvironmentScore from '../../utils/calculateEnvironmentScore';
 import { getEnvironmentStatus } from '../../utils/getEnvironmentStatus';
 import getMetricStatus from '../../utils/getMetricStatus';
 import './EnvironmentCard.css';
@@ -80,7 +80,12 @@ function EnvironmentCard({ environment, onToggleFavorite }) {
         icon={metric.icon}
         label={t(metric.labelKey)}
         value={metric.getValue(environment)}
-        status={getMetricStatus(metric.statusType, metric.getRaw(environment), t)}
+        status={getMetricStatus(
+          metric.statusType,
+          metric.getRaw(environment),
+          t,
+          environment.metricSeverity?.[metric.key]
+        )}
       />
     );
   });
@@ -88,12 +93,12 @@ function EnvironmentCard({ environment, onToggleFavorite }) {
   return (
     <>
       <article className="environment-card" onClick={() => setOpen(true)}>
-        <div className={`environment-status ${status.class}`} />
+        <div className="environment-status" style={{ backgroundColor: status.color }} />
 
         <div className="environment-card-header">
           <div>
             <h3>{environment.name}</h3>
-            <span className={`status-badge ${status.class}`}>{t(status.label)}</span>
+            <span className="status-badge" style={{ color: status.color, backgroundColor: status.bg }}>{status.text}</span>
           </div>
 
           <button 

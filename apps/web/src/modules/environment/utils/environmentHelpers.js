@@ -43,12 +43,13 @@ export function getBadgeClass(statusKey, qualityKey) {
   return 'mgmt-card__badge--normal';
 }
 
-export function getMetricColor(key, value) {
-  if (key === 'temp') return value > 25 ? '#f85149' : value > 23 ? '#d29922' : '#3fb950';
-  if (key === 'humidity') return value > 65 ? '#f85149' : value < 35 ? '#d29922' : '#3fb950';
-  if (key === 'co2') return value > 1200 ? '#f85149' : value > 1000 ? '#d29922' : '#3fb950';
-  if (key === 'noise') return value > 60 ? '#d29922' : '#3fb950';
-  return '#3fb950';
+export function getMetricColor(_key, _value, severityCode) {
+  // El color sale exclusivamente de la severidad calculada por el backend con
+  // los umbrales del ambiente. Sin severidad no hay color "inventado".
+  if (severityCode === 'CRITICAL') return '#f85149';
+  if (severityCode === 'WARNING') return '#d29922';
+  if (severityCode === 'OK') return '#3fb950';
+  return '#8b949e';
 }
 
 export function getDisplayName(env, t) {
