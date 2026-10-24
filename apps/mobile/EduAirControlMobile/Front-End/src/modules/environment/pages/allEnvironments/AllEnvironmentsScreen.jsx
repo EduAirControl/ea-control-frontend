@@ -17,8 +17,6 @@ import { useAllEnvironmentsVM } from '../../viewmodels/useAllEnvironmentsVM.js'
 import calculateEnvironmentScore from '../../utils/calculateEnvironmentScore.js'
 import { getEnvironmentStatus } from '../../utils/getEnvironmentStatus.js'
 import { styles } from './AllEnvironmentsScreen.styles'
-import { useEnvironments } from '../../../../context/EnvironmentContext.jsx'
-import { usePolling } from '../../../../shared/hooks/usePolling.js'
 
 function EnvironmentRow({ env, onPress, currentColors, t }) {
   const status = getEnvironmentStatus(env.statusKey, t, currentColors)
@@ -71,10 +69,7 @@ function EnvironmentRow({ env, onPress, currentColors, t }) {
 export default function AllEnvironmentsScreen({ navigation }) {
   const { darkMode, currentColors } = useTheme()
   const { t } = useTranslation()
-  const { refreshEnvironments } = useEnvironments()
   const { filtered, filters, setFilter, clearFilters, counts, activeCount } = useAllEnvironmentsVM()
-
-  usePolling(refreshEnvironments, 30000)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filterSection, setFilterSection] = useState('status')

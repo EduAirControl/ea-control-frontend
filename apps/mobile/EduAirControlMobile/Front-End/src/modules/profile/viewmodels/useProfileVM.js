@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import * as ImagePicker from 'expo-image-picker'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../../../shared/components/Toast/Toast.jsx'
 import profileService from '../services/profileService'
+import { usePolling } from '../../../shared/hooks/usePolling.js'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024
 
@@ -29,13 +30,32 @@ export function useProfileVM({ onLogout } = {}) {
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [avatarError, setAvatarError] = useState(null)
 
+  const isEditingRef = useRef(false)
   useEffect(() => {
-    profileService.get().then((data) => {
-      setProfile(data)
-      setForm(data)
-      setAvatar(data.avatarUrl || null)
-    })
+    isEditingRef.current = isEditing
+  }, [isEditing])
+
+  // El refresh de 10 s no pisa un formulario en edición: solo se aplica si el
+  // usuario no está editando (también tras esperar el fetch).
+  const loadProfile = useCallback(async () => {
+    if (isEditingRef.current) return
+    try {
+      const data = await profileService.get()
+      if (isEditingRef.current) return
+      const same = (value) => JSON.stringify(value) === JSON.stringify(data)
+      setProfile((prev) => (same(prev) ? prev : data))
+      setForm((prev) => (same(prev) ? prev : data))
+      setAvatar((prev) => (prev === (data.avatarUrl || null) ? prev : data.avatarUrl || null))
+    } catch {
+      // best-effort: el perfil mostrado sigue siendo válido
+    }
   }, [])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
+
+  usePolling(loadProfile, 10000)
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))

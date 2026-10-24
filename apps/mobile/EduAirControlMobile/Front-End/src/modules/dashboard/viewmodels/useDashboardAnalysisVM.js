@@ -50,7 +50,7 @@ function relativeLabel(iso, t) {
 
 export function useDashboardAnalysisVM() {
   const { t, i18n } = useTranslation()
-  const { environments = [], refreshEnvironments } = useEnvironments()
+  const { environments = [] } = useEnvironments()
 
   const [period, setPeriod] = useState('day')
   const [metric, setMetric] = useState('co2')
@@ -196,9 +196,8 @@ export function useDashboardAnalysisVM() {
     setIsFresh(true)
     loadSummary()
     loadSeries()
-    if (refreshEnvironments) refreshEnvironments()
     setTimeout(() => setIsFresh(false), 2600)
-  }, [loadSummary, loadSeries, refreshEnvironments])
+  }, [loadSummary, loadSeries])
 
   const healthPercent = selectedEnvironments.length
     ? Math.round((statusCounts.normal / selectedEnvironments.length) * 100)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '../../../../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
 import institutionService from '../../services/institutionService.js'
+import { usePolling } from '../../../../shared/hooks/usePolling.js'
 import { styles } from './SuperAdminScreen.styles.js'
 
 const EMPTY_FORM = { code: '', name: '', type: '' }
@@ -28,22 +29,26 @@ export default function SuperAdminScreen() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
 
-  const load = async () => {
-    setLoading(true)
+  // `background` (polling de 10 s): no parpadea el spinner ni tumba la
+  // pantalla si un tick falla por red.
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (!background) setLoading(true)
     try {
       const data = await institutionService.getAll()
       setInstitutions(data)
       setError('')
     } catch (err) {
-      setError(err.message || t('superadmin.error', 'Error al cargar instituciones'))
+      if (!background) setError(err.message || t('superadmin.error', 'Error al cargar instituciones'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
+
+  usePolling(() => load({ background: true }), 10000)
 
   const handleChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }))
 
