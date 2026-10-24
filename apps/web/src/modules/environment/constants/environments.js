@@ -12,14 +12,6 @@ export const QUALITY = {
   BAD: 'dashboard.qualityBad',
 }
 
-// Rangos ideales de métricas
-export const IDEAL_RANGES = {
-  temperature: '18–24°C',
-  humidity: '40–60%',
-  co2: '< 1000 ppm',
-  noise: '< 50 dB',
-}
-
 // Colores por status
 export const STATUS_COLORS = {
   [STATUS.NORMAL]: '#4CAF50',
