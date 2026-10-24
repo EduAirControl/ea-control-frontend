@@ -1,4 +1,6 @@
-# Etapa 1: build
+# ==========================================
+# Stage 1: Build React + Vite
+# ==========================================
 FROM node:20 AS builder
 
 WORKDIR /app
@@ -12,30 +14,40 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Etapa 2: servidor web
+# ==========================================
+# Stage 2: Nginx
+# ==========================================
 FROM nginx:alpine
 
-RUN addgroup -S appgroup -g 1000 
+# Crear usuario sin privilegios
+RUN addgroup -S appgroup -g 1000 \
     && adduser -S appuser -G appgroup -u 1000
 
+# Copiar archivos compilados de React
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copiar configuración del sitio
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Configuración para ejecutar Nginx sin privilegios de root
-RUN sed -i 's|pid[[:space:]]*/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf 
-    && sed -i '/^[[:space:]]*user[[:space:]]/d' /etc/nginx/nginx.conf 
-    && chown -R appuser:appgroup 
-        /usr/share/nginx/html 
-        /var/cache/nginx 
-        /var/log/nginx 
-        /etc/nginx/conf.d 
+# Configurar Nginx para ejecutarse como usuario no-root
+RUN sed -i 's|pid[[:space:]]*/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf \
+    && sed -i '/^[[:space:]]*user[[:space:]]/d' /etc/nginx/nginx.conf \
+    && chown -R appuser:appgroup \
+        /usr/share/nginx/html \
+        /var/cache/nginx \
+        /var/log/nginx \
+        /etc/nginx/conf.d \
     && chmod -R 755 /usr/share/nginx/html
 
+# Ejecutar como usuario sin privilegios
 USER appuser
 
+# Puerto HTTP del contenedor
 EXPOSE 80
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 
+# Comprobar que el servidor responde
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
     CMD wget -qO- http://127.0.0.1/ || exit 1
 
+# Iniciar Nginx en primer plano
 CMD ["nginx", "-g", "daemon off;"]
