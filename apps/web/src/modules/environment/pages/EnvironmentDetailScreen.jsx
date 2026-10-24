@@ -11,6 +11,7 @@ import Navbar from '../../dashboard/components/Navbar/Navbar';
 import { BackButton } from '../../../shared/components';
 import { useEnvironment } from '../../../context/useEnvironment';
 import { useToast } from '../../../shared/hooks/useToast';
+import { usePolling } from '../../../shared/hooks/usePolling';
 import sensorService from '../services/sensorService';
 import environmentService from '../services/environmentService';
 import { getMetricColor } from '../utils/environmentHelpers';
@@ -91,7 +92,8 @@ function EnvironmentDetailScreen() {
       );
       setDevices(rows);
     } catch {
-      setDevices([]);
+      // Con polling cada 10 s un fallo transitorio no debe vaciar la lista:
+      // se conservan los últimos dispositivos conocidos.
     } finally {
       setDevicesLoading(false);
     }
@@ -100,6 +102,10 @@ function EnvironmentDetailScreen() {
   useEffect(() => {
     loadDevices();
   }, [loadDevices]);
+
+  // Los dispositivos y las métricas del ambiente se actualizan solos: sin
+  // este polling la pantalla quedaba congelada en la carga inicial.
+  usePolling(loadDevices, 10000);
 
   // Rangos normales configurados para ESTE ambiente. La UI no usa cortes fijos:
   // si el admin cambia los umbrales, aquí se reflejan.

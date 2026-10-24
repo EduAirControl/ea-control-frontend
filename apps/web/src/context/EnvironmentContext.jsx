@@ -3,6 +3,13 @@ import { EnvironmentContext } from './useEnvironment';
 import environmentService from '../modules/environment/services/environmentService';
 import authService from '../modules/auth/services/authService';
 import { useToast } from '../shared/hooks/useToast';
+import { usePolling } from '../shared/hooks/usePolling';
+
+// Solo hay sesión real si quedan tokens: sin esta guarda el polling intentaría
+// renovar el token cada 10 s en landing/login (el provider envuelve toda la app).
+function hasSession() {
+  return Boolean(localStorage.getItem('token') || localStorage.getItem('refreshToken'));
+}
 
 export function EnvironmentProvider({ children }) {
   const [environments, setEnvironments] = useState([]);
@@ -43,16 +50,17 @@ export function EnvironmentProvider({ children }) {
 
   useEffect(() => {
     loadEnvironments();
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') loadEnvironments();
-    };
     window.addEventListener('eduaircontrol:auth', loadEnvironments);
-    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       window.removeEventListener('eduaircontrol:auth', loadEnvironments);
-      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [loadEnvironments]);
+
+  // Frescura app-wide: los ambientes se refrescan solos cada 10 s (y al volver
+  // a la pestaña) sin depender de que cada pantalla monte su propio polling.
+  usePolling(() => {
+    if (hasSession()) loadEnvironments();
+  }, 10000);
 
   const toggleFavorite = async (id) => {
     const snapshot = environments;
@@ -118,9 +126,8 @@ export function EnvironmentProvider({ children }) {
     }
   };
 
-  // Memoizado: los consumers (dashboard, gestión) montan un setInterval con
-  // esta función como dependencia; sin useCallback el intervalo se recrearía
-  // en cada render del provider y el polling no tendría cadencia estable.
+  // Memoizado: los consumers lo usan tras mutaciones; sin useCallback cambiaría
+  // de identidad en cada render y recargaría efectos que dependen de él.
   const refreshEnvironments = useCallback(() => loadEnvironments(), [loadEnvironments]);
 
   return (

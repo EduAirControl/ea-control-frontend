@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 import authService from '../../auth/services/authService';
+import { usePolling } from '../../../shared/hooks/usePolling';
 
 export function useProfileVM() {
   const navigate = useNavigate();
@@ -14,13 +15,37 @@ export function useProfileVM() {
   const [avatarError, setAvatarError] = useState(null);
   const [saveError, setSaveError] = useState(null);
 
+  const isEditingRef = useRef(false);
   useEffect(() => {
-    profileService.get().then((data) => {
-      setProfile(data);
-      setForm(data);
-      setAvatarUrl(data.avatarUrl || '');
-    });
+    isEditingRef.current = isEditing;
+  }, [isEditing]);
+
+  // El refresh en segundo plano no pisa un formulario que el usuario está
+  // editando: solo se actualiza el perfil cuando no hay cambios en curso.
+  const loadProfile = useCallback(async () => {
+    if (isEditingRef.current) return;
+    try {
+      const data = await profileService.get();
+      // Re-chequeo tras esperar: si el usuario entró en edición durante el
+      // fetch, el resultado no debe pisar lo que está escribiendo.
+      if (isEditingRef.current) return;
+      const same = (value) => JSON.stringify(value) === JSON.stringify(data);
+      setProfile((prev) => (same(prev) ? prev : data));
+      setForm((prev) => (same(prev) ? prev : data));
+      setAvatarUrl((prev) => (prev === (data.avatarUrl || '') ? prev : data.avatarUrl || ''));
+    } catch {
+      // best-effort: el perfil mostrado sigue siendo válido
+    }
   }, []);
+
+  useEffect(() => {
+    // Falso positivo de react-hooks/set-state-in-effect: el fetch es async y
+    // los setState solo se ejecutan tras el await, nunca síncronos en el effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadProfile();
+  }, [loadProfile]);
+
+  usePolling(loadProfile, 10000);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));

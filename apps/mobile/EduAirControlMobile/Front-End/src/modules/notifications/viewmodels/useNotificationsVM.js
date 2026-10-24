@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEnvironments } from '../../../context/EnvironmentContext'
+import { usePolling } from '../../../shared/hooks/usePolling.js'
 import alertService from '../services/alertService'
 
 const SEVERITY_TYPE = {
@@ -17,14 +18,18 @@ export function useNotificationsVM() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // `background` (polling de 10 s): conserva la lista y no toca el spinner
+  // ni el error para que la pantalla no parpadee en cada tick.
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (!background) setLoading(true)
     try {
       setAlerts(await alertService.listActive(50))
       setError(null)
     } catch (e) {
-      setAlerts([])
-      setError(e.message || 'No fue posible cargar las alertas')
+      if (!background) {
+        setAlerts([])
+        setError(e.message || 'No fue posible cargar las alertas')
+      }
     } finally {
       setLoading(false)
     }
@@ -33,6 +38,9 @@ export function useNotificationsVM() {
   useEffect(() => {
     load()
   }, [load])
+
+  // Alertas frescas al tener la pantalla abierta (además del push de Expo).
+  usePolling(() => load({ background: true }), 10000)
 
   const envName = useCallback(
     (id) => environments.find((env) => String(env.id) === String(id))?.name || '',

@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native'
  * pantalla está enfocada. El timer se pausa al desenfocar (backdrop, otro
  * stack, app en background) para no quemar batería ni spamear la API.
  */
-export function usePolling(callback, intervalMs = 30000) {
+export function usePolling(callback, intervalMs = 10000) {
   const saved = useRef(callback)
   saved.current = callback
 

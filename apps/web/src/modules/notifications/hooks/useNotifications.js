@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useEnvironments } from "../../../context/useEnvironment";
+import { usePolling } from "../../../shared/hooks/usePolling";
 import alertService from "../services/alertService";
 
 const SEVERITY_TO_TYPE = {
@@ -41,17 +42,31 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // El nombre del ambiente se resuelve al cargar; el ref permite que `load`
+  // sea estable aunque cambie la lista de ambientes (si dependiera de ella,
+  // cada tick de 10 s re-petiría las alertas y parpadearía el spinner).
+  const environmentsRef = useRef(environments);
+  useEffect(() => {
+    environmentsRef.current = environments;
+  }, [environments]);
+
   const nameOf = useCallback(
     (environmentId) => {
-      const env = environments.find((e) => e.id === environmentId);
+      const env = environmentsRef.current.find((e) => e.id === environmentId);
       return env?.name || env?.code || null;
     },
-    [environments]
+    []
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
+  /**
+   * `background` = refresh del polling: conserva los datos y el spinner tal
+   * como están para que la lista no parpadee cada 10 s.
+   */
+  const load = useCallback(async ({ background = false } = {}) => {
+    if (!background) {
+      setLoading(true);
+      setError(false);
+    }
     try {
       const alerts = await alertService.list({ limit: 100 });
       const mapped = alerts.map((a) => ({
@@ -74,9 +89,12 @@ export const useNotifications = () => {
       }));
       mapped.sort((a, b) => (b.raisedAt?.getTime() || 0) - (a.raisedAt?.getTime() || 0));
       setNotifications(mapped);
+      setError(false);
     } catch {
-      setNotifications([]);
-      setError(true);
+      if (!background) {
+        setNotifications([]);
+        setError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -85,6 +103,25 @@ export const useNotifications = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Las alertas se piden cada 10 s; los nombres de ambientes se re-mapean
+  // aquí sin volver a llamar al backend.
+  useEffect(() => {
+    setNotifications((prev) => {
+      let changed = false;
+      const next = prev.map((n) => {
+        const name = nameOf(n.environmentId);
+        if (n.environmentName === name) return n;
+        changed = true;
+        return { ...n, environmentName: name };
+      });
+      return changed ? next : prev;
+    });
+  }, [environments, nameOf]);
+
+  // El panel está montado en el Navbar de todas las pantallas: con este
+  // polling el badge y la lista de alertas están frescos en toda la app.
+  usePolling(() => load({ background: true }), 10000);
 
   const active = useMemo(
     () => notifications.filter((n) => !n.read),
