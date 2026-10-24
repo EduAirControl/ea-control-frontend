@@ -39,23 +39,17 @@ export function mapMetricsByEnvironment(rows) {
 
 const SEVERITY = { OK: 0, WARNING: 1, ALERT: 2 };
 
-/** Severidad de una métrica concreta; usa los mismos umbrales que getMetricStatus. */
-function severityOf(field, value) {
-  if (value === undefined || value === null || Number.isNaN(value)) return SEVERITY.OK;
-  switch (field) {
-    case 'temp':
-      return value >= 20 && value <= 26 ? SEVERITY.OK : SEVERITY.WARNING;
-    case 'humidity':
-      return value >= 40 && value <= 60 ? SEVERITY.OK : SEVERITY.WARNING;
-    case 'co2':
-      if (value <= 800) return SEVERITY.OK;
-      return value <= 1000 ? SEVERITY.WARNING : SEVERITY.ALERT;
-    case 'noise':
-      if (value <= 50) return SEVERITY.OK;
-      return value <= 65 ? SEVERITY.WARNING : SEVERITY.ALERT;
-    default:
-      return SEVERITY.OK;
-  }
+/**
+ * Severidad de una alerta del backend ('WARNING' | 'CRITICAL') → nivel.
+ *
+ * <p>Los umbrales NO viven aquí: los calcula ms-environment-monitoring con la
+ * configuración (override por ambiente) que edita el admin en la gestión. El front
+ * solo pinta lo que el backend decide — una sola fuente de verdad.
+ */
+function levelOfAlert(alertSeverity) {
+  if (alertSeverity === 'CRITICAL') return SEVERITY.ALERT;
+  if (alertSeverity === 'WARNING') return SEVERITY.WARNING;
+  return SEVERITY.OK;
 }
 
 /**
@@ -74,21 +68,19 @@ export function hasAnyMetric(environment) {
 }
 
 /**
- * Estado global de un ambiente: la peor severidad entre sus métricas.
+ * Estado global de un ambiente.
  *
- * <p>Sin métricas el estado queda sin definir y la UI muestra «desconocido»: es
- * mejor que pintar un verde inventado (antes el score siempre devolvía 100).
+ * <p>La severidad REAL la da el backend: `alertSeverity` es la peor alerta activa
+ * del ambiente (o `undefined` si no hay). Con eso:
+ * <ul>
+ *   <li>CRITICAL → alerta; WARNING → advertencia;</li>
+ *   <li>sin alerta y con mediciones → normal;</li>
+ *   <li>sin alerta y sin mediciones → «desconocido» (no pintar verde inventado).</li>
+ * </ul>
  */
-export function deriveStatusKey(metrics) {
-  if (!metrics) return undefined;
-  const worst = Object.values(CODE_TO_FIELD).reduce((acc, field) => {
-    const severity = severityOf(field, metrics[field]);
-    return severity > acc ? severity : acc;
-  }, SEVERITY.OK);
-
-  if (worst >= SEVERITY.ALERT) return STATUS.ALERT;
-  if (worst >= SEVERITY.WARNING) return STATUS.WARNING;
-
-  const hasAnyMetric = Object.values(CODE_TO_FIELD).some((f) => metrics[f] !== undefined);
-  return hasAnyMetric ? STATUS.NORMAL : undefined;
+export function deriveStatusKey(metrics, alertSeverity) {
+  const level = levelOfAlert(alertSeverity);
+  if (level >= SEVERITY.ALERT) return STATUS.ALERT;
+  if (level >= SEVERITY.WARNING) return STATUS.WARNING;
+  return hasAnyMetric(metrics) ? STATUS.NORMAL : undefined;
 }
