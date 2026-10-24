@@ -66,6 +66,22 @@ function NotificationPanel({ isOpen, onClose }) {
     if (isOpen) refresh();
   }, [isOpen, refresh]);
 
+  const handleDelete = async (notification) => {
+    const ok = await deleteAlert(notification.id);
+    if (ok) {
+      toast.success('Alerta eliminada');
+    } else {
+      toast.error('No se pudo eliminar la alerta');
+    }
+  };
+
+  const handleDeleteAllRead = async () => {
+    const deleted = await deleteAllRead();
+    if (deleted > 0) {
+      toast.success(`${deleted} alerta(s) eliminada(s)`);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -160,6 +176,18 @@ function NotificationPanel({ isOpen, onClose }) {
                 </button>
               )}
             </div>
+
+            {unreadCount > 0 && (
+              <button className="mark-read-link" onClick={markAllRead} aria-label="Marcar todas como leídas">
+                <IoCheckmarkOutline aria-hidden="true" /> {t('notifications.markAllRead')}
+              </button>
+            )}
+
+            {readCount > 0 && (
+              <button className="delete-read-link" onClick={handleDeleteAllRead} aria-label="Eliminar todas las leídas">
+                <FaTrashAlt aria-hidden="true" /> {t('notifications.deleteAllRead')}
+              </button>
+            )}
           </div>
 
           <button className="close-btn" onClick={onClose} aria-label={t('common.close')}>

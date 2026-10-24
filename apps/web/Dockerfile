@@ -15,9 +15,16 @@ RUN npm run build
 # Etapa 2: servidor
 FROM nginx:alpine
 
+RUN addgroup -S appgroup -g 1000 && adduser -S appuser -G appgroup -u 1000
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN chown -R appuser:appgroup /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+
+USER appuser
 
 EXPOSE 80
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
