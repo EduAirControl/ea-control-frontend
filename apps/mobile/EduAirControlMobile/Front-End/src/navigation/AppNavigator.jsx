@@ -1,9 +1,12 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { useNavigation } from '@react-navigation/native'
+import { useEffect } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext'
 import authService from '../modules/auth/services/authService'
+import { registerForPushNotifications, addNotificationTapHandler } from '../shared/services/pushNotifications'
 
 import DashboardScreen from '../modules/dashboard/pages/dashboard/DashboardScreen'
 import FavoritesScreen from '../modules/favorites/pages/favorites/FavoritesScreen'
@@ -72,8 +75,18 @@ function ProfileStack() {
 export default function AppNavigator() {
   const { currentColors } = useTheme()
   const { t } = useTranslation()
+  const navigation = useNavigation()
   const isAdmin = authService.isAdmin()
   const isSuperAdmin = authService.isSuperAdmin()
+
+  // Registra el token push y lleva a las alertas al tocar una notificacion.
+  useEffect(() => {
+    registerForPushNotifications().catch(() => {})
+    const subscription = addNotificationTapHandler(() => {
+      navigation.navigate('Dashboard', { screen: 'NotificationsPanel' })
+    })
+    return () => subscription?.remove?.()
+  }, [navigation])
 
   return (
     <Tab.Navigator

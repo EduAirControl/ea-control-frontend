@@ -2,6 +2,7 @@ import './NotificationPanel.css';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
+import { useToast } from '../../../shared/hooks/useToast';
 import {
   FaBell,
   FaExclamationTriangle,
@@ -22,7 +23,24 @@ function NotificationPanel({ isOpen, onClose }) {
   } = useNotifications();
 
   const { t } = useTranslation();
+  const toast = useToast();
   const panelRef = useRef(null);
+
+  const handleDelete = async (notification) => {
+    const ok = await deleteAlert(notification.id);
+    if (ok) {
+      toast.success('Alerta eliminada');
+    } else {
+      toast.error('No se pudo eliminar la alerta');
+    }
+  };
+
+  const handleDeleteAllRead = async () => {
+    const deleted = await deleteAllRead();
+    if (deleted > 0) {
+      toast.success(`${deleted} alerta(s) eliminada(s)`);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -70,7 +88,7 @@ function NotificationPanel({ isOpen, onClose }) {
             )}
 
             {readCount > 0 && (
-              <button className="delete-read-link" onClick={deleteAllRead} aria-label="Eliminar todas las leídas">
+              <button className="delete-read-link" onClick={handleDeleteAllRead} aria-label="Eliminar todas las leídas">
                 <FaTrashAlt aria-hidden="true" /> {t('notifications.deleteAllRead')}
               </button>
             )}
@@ -144,20 +162,18 @@ function NotificationPanel({ isOpen, onClose }) {
                   </span>
                 </div>
 
-                {/* BOTÓN ELIMINAR (solo para alertas leídas) */}
-                {notification.read && (
-                  <button
-                    className="notification-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteAlert(notification.id);
-                    }}
-                    aria-label="Eliminar notificación"
-                    title={t('notifications.delete')}
-                  >
-                    <FaTrashAlt size={14} />
-                  </button>
-                )}
+                {/* BOTÓN ELIMINAR (cualquier alerta: el backend hace soft delete) */}
+                <button
+                  className="notification-delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(notification);
+                  }}
+                  aria-label="Eliminar notificación"
+                  title={t('notifications.delete')}
+                >
+                  <FaTrashAlt size={14} />
+                </button>
               </div>
             ))
           )}
@@ -165,7 +181,7 @@ function NotificationPanel({ isOpen, onClose }) {
 
         <div className="notification-footer">
           {readCount > 0 && (
-            <button className="delete-all-read-btn" onClick={deleteAllRead}>
+            <button className="delete-all-read-btn" onClick={handleDeleteAllRead}>
               <FaTrashAlt size={14} /> {t('notifications.deleteAllRead', { count: readCount })}
             </button>
           )}
