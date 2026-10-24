@@ -57,6 +57,9 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
   const [tempMin, setTempMin] = useState(environment.tempMin ?? 18);
   const [tempMax, setTempMax] = useState(environment.tempMax ?? 28);
   const [tempProfile, setTempProfile] = useState('Personalizar');
+  // CO2 en ppm. Semilla del backend (WARNING): 0–1000.
+  const [co2Min, setCo2Min] = useState(environment.co2Min ?? 0);
+  const [co2Max, setCo2Max] = useState(environment.co2Max ?? 1000);
 
   // Carga el umbral WARNING efectivo del ambiente (override propio o el del
   // tipo). Si es un override, se muestra como «Personalizar».
@@ -67,17 +70,23 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
       .then((thresholds) => {
         if (cancelled) return;
         const temperature = (thresholds || []).find((x) => x.variableCode === 'temperature');
-        if (!temperature) return;
-        if (temperature.minValue != null) setTempMin(temperature.minValue);
-        if (temperature.maxValue != null) setTempMax(temperature.maxValue);
-        if (temperature.source !== 'ENVIRONMENT') {
-          const match = Object.keys(TEMP_PROFILES).find(
-            (p) =>
-              TEMP_PROFILES[p] &&
-              TEMP_PROFILES[p].min === Number(temperature.minValue) &&
-              TEMP_PROFILES[p].max === Number(temperature.maxValue)
-          );
-          setTempProfile(match || 'Personalizar');
+        if (temperature) {
+          if (temperature.minValue != null) setTempMin(temperature.minValue);
+          if (temperature.maxValue != null) setTempMax(temperature.maxValue);
+          if (temperature.source !== 'ENVIRONMENT') {
+            const match = Object.keys(TEMP_PROFILES).find(
+              (p) =>
+                TEMP_PROFILES[p] &&
+                TEMP_PROFILES[p].min === Number(temperature.minValue) &&
+                TEMP_PROFILES[p].max === Number(temperature.maxValue)
+            );
+            setTempProfile(match || 'Personalizar');
+          }
+        }
+        const co2 = (thresholds || []).find((x) => x.variableCode === 'co2');
+        if (co2) {
+          if (co2.minValue != null) setCo2Min(co2.minValue);
+          if (co2.maxValue != null) setCo2Max(co2.maxValue);
         }
       })
       .catch(() => {
@@ -131,6 +140,15 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
       });
     } catch (err) {
       toast.error(err?.message || 'No se pudieron guardar los umbrales');
+      return;
+    }
+    try {
+      await environmentService.updateThresholds(environment.id, 'co2', {
+        minValue: co2Min,
+        maxValue: co2Max,
+      });
+    } catch (err) {
+      toast.error(err?.message || 'No se pudieron guardar los umbrales de CO₂');
       return;
     }
     onClose();
@@ -269,6 +287,35 @@ function EditEnvironmentModal({ environment, onClose, onSave }) {
                 type="number"
                 value={tempMax}
                 onChange={handleTempChange(setTempMax)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Umbrales CO2 */}
+        <div className="add-env-modal__section">
+          <label className="add-env-modal__label add-env-modal__label--section">
+            Umbrales de CO₂ (ppm)
+          </label>
+          <div className="add-env-modal__row add-env-modal__row--sm">
+            <div className="add-env-modal__field">
+              <label className="add-env-modal__label">Mín (ppm)</label>
+              <input
+                className="add-env-modal__input"
+                type="number"
+                min={0}
+                value={co2Min}
+                onChange={(e) => setCo2Min(e.target.value)}
+              />
+            </div>
+            <div className="add-env-modal__field">
+              <label className="add-env-modal__label">Máx (ppm)</label>
+              <input
+                className="add-env-modal__input"
+                type="number"
+                min={0}
+                value={co2Max}
+                onChange={(e) => setCo2Max(e.target.value)}
               />
             </div>
           </div>
