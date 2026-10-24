@@ -90,15 +90,18 @@ export const useNotifications = () => {
   };
 
   /**
-   * Elimina una alerta (soft delete). Solo funciona si ya fue reconocida.
+   * Elimina una alerta (soft delete en el backend). No exige reconocerla antes.
+   * Optimista: si falla, revierte. Devuelve true/false segun el resultado.
    */
   const deleteAlert = async (id) => {
     const snapshot = notifications;
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
       await alertService.delete(id);
+      return true;
     } catch {
       setNotifications(snapshot);
+      return false;
     }
   };
 
@@ -121,7 +124,7 @@ export const useNotifications = () => {
   const deleteAllRead = async () => {
     const snapshot = notifications;
     const toDelete = notifications.filter((n) => n.read);
-    if (toDelete.length === 0) return;
+    if (toDelete.length === 0) return 0;
     setNotifications((prev) => prev.filter((n) => !n.read));
     const results = await Promise.allSettled(
       toDelete.map((n) => alertService.delete(n.id))
@@ -130,6 +133,7 @@ export const useNotifications = () => {
     if (failed.length > 0) {
       setNotifications(snapshot);
     }
+    return toDelete.length - failed.length;
   };
 
   return {
