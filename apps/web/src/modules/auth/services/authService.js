@@ -1,4 +1,4 @@
-import apiClient, { API_BASE, getToken, clearToken } from '../../../shared/services/apiClient';
+import apiClient, { API_BASE, clearToken } from '../../../shared/services/apiClient';
 
 const RESET_EMAIL_KEY = 'resetEmail';
 const AUTH_EVENT = 'eduaircontrol:auth';
@@ -9,63 +9,9 @@ function notifyAuthChanged() {
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 
-function base64UrlDecode(str) {
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-  return atob(padded);
-}
-
-function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(base64UrlDecode(payload));
-  } catch {
-    return null;
-  }
-}
-
-function setSession(token, extraUser = {}) {
-  localStorage.setItem('token', token);
-  const decoded = decodeJWT(token);
-  const user = {
-    id: decoded?.sub || extraUser.id || null,
-    email: decoded?.email || extraUser.email || '',
-    username: decoded?.username || extraUser.username || '',
-    role: decoded?.roles?.[0] || extraUser.role || 'USER',
-    roles: decoded?.roles || (decoded?.roles?.[0] ? [decoded.roles[0]] : (extraUser.role ? [extraUser.role] : ['USER'])),
-    name: decoded?.username || extraUser.name || (decoded?.email || extraUser.email || '').split('@')[0],
-    institutionId: decoded?.institutionId || extraUser.institutionId || null,
-    campusId: decoded?.campusId || extraUser.campusId || null,
-    ...extraUser,
-  };
-  localStorage.setItem('user', JSON.stringify(user));
-  currentUser = user;
-  notifyAuthChanged();
-  return user;
-}
-
 const authService = {
   async getCurrentUser(force = false) {
     if (currentUser && !force) return currentUser;
-
-    const token = getToken();
-    if (token) {
-      const decoded = decodeJWT(token);
-      if (decoded && decoded.exp * 1000 > Date.now()) {
-        currentUser = {
-          id: decoded.sub || null,
-          email: decoded.email || '',
-          username: decoded.username || '',
-          role: decoded.roles?.[0] || 'USER',
-          roles: decoded.roles || (decoded.roles?.[0] ? [decoded.roles] : ['USER']),
-          name: decoded.username || (decoded.email || '').split('@')[0],
-          institutionId: decoded.institutionId || null,
-          campusId: decoded.campusId || null,
-        };
-        return currentUser;
-      }
-      clearToken();
-    }
 
     try {
       const me = await apiClient.get('/api/v1/me');
@@ -86,10 +32,19 @@ const authService = {
 
   async loginWithCredentials(email, password) {
     const data = await apiClient.post('/api/v1/auth/login', { email, password });
-    if (data.refreshToken) {
-      localStorage.setItem('refreshToken', data.refreshToken);
-    }
-    return setSession(data.accessToken, data.user);
+    // Token is in HttpOnly cookie; just set user session
+    currentUser = {
+      id: data.user?.id || null,
+      email: data.user?.email || '',
+      role: (Array.isArray(data.user?.roles) && data.user.roles.length ? data.user.roles[0] : 'USER'),
+      roles: Array.isArray(data.user?.roles) ? data.user.roles : [],
+      name: data.user?.username || data.user?.name || (data.user?.email || '').split('@')[0],
+      institutionId: data.user?.institutionId || null,
+      campusId: data.user?.campusId || null,
+    };
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    window.dispatchEvent(new Event('eduaircontrol:auth'));
+    return currentUser;
   },
 
   loginWithOAuth2() {
@@ -98,10 +53,17 @@ const authService = {
 
   async exchangeSocialCode(code) {
     const data = await apiClient.post('/api/v1/auth/oauth2/social/exchange', { code });
-    if (data.refreshToken) {
-      localStorage.setItem('refreshToken', data.refreshToken);
-    }
-    setSession(data.accessToken, data.user);
+    currentUser = {
+      id: data.user?.id || null,
+      email: data.user?.email || '',
+      role: (Array.isArray(data.user?.roles) && data.user.roles.length ? data.user.roles[0] : 'USER'),
+      roles: Array.isArray(data.user?.roles) ? data.user.roles : [],
+      name: data.user?.username || data.user?.name || (data.user?.email || '').split('@')[0],
+      institutionId: data.user?.institutionId || null,
+      campusId: data.user?.campusId || null,
+    };
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    window.dispatchEvent(new Event('eduaircontrol:auth'));
     return { needsOnboarding: Boolean(data.needsOnboarding) };
   },
 
@@ -110,53 +72,26 @@ const authService = {
   },
 
   async refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return null;
-    const data = await apiClient.post('/api/v1/auth/refresh', { refreshToken });
-    if (data.refreshToken) {
-      localStorage.setItem('refreshToken', data.refreshToken);
-    }
-    return setSession(data.accessToken, data.user);
+    // Refresh is handled by BFF via cookie; just re-hydrate user
+    return this.getCurrentUser(true);
   },
 
   async logout() {
-    const token = getToken();
-    const refreshToken = localStorage.getItem('refreshToken');
-
     try {
-      if (token) {
-        const response = await fetch(`${API_BASE}/api/v1/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-        if (!response.ok && response.status !== 401) {
-          console.error(`Logout request failed with status ${response.status}`);
-        }
-      } else {
-        const response = await fetch(`${API_BASE}/logout`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (!response.ok && response.status !== 401) {
-          console.error(`Logout request failed with status ${response.status}`);
-        }
-      }
+      await fetch(`${API_BASE}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
     } catch (error) {
       console.error('Logout request failed', error);
     } finally {
-      clearToken();
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
       currentUser = null;
       window.location.assign('/login');
     }
   },
 
   async register(name, email, password, companyCode) {
-    // `RegisterRequest` no tiene campo `name`: el nombre visible es `username`.
     return apiClient.post('/api/v1/auth/register', {
       email,
       password,
@@ -206,11 +141,6 @@ const authService = {
   },
 
   isAuthenticated() {
-    const token = getToken();
-    if (token) {
-      const decoded = decodeJWT(token);
-      return decoded && decoded.exp * 1000 > Date.now();
-    }
     return Boolean(currentUser);
   },
 

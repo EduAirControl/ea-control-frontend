@@ -8,7 +8,7 @@ import { usePolling } from '../shared/hooks/usePolling';
 // Solo hay sesión real si quedan tokens: sin esta guarda el polling intentaría
 // renovar el token cada 10 s en landing/login (el provider envuelve toda la app).
 function hasSession() {
-  return Boolean(localStorage.getItem('token') || localStorage.getItem('refreshToken'));
+  return Boolean(localStorage.getItem('user'));
 }
 
 export function EnvironmentProvider({ children }) {
