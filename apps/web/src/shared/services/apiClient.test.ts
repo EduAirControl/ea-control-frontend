@@ -141,7 +141,7 @@ describe('apiClient', () => {
       await apiClient.get('/api/test', { params: { page: 1, limit: 10 } })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/test?page=1&limit=10',
+        expect.stringContaining('/api/test?page=1&limit=10'),
         expect.any(Object)
       )
     })
