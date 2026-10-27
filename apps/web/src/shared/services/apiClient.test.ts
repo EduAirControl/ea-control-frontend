@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import apiClient, { API_BASE, getToken, clearToken, buildUrl } from './apiClient'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import apiClient, { API_BASE, clearToken, buildUrl } from './apiClient'
 
 // Mock fetch
 const mockFetch = vi.fn()
@@ -13,29 +13,15 @@ describe('apiClient', () => {
   })
 
   describe('API_BASE', () => {
-    it('should use VITE_API_URL when set', () => {
-      // This is tested implicitly
+    it('should be defined', () => {
       expect(API_BASE).toBeDefined()
     })
   })
 
-  describe('getToken', () => {
-    it('returns token from localStorage', () => {
-      localStorage.setItem('token', 'test-token')
-      expect(getToken()).toBe('test-token')
-    })
-
-    it('returns null when no token', () => {
-      expect(getToken()).toBeNull()
-    })
-  })
-
   describe('clearToken', () => {
-    it('removes token and user from localStorage', () => {
-      localStorage.setItem('token', 'test-token')
+    it('removes the cached user from localStorage', () => {
       localStorage.setItem('user', '{"id": "1"}')
       clearToken()
-      expect(localStorage.getItem('token')).toBeNull()
       expect(localStorage.getItem('user')).toBeNull()
     })
   })
@@ -64,33 +50,29 @@ describe('apiClient', () => {
       mockFetch.mockClear()
     })
 
-    it('should make GET request with token', async () => {
+    it('sends requests with credentials included', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ data: 'test' }),
         status: 200,
       })
 
-      localStorage.setItem('token', 'test-token')
       const result = await apiClient.get('/api/test')
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/test'),
-        expect.objectContaining({
-          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-        })
+        expect.objectContaining({ credentials: 'include' })
       )
       expect(result).toEqual({ data: 'test' })
     })
 
-    it('should make POST request with body', async () => {
+    it('makes POST request with body', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ id: '1' }),
         status: 201,
       })
 
-      localStorage.setItem('token', 'test-token')
       const result = await apiClient.post('/api/test', { name: 'test' })
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -98,11 +80,13 @@ describe('apiClient', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ name: 'test' }),
+          credentials: 'include',
         })
       )
+      expect(result).toEqual({ id: '1' })
     })
 
-    it('should handle 401 and try to refresh token', async () => {
+    it('handles 401 by refreshing via cookie and retrying', async () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: false,
@@ -111,44 +95,55 @@ describe('apiClient', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ accessToken: 'new-token' }),
+          status: 200,
+          json: () => Promise.resolve({}),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ data: 'refreshed' }),
           status: 200,
+          json: () => Promise.resolve({ data: 'refreshed' }),
         })
-
-      localStorage.setItem('token', 'old-token')
-      localStorage.setItem('refreshToken', 'refresh-token')
 
       const result = await apiClient.get('/api/test')
 
       expect(mockFetch).toHaveBeenCalledTimes(3)
+      expect(result).toEqual({ data: 'refreshed' })
     })
 
-    it('should handle 204 no content', async () => {
+    it('handles 204 no content', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 204,
       })
 
-      localStorage.setItem('token', 'test-token')
       const result = await apiClient.delete('/api/test/1')
 
       expect(result).toBeNull()
     })
 
-    it('should handle errors and throw with message', async () => {
+    it('throws with a mapped message on error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         json: () => Promise.resolve({}),
       })
 
-      localStorage.setItem('token', 'test-token')
-
       await expect(apiClient.get('/api/test')).rejects.toThrow('Recurso no encontrado')
+    })
+
+    it('sends params as query string on GET', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      })
+
+      await apiClient.get('/api/test', { params: { page: 1, limit: 10 } })
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/test?page=1&limit=10'),
+        expect.any(Object)
+      )
     })
   })
 })
