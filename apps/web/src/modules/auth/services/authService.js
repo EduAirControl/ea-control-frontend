@@ -34,10 +34,10 @@ const authService = {
     const data = await apiClient.post('/api/v1/auth/login', { email, password });
     // Token is in HttpOnly cookie; just set user session
     currentUser = {
-      id: data.user?.userId || null,
+      id: data.user?.id || null,
       email: data.user?.email || '',
-      role: data.user?.role || 'USER',
-      roles: data.user?.roles || [data.user?.role || 'USER'],
+      role: (Array.isArray(data.user?.roles) && data.user.roles.length ? data.user.roles[0] : 'USER'),
+      roles: Array.isArray(data.user?.roles) ? data.user.roles : [],
       name: data.user?.username || data.user?.name || (data.user?.email || '').split('@')[0],
       institutionId: data.user?.institutionId || null,
       campusId: data.user?.campusId || null,
@@ -54,10 +54,10 @@ const authService = {
   async exchangeSocialCode(code) {
     const data = await apiClient.post('/api/v1/auth/oauth2/social/exchange', { code });
     currentUser = {
-      id: data.user?.userId || null,
+      id: data.user?.id || null,
       email: data.user?.email || '',
-      role: data.user?.role || 'USER',
-      roles: data.user?.roles || [data.user?.role || 'USER'],
+      role: (Array.isArray(data.user?.roles) && data.user.roles.length ? data.user.roles[0] : 'USER'),
+      roles: Array.isArray(data.user?.roles) ? data.user.roles : [],
       name: data.user?.username || data.user?.name || (data.user?.email || '').split('@')[0],
       institutionId: data.user?.institutionId || null,
       campusId: data.user?.campusId || null,
