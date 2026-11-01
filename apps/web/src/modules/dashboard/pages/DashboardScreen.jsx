@@ -35,6 +35,7 @@ import { useEnvironment } from '../../../context/useEnvironment';
 import { useDashboardVM } from '../viewmodels/useDashboardVM';
 import { usePolling } from '../../../shared/hooks/usePolling';
 import Navbar from '../components/Navbar/Navbar';
+import { downloadMeasurements } from '../../environment/services/exportService';
 
 import './DashboardScreen.css';
 
@@ -211,6 +212,7 @@ function formatUpdatedAt(lastUpdatedIso) {
 
 function DashboardScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { environments = [], refreshEnvironments } = useEnvironment();
   const {
     dashboardData,
@@ -351,6 +353,17 @@ function DashboardScreen() {
     fetchDashboardData();
     fetchSeries(period, metric, environmentId);
     refreshEnvironments();
+  };
+
+  const handleExport = async (format) => {
+    try {
+      const envId = environmentId === 'all' ? environments[0]?.id : environmentId;
+      if (!envId) { window.alert('Selecciona un ambiente'); return; }
+      await downloadMeasurements(envId, null, null, null, format);
+      window.alert('Exportacion completada');
+    } catch (err) {
+      window.alert(err.message || 'Error al exportar');
+    }
   };
 
   const kpiDefinitions = [
@@ -537,6 +550,14 @@ function DashboardScreen() {
                 </span>
                 <button type="button" aria-label={t('dashboardAnalysis.ariaLabels.refreshData')} onClick={handleRefresh}>
                   <FaSyncAlt size={13} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => handleExport('csv')} title="Exportar CSV">
+                  <FaDownload size={13} /> CSV
+                </button>
+                <button type="button" onClick={() => handleExport('xlsx')} title="Exportar Excel">
+                  <FaDownload size={13} /> Excel
                 </button>
               </div>
             </section>
