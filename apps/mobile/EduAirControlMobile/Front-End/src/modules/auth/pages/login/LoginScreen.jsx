@@ -75,7 +75,7 @@ export default function LoginScreen() {
     setErrors({})
     setSubmitting(true)
     try {
-      await authService.login(parsed.data.email, parsed.data.password)
+      await authService.login(parsed.data.email, parsed.data.password, form.rememberMe)
       navigation.reset({ index: 0, routes: [{ name: 'App' }] })
     } catch (err) {
       const msg = err.message || t('login.error', 'Error al iniciar sesión')

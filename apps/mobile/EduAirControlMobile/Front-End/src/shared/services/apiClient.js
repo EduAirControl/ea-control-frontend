@@ -42,23 +42,31 @@ function getToken() {
  */
 let refreshInFlight = null
 
+/**
+ * Resultado de un intento de renovación:
+ * - `'ok'`       → renovado, se puede reintentar la petición original.
+ * - `'rejected'` → el backend rechazó el refresh token: la sesión ya no sirve
+ *                  (venció, se revirtió o ya se usó). Sí hay que limpiar.
+ * - `'error'`    → fallo transitorio (red, 5xx): **no** se destruye la sesión,
+ *                  un apagón no debe obligar a volver a entrar.
+ */
 async function doRefresh() {
   const refreshToken = storage.getItem('refreshToken')
-  if (!refreshToken) return false
+  if (!refreshToken) return 'rejected'
   try {
     const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
-    if (!res.ok) return false
+    if (!res.ok) return res.status === 401 || res.status === 403 ? 'rejected' : 'error'
     const data = await res.json()
-    if (!data?.accessToken) return false
+    if (!data?.accessToken) return 'error'
     await storage.setItem('token', data.accessToken)
     if (data.refreshToken) await storage.setItem('refreshToken', data.refreshToken)
-    return true
+    return 'ok'
   } catch {
-    return false
+    return 'error'
   }
 }
 
@@ -108,9 +116,12 @@ async function request(endpoint, options = {}, baseUrl = API_BASE) {
   }
 
   // Un 401 con token puede ser un access token vencido: se intenta renovar una vez.
+  // Solo se reintenta con éxito real; el resultado se guarda para decidir más
+  // abajo si la sesión se destruye o no.
+  let refreshOutcome = null
   if (response.status === 401 && token && !PUBLIC_AUTH_ENDPOINTS.some((p) => endpoint.startsWith(p))) {
-    const refreshed = await tryRefreshToken()
-    if (refreshed) {
+    refreshOutcome = await tryRefreshToken()
+    if (refreshOutcome === 'ok') {
       try {
         response = await doFetch()
       } catch {
@@ -124,9 +135,20 @@ async function request(endpoint, options = {}, baseUrl = API_BASE) {
     const isPublicAuth = PUBLIC_AUTH_ENDPOINTS.some((p) => endpoint.startsWith(p))
 
     if (response.status === 401 && !isPublicAuth) {
-      await clearSession()
-      onUnauthorized?.()
-      throw new Error(error.message || i18n.t('errors.sessionExpired'))
+      // 'error' = fallo transitorio (red/5xx al renovar). La sesión sigue siendo
+      // válida en el backend: no se borra y no se manda al login. Solo se limpia
+      // cuando el refresh fue rechazado o no había nada con lo que renovar.
+      if (refreshOutcome !== 'error') {
+        await clearSession()
+        onUnauthorized?.()
+      }
+      const sessionError = new Error(
+        error.message || i18n.t(refreshOutcome === 'error' ? 'errors.network' : 'errors.sessionExpired')
+      )
+      // Marcado para que la capa de UI sepa que es un fin de sesión real (ya
+      // navega al login) y no tenga que toastear además el mensaje.
+      sessionError.sessionExpired = refreshOutcome !== 'error'
+      throw sessionError
     }
 
     // El status se adjunta al error: sin el, un 409 (serial ya dado de alta)

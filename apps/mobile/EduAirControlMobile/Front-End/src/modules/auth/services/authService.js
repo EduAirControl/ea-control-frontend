@@ -49,8 +49,16 @@ async function storeSession(data) {
 }
 
 const authService = {
-  /** `LoginRequest` es solo `{email, password}`: el `companyCode` lo ignora el backend. */
-  async login(email, password) {
+  /**
+   * `LoginRequest` es solo `{email, password}`: el `companyCode` lo ignora el
+   * backend.
+   *
+   * @param {boolean} [_rememberMe] **Informativo.** La sesión local se persiste
+   *   siempre igual: el refresh token ya dura 7 días y `LoginRequest` no tiene
+   *   ese campo. Desmarcarlo no acorta nada, solo refleja la intención del
+   *   usuario en la UI.
+   */
+  async login(email, password, _rememberMe) {
     const data = await apiClient.post(`${BASE}/login`, { email, password })
     return storeSession(data)
   },
@@ -139,7 +147,11 @@ return null
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
-      clearSession()
+      // Access token vencido NO es sesión muerta: si queda refresh token la
+      // sesión se conserva y App.js la renueva al arrancar. Antes se borraba
+      // aquí mismo (refresh incluido), con lo que era imposible renovarla y
+      // cada arranque o cada expiración mandaba al login.
+      if (!storage.getItem('refreshToken')) clearSession()
       return false
     }
     return true
