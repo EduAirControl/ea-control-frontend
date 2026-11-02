@@ -68,7 +68,20 @@ const authService = {
   },
 
   async completeSocialOnboarding(companyCode) {
-    return apiClient.post('/api/v1/auth/oauth2/onboarding', { companyCode });
+    await apiClient.post('/api/v1/auth/oauth2/onboarding', { companyCode });
+    // El token emitido antes del onboarding no trae institutionId y los servicios lo
+    // rechazan (403): se renueva la sesion para que el nuevo token ya lo incluya.
+    try {
+      await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Token refresh after onboarding failed', error);
+    }
+    const user = await this.getCurrentUser(true);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    return user;
   },
 
   async refreshToken() {
