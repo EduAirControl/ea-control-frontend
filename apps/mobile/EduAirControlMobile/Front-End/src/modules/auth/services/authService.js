@@ -143,7 +143,7 @@ return null
     if (!claims) {
       // Solo limpieza local: un logout remoto con token inválido solo provoca
       // un refresh en camino y carrera con clearSession.
-      clearSession()
+      clearSession().catch(() => {})
       return false
     }
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
@@ -151,7 +151,7 @@ return null
       // sesión se conserva y App.js la renueva al arrancar. Antes se borraba
       // aquí mismo (refresh incluido), con lo que era imposible renovarla y
       // cada arranque o cada expiración mandaba al login.
-      if (!storage.getItem('refreshToken')) clearSession()
+      if (!storage.getItem('refreshToken')) clearSession().catch(() => {})
       return false
     }
     return true
