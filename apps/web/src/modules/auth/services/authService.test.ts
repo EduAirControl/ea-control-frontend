@@ -172,6 +172,44 @@ describe('authService', () => {
     })
   })
 
+  describe('completeSocialOnboarding', () => {
+    it('refreshes the session after onboarding so the new token carries the institution', async () => {
+      mockApiClient.post.mockResolvedValueOnce(null)
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 200 })
+      mockApiClient.get.mockResolvedValueOnce({
+        userId: 'u1', email: 'a@b.com', role: 'USER', institutionId: 'inst-1',
+      })
+
+      const user = await authService.completeSocialOnboarding('ABC-0000')
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/auth/oauth2/onboarding', { companyCode: 'ABC-0000' })
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8080/api/v1/auth/refresh',
+        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+      )
+      expect(user?.institutionId).toBe('inst-1')
+      expect(JSON.parse(localStorage.getItem('user') as string).institutionId).toBe('inst-1')
+    })
+
+    it('still rehydrates the user when the refresh request fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      mockApiClient.post.mockResolvedValueOnce(null)
+      mockFetch.mockRejectedValueOnce(new Error('network'))
+      mockApiClient.get.mockResolvedValueOnce({ userId: 'u1', email: 'a@b.com', role: 'USER' })
+
+      const user = await authService.completeSocialOnboarding('ABC-0000')
+
+      expect(user?.email).toBe('a@b.com')
+    })
+
+    it('does not refresh when the onboarding call fails', async () => {
+      mockApiClient.post.mockRejectedValueOnce(new Error('Unknown institution'))
+
+      await expect(authService.completeSocialOnboarding('XXX')).rejects.toThrow('Unknown institution')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+  })
+
   describe('register', () => {
     it('calls apiClient.post with correct data', async () => {
       mockApiClient.post.mockResolvedValueOnce({})
