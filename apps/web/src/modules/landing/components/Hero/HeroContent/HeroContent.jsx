@@ -25,11 +25,16 @@ function HeroContent() {
       <p className="hero-description">{t('landing.hero.description')}</p>
 
       <div className="hero-actions">
-        <Link to="/login?panel=register" className="primary-btn">
+        <a
+          href="https://drive.google.com/file/d/1vl6oBwqoIPnVqEiP4aYCiYNx5vVWdE_r/view?usp=drive_link"
+          className="primary-btn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {t('landing.hero.downloadApp')}
 
           <span className="btn-arrow">→</span>
-        </Link>
+        </a>
 
         <Link to="/guide" className="secondary-btn">
           {t('landing.hero.viewDemo')}
