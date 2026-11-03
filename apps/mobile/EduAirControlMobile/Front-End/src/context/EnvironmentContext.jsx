@@ -35,7 +35,10 @@ export function EnvironmentProvider({ children }) {
         setError(null)
       } catch (e) {
         setError(e.message)
-        if (showErrors) toast.error(e.message)
+        // Un fin de sesión real no se avisa con toast: `setOnUnauthorized` ya
+        // navega al login. Antes el toast "tu sesión ha expirado" salía además
+        // en la primera carga, con la app recién abierta.
+        if (showErrors && !e.sessionExpired) toast.error(e.message)
       } finally {
         setLoading(false)
       }

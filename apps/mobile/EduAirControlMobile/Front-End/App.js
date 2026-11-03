@@ -39,7 +39,21 @@ export default function App() {
       try {
       await storage.init()
 
-      const authenticated = authService.isAuthenticated()
+      let authenticated = authService.isAuthenticated()
+
+      // Un access token vencido no es "no autenticado": mientras quede refresh
+      // token la sesión se renueva aquí, al arrancar. Antes la app nunca lo
+      // intentaba, así que cada expiración obligaba a volver a entrar.
+      if (!authenticated && authService.getRefreshToken()) {
+        try {
+          authenticated = await authService.refresh()
+        } catch (error) {
+          // 4xx del backend = el refresh token ya no sirve → Login. Cualquier
+          // otra cosa (red caída) no invalida la sesión: se entra con lo que hay
+          // y el cliente la renovará en el primer 401.
+          authenticated = !(error?.status >= 400 && error.status < 500)
+        }
+      }
 
       if (isMounted) {
         setInitialized(authenticated ? 'App' : 'Login')
