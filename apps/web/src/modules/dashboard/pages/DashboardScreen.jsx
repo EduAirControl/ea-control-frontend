@@ -212,7 +212,6 @@ function formatUpdatedAt(lastUpdatedIso) {
 
 function DashboardScreen() {
   const { t } = useTranslation();
-  const toast = useToast();
   const { environments = [], refreshEnvironments } = useEnvironment();
   const {
     dashboardData,
