@@ -92,6 +92,8 @@ describe('SettingsScreen modo oscuro', () => {
     get.mockResolvedValue(prefs({ darkMode: false }));
     mountWithSystemDark();
     await waitFor(() => expect(isDark()).toBe(false));
+    await waitFor(() => expect(save).toHaveBeenCalled());
+    await act(async () => {});
     get.mockResolvedValue(prefs({ darkMode: true }));
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     await waitFor(() => expect(isDark()).toBe(true));
