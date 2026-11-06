@@ -21,6 +21,8 @@ vi.mock('../services/preferencesService', () => ({
   },
 }));
 
+vi.mock('../../dashboard/components/Navbar/Navbar', () => ({ default: () => null }));
+
 import SettingsScreen from './SettingsScreen';
 
 const prefs = (over = {}) => ({ darkMode: false, colorTheme: '', language: 'es', dateFormat: 'DD-MM-YYYY',
@@ -104,6 +106,10 @@ describe('SettingsScreen modo oscuro', () => {
     get.mockResolvedValue(prefs({ darkMode: false }));
     mountWithSystemDark();
     await waitFor(() => expect(isDark()).toBe(false));
+    // La hidratación inicial sincroniza al backend; mientras ese PUT sigue en vuelo
+    // se ignoran las lecturas (a propósito), así que se espera a que termine.
+    await waitFor(() => expect(save).toHaveBeenCalled());
+    await act(async () => {});
     get.mockResolvedValue(prefs({ darkMode: true }));
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     await waitFor(() => expect(isDark()).toBe(true));
