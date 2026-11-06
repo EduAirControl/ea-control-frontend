@@ -2,25 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-
-const { get, save } = vi.hoisted(() => ({
-  get: vi.fn(),
-  save: vi.fn().mockResolvedValue(null),
-}));
-
+const get = vi.fn();
+const save = vi.fn().mockResolvedValue(null);
 vi.mock('../services/preferencesService', () => ({
-  default: {
-    get: (...args: unknown[]) => get(...args),
-    save: (...args: unknown[]) => save(...args),
-  },
-  DEFAULT_REMINDERS: {
-    alertas: true,
-    advertencias: true,
-    resumenDiario: false,
-    sonido: true,
-  },
+  default: { get: (...a: unknown[]) => get(...a), save: (...a: unknown[]) => save(...a) },
+  DEFAULT_REMINDERS: { alertas: true, advertencias: true, resumenDiario: false, sonido: true },
 }));
-
+vi.mock('../../dashboard/components/Navbar/Navbar', () => ({ default: () => null }));
 import SettingsScreen from './SettingsScreen';
 
 const prefs = (over = {}) => ({ darkMode: false, colorTheme: '', language: 'es', dateFormat: 'DD-MM-YYYY',
@@ -104,6 +92,8 @@ describe('SettingsScreen modo oscuro', () => {
     get.mockResolvedValue(prefs({ darkMode: false }));
     mountWithSystemDark();
     await waitFor(() => expect(isDark()).toBe(false));
+    await waitFor(() => expect(save).toHaveBeenCalled());
+    await act(async () => {});
     get.mockResolvedValue(prefs({ darkMode: true }));
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     await waitFor(() => expect(isDark()).toBe(true));
