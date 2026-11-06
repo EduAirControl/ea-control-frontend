@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const profileSchema = z.object({
+export const profileSchemas = z.object({
   email: z
     .string()
     .trim()
