@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 import authService from '../../auth/services/authService';
-import { usePolling } from '../../../shared/hooks/usePolling';
+import { useRefreshOnVisible } from '../../../shared/hooks/useRefreshOnVisible';
 
 export function useProfileVM() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export function useProfileVM() {
     isEditingRef.current = isEditing;
   }, [isEditing]);
 
-  // El refresh en segundo plano no pisa un formulario que el usuario está
+  // El refresco al volver a la pestaña no pisa un formulario que el usuario está
   // editando: solo se actualiza el perfil cuando no hay cambios en curso.
   const loadProfile = useCallback(async () => {
     if (isEditingRef.current) return;
@@ -45,7 +45,8 @@ export function useProfileVM() {
     loadProfile();
   }, [loadProfile]);
 
-  usePolling(loadProfile, 10000);
+  // El perfil solo cambia cuando el usuario lo edita: se relee al volver a la pestaña.
+  useRefreshOnVisible(loadProfile);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));

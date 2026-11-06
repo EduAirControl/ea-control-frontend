@@ -32,7 +32,7 @@ import authService from '../../auth/services/authService';
 import { EditModal, Modal, Button } from '../../../shared/components';
 import { useDarkMode } from '../../../shared/hooks/useDarkMode';
 import { saveDateFormat } from '../../../shared/hooks/useDateFormat';
-import { usePolling } from '../../../shared/hooks/usePolling';
+import { useRefreshOnVisible } from '../../../shared/hooks/useRefreshOnVisible';
 import preferencesService, {
   DEFAULT_REMINDERS,
 } from '../services/preferencesService';
@@ -123,6 +123,9 @@ function SettingsScreen() {
   const [theme, setTheme] = useState(() => getAccessibilitySettings().colorTheme);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const hydratedRef = useRef(false);
+  // Guardados en vuelo: mientras haya uno, un refresco trae el valor viejo y
+  // revertiría el cambio que el usuario acaba de hacer.
+  const pendingSavesRef = useRef(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editField, setEditField] = useState('');
   const [editValue, setEditValue] = useState('');
@@ -166,8 +169,11 @@ function SettingsScreen() {
     } catch {
       return; // best-effort: siguen valiendo las preferencias actuales
     }
-    hydratedRef.current = true;
+    // Solo cuenta como hidratado si la BD respondió: con un GET fallido el modo
+    // oscuro sale del sistema, y sincronizarlo escribiría ese valor en la BD.
     if (!prefs) return;
+    if (pendingSavesRef.current > 0) return;
+    hydratedRef.current = true;
     if (prefs.reminders) {
       const nextReminders = { ...DEFAULT_REMINDERS, ...prefs.reminders };
       setReminders((prev) =>
@@ -212,13 +218,14 @@ function SettingsScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Preferencias frescas si cambian en otro dispositivo: mismos guards que
-  // arriba, así un tick sin cambios no vuelve a hacer PUT al backend.
-  usePolling(loadPreferences, 10000);
+  // Las preferencias solo las cambia el usuario: se leen al montar y al volver
+  // a la pestaña (p. ej. tras editarlas en otro dispositivo), sin polling.
+  useRefreshOnVisible(loadPreferences);
 
   // Sincroniza al backend cualquier cambio de preferencias.
   useEffect(() => {
     if (!hydratedRef.current) return;
+    pendingSavesRef.current += 1;
     preferencesService.save({
       autoTimezone,
       manualTimezone,
@@ -228,6 +235,8 @@ function SettingsScreen() {
       darkMode,
       colorTheme: theme,
       notificationsEnabled,
+    }).finally(() => {
+      pendingSavesRef.current -= 1;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoTimezone, manualTimezone, reminders, settings, theme, darkMode, notificationsEnabled]);
