@@ -73,7 +73,7 @@ export function useProfileVM() {
 
   const handleSave = async () => {
     const fullName = (form.fullName || '').trim();
-    const emailResult = profileSchema.safeParse({ email: form.email });
+    const emailResult = profileSchemas.safeParse({ email: form.email });
     setEmailError(emailResult.success ? null : emailResult.error.issues[0].message);
     // El backend exige fullName (@NotBlank) al crear el perfil.
     if (!fullName) {
