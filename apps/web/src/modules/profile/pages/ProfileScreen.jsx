@@ -26,6 +26,7 @@ function ProfileScreen() {
     logoutModal,
     avatarError,
     saveError,
+    emailError,
     setIsEditing,
     setLogoutModal,
     handleChange,
@@ -134,6 +135,9 @@ function ProfileScreen() {
                     value={form[field.key]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                   />
+                  {field.key === 'email' && emailError && (
+                    <p className="item-error" role="alert">{t(emailError)}</p>
+                  )}
                 </div>
               </div>
             ))}

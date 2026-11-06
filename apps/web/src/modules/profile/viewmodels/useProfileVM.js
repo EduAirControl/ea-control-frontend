@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 import authService from '../../auth/services/authService';
+import { profileSchemas} from '../schemas/profileSchemas'; 
 import { useRefreshOnVisible } from '../../../shared/hooks/useRefreshOnVisible';
 
 export function useProfileVM() {
@@ -13,6 +14,7 @@ export function useProfileVM() {
   const [isEditing, setIsEditing] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
   const [saveError, setSaveError] = useState(null);
 
   const isEditingRef = useRef(false);
@@ -49,6 +51,7 @@ export function useProfileVM() {
   useRefreshOnVisible(loadProfile);
 
   const handleChange = (field, value) => {
+    if (field === 'email') setEmailError(null);
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -70,11 +73,14 @@ export function useProfileVM() {
 
   const handleSave = async () => {
     const fullName = (form.fullName || '').trim();
+    const emailResult = profileSchemas.safeParse({ email: form.email });
+    setEmailError(emailResult.success ? null : emailResult.error.issues[0].message);
     // El backend exige fullName (@NotBlank) al crear el perfil.
     if (!fullName) {
       setSaveError('El nombre es obligatorio');
       return;
     }
+    if (!emailResult.success) return;
     setSaveError(null);
     const trimmedUrl = (avatarUrl || '').trim();
     const updated = { ...form, fullName, avatarUrl: trimmedUrl };
@@ -95,6 +101,7 @@ export function useProfileVM() {
     setAvatarUrl(profile.avatarUrl || '');
     setIsEditing(false);
     setAvatarError(null);
+    setEmailError(null);
   };
 
   const handleLogout = () => {
@@ -111,6 +118,7 @@ export function useProfileVM() {
     logoutModal,
     avatarError,
     saveError,
+    emailError,
     setIsEditing,
     setLogoutModal,
     handleChange,
