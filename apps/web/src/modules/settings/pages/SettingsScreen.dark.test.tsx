@@ -2,13 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const get = vi.fn();
-const save = vi.fn().mockResolvedValue(null);
-vi.mock('../services/preferencesService', () => ({
-  default: { get: (...a: unknown[]) => get(...a), save: (...a: unknown[]) => save(...a) },
-  DEFAULT_REMINDERS: { alertas: true, advertencias: true, resumenDiario: false, sonido: true },
+
+const { get, save } = vi.hoisted(() => ({
+  get: vi.fn(),
+  save: vi.fn().mockResolvedValue(null),
 }));
-vi.mock('../../dashboard/components/Navbar/Navbar', () => ({ default: () => null }));
+
+vi.mock('../services/preferencesService', () => ({
+  default: {
+    get: (...args: unknown[]) => get(...args),
+    save: (...args: unknown[]) => save(...args),
+  },
+  DEFAULT_REMINDERS: {
+    alertas: true,
+    advertencias: true,
+    resumenDiario: false,
+    sonido: true,
+  },
+}));
+
 import SettingsScreen from './SettingsScreen';
 
 const prefs = (over = {}) => ({ darkMode: false, colorTheme: '', language: 'es', dateFormat: 'DD-MM-YYYY',
